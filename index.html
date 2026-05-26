@@ -2790,9 +2790,6 @@ function _renderChiTieuCommon({ allRows, allDetail,
   } else {
     rows = allRows || [];
   }
-  // KPI — luôn đếm trực tiếp từ chiTietRows (không dùng uniqueDat/GAS vì có thể sai)
-  _countAndSetKPI(allDetail, idDat, idVuot, idKdat, idKps);
-
   // Populate selects — dùng rows (đã fallback)
   const sel = $(idKVSel);
   if (sel) {
@@ -2801,8 +2798,10 @@ function _renderChiTieuCommon({ allRows, allDetail,
   }
   const fDVDet = $(idDVDet);
   if (fDVDet) {
+    const prevVal = fDVDet.value; // giữ lại giá trị đang chọn (nếu có)
     fDVDet.innerHTML = '<option value="">Tất cả đơn vị</option>';
     rows.forEach(r => { const o=document.createElement('option'); o.value=r.donVi; o.textContent=r.donVi; fDVDet.appendChild(o); });
+    if (prevVal) fDVDet.value = prevVal; // khôi phục nếu option còn tồn tại
   }
   const fTen = $(idTen);
   if (fTen) {
@@ -2812,46 +2811,15 @@ function _renderChiTieuCommon({ allRows, allDetail,
     });
   }
 
-  // Lưu data
+  // Lưu data — TRƯỚC khi gọi filter để filter đọc được
   if (storeKey12) { DATA12=DATA12||{}; DATA12._ctDetailAll=allDetail; DATA12._dvSummaryAll=rows; }
   else            { DATA6._ctDetailAll=allDetail; DATA6._dvSummaryAll=rows; }
 
+  // Xóa chart cũ — filterCtTable/filterCt6Table sẽ tạo lại đúng theo filter
   if (CHS[idChartDV]) { CHS[idChartDV].destroy(); delete CHS[idChartDV]; }
   if (CHS[idChartPB]) { CHS[idChartPB].destroy(); delete CHS[idChartPB]; }
 
-  // Chart tỷ lệ đạt
-  if (rows.length > 0) {
-    CHS[idChartDV] = mkChart(idChartDV,'bar',{
-      labels: rows.map(r=>r.donVi),
-      datasets:[
-        { label:'Vượt',      data:rows.map(r=>r.vuot||0),     backgroundColor:'rgba(0,212,255,.85)', borderRadius:3, stack:'s' },
-        { label:'Đạt',       data:rows.map(r=>r.dat||0),      backgroundColor:'rgba(0,229,160,.85)', borderRadius:3, stack:'s' },
-        { label:'Không đạt', data:rows.map(r=>r.khongDat||0), backgroundColor:'rgba(255,90,90,.80)', borderRadius:3, stack:'s' },
-        { label:'Không PS',  data:rows.map(r=>r.khongPS||0),  backgroundColor:'rgba(255,184,0,.65)', borderRadius:3, stack:'s' }
-      ]
-    },{ indexAxis:'y', scales:{
-        x:{ stacked:true, ...dkScale(), ticks:{...dkScale().ticks,stepSize:1,precision:0}},
-        y:{ stacked:true, ...dkScale() }
-    }});
-  }
-
-  // Chart phân bổ kết quả — dùng dvSummary (đã có sẵn, không cần detail)
-  if (CHS[idChartPB]) { CHS[idChartPB].destroy(); delete CHS[idChartPB]; }
-  const totD = rows.reduce((s,r)=>s+(r.dat||0),0);
-  const totV = rows.reduce((s,r)=>s+(r.vuot||0),0);
-  const totK = rows.reduce((s,r)=>s+(r.khongDat||0),0);
-  const totP = rows.reduce((s,r)=>s+(r.khongPS||0),0);
-  if (totD+totV+totK+totP > 0) {
-    CHS[idChartPB] = mkChart(idChartPB,'bar',{
-      labels:['Đạt','Vượt','Không đạt','Không PS'],
-      datasets:[{ data:[totD,totV,totK,totP],
-        backgroundColor:['rgba(0,229,160,.8)','rgba(0,212,255,.8)','rgba(255,90,90,.8)','rgba(255,184,0,.8)'],
-        borderRadius:6 }]
-    },{ plugins:{legend:{display:false}},
-        scales:{x:{...dkScale()},y:{...dkScale(),min:0,ticks:{...dkScale().ticks,stepSize:1,precision:0}}}
-    });
-  }
-
+  // Gọi filter — đây là hàm duy nhất render KPI + biểu đồ + bảng theo filter hiện tại
   if (storeKey12) filterCtTable();
   else filterCt6Table();
 }
@@ -2952,51 +2920,49 @@ function syncCtKV() {
 }
 
 function filterCtTable() {
-  // Đồng bộ từ topbar fKV nếu fCtDVDet chưa chọn gì và topbar đang chọn 1 KV
-  const topKV = v('fKV');
+  if (!DATA12?._ctDetailAll?.length) return; // chưa có data
+
+  // ── Bước 1: Đồng bộ filter đơn vị từ topbar fKV (nếu fCtDVDet chưa chọn) ──
+  const topKV    = v('fKV');
   const fDVDetEl = $('fCtDVDet');
   if (fDVDetEl && topKV && !fDVDetEl.value) {
     const opts = Array.from(fDVDetEl.options).map(o => o.value);
     if (opts.includes(topKV)) fDVDetEl.value = topKV;
   }
 
-  // Đọc filter từ dropdown đơn vị (fCtDVDet) và tên chỉ tiêu (fCtTen)
-  const dvd = v('fCtDVDet'); // đơn vị đang chọn (KV1...KV14 hoặc rỗng = tất cả)
-  const ten = v('fCtTen');
-
-  // Đồng bộ fCtKV ẩn
+  // ── Bước 2: Đọc filter hiện tại ──
+  const dvd = v('fCtDVDet') || ''; // '' = tất cả đơn vị
+  const ten = v('fCtTen')   || ''; // '' = tất cả chỉ tiêu
   const selKV = $('fCtKV');
   if (selKV) selKV.value = dvd;
 
-  const allRows = DATA12?._ctDetailAll || [];
+  const allRows = DATA12._ctDetailAll;
 
-  // Filter theo đơn vị + tên chỉ tiêu
+  // ── Bước 3: Filter bảng chi tiết ──
   let detailRows = allRows;
   if (dvd) detailRows = detailRows.filter(r => r.donVi === dvd);
   if (ten) detailRows = detailRows.filter(r => r.tenChiTieu === ten);
-
-  // Cập nhật bảng chi tiết
   _ctDetailRows = detailRows;
   _ctDetailPage = 0;
   _renderCtDetailPage();
 
-  // Cập nhật scorecard — đếm từ rows đã filter theo đơn vị
+  // ── Bước 4: KPI — đếm từ KV đang chọn (bỏ qua filter tên chỉ tiêu) ──
   const kpiRows = dvd ? allRows.filter(r => r.donVi === dvd) : allRows;
-  _countAndSetKPI(kpiRows, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
+  _countAndSetKPI(kpiRows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
 
-  // Cập nhật biểu đồ tỷ lệ đạt — rebuild từ chiTietRows theo filter
-  _rebuildCtCharts(dvd);
+  // ── Bước 5: Biểu đồ — build từ chiTietRows theo dvd ──
+  _buildCtCharts(dvd);
 }
 
-/** Rebuild biểu đồ CT12T theo đơn vị đang chọn */
-function _rebuildCtCharts(filterDV) {
+/** Build/update biểu đồ CT12T theo đơn vị đang chọn */
+function _buildCtCharts(filterDV) {
   const allRows = DATA12?._ctDetailAll || [];
 
-  // Build dvSummary từ chiTietRows — chỉ các đơn vị phù hợp
+  // Build dvSummary từ chiTietRows theo filter
   const dvMap = {};
   allRows.forEach(r => {
     const dv = r.donVi || ''; if (!dv) return;
-    if (filterDV && dv !== filterDV) return; // nếu đang filter 1 KV
+    if (filterDV && dv !== filterDV) return;
     if (!dvMap[dv]) dvMap[dv] = { donVi:dv, dat:0, vuot:0, khongDat:0, khongPS:0 };
     const ts = (r.trangThai || '').trim();
     if      (ts === 'Đạt')             dvMap[dv].dat++;
@@ -3007,24 +2973,46 @@ function _rebuildCtCharts(filterDV) {
   const rows = Object.values(dvMap).sort((a,b) =>
     a.donVi.localeCompare(b.donVi, undefined, {numeric:true}));
 
-  // Update biểu đồ tỷ lệ đạt theo đơn vị
+  // Biểu đồ tỷ lệ đạt — tạo mới hoặc update
   if (CHS['cCtDV']) {
-    CHS['cCtDV'].data.labels = rows.map(r=>r.donVi);
+    CHS['cCtDV'].data.labels         = rows.map(r=>r.donVi);
     CHS['cCtDV'].data.datasets[0].data = rows.map(r=>r.vuot||0);
     CHS['cCtDV'].data.datasets[1].data = rows.map(r=>r.dat||0);
     CHS['cCtDV'].data.datasets[2].data = rows.map(r=>r.khongDat||0);
     CHS['cCtDV'].data.datasets[3].data = rows.map(r=>r.khongPS||0);
-    CHS['cCtDV'].update();
+    CHS['cCtDV'].update('none');
+  } else if (rows.length > 0) {
+    CHS['cCtDV'] = mkChart('cCtDV','bar',{
+      labels: rows.map(r=>r.donVi),
+      datasets:[
+        { label:'Vượt',      data:rows.map(r=>r.vuot||0),     backgroundColor:'rgba(0,212,255,.85)', borderRadius:3, stack:'s' },
+        { label:'Đạt',       data:rows.map(r=>r.dat||0),      backgroundColor:'rgba(0,229,160,.85)', borderRadius:3, stack:'s' },
+        { label:'Không đạt', data:rows.map(r=>r.khongDat||0), backgroundColor:'rgba(255,90,90,.80)', borderRadius:3, stack:'s' },
+        { label:'Không PS',  data:rows.map(r=>r.khongPS||0),  backgroundColor:'rgba(255,184,0,.65)', borderRadius:3, stack:'s' }
+      ]
+    },{ indexAxis:'y', scales:{
+        x:{ stacked:true, ...dkScale(), ticks:{...dkScale().ticks,stepSize:1,precision:0}},
+        y:{ stacked:true, ...dkScale() }
+    }});
   }
 
-  // Update biểu đồ phân bổ kết quả
+  // Biểu đồ phân bổ kết quả — tạo mới hoặc update
+  const totD = rows.reduce((s,r)=>s+(r.dat||0),0);
+  const totV = rows.reduce((s,r)=>s+(r.vuot||0),0);
+  const totK = rows.reduce((s,r)=>s+(r.khongDat||0),0);
+  const totP = rows.reduce((s,r)=>s+(r.khongPS||0),0);
   if (CHS['cCtPB']) {
-    const totD = rows.reduce((s,r)=>s+(r.dat||0),0);
-    const totV = rows.reduce((s,r)=>s+(r.vuot||0),0);
-    const totK = rows.reduce((s,r)=>s+(r.khongDat||0),0);
-    const totP = rows.reduce((s,r)=>s+(r.khongPS||0),0);
     CHS['cCtPB'].data.datasets[0].data = [totD,totV,totK,totP];
-    CHS['cCtPB'].update();
+    CHS['cCtPB'].update('none');
+  } else if (totD+totV+totK+totP > 0) {
+    CHS['cCtPB'] = mkChart('cCtPB','bar',{
+      labels:['Đạt','Vượt','Không đạt','Không PS'],
+      datasets:[{ data:[totD,totV,totK,totP],
+        backgroundColor:['rgba(0,229,160,.8)','rgba(0,212,255,.8)','rgba(255,90,90,.8)','rgba(255,184,0,.8)'],
+        borderRadius:6 }]
+    },{ plugins:{legend:{display:false}},
+        scales:{x:{...dkScale()},y:{...dkScale(),min:0,ticks:{...dkScale().ticks,stepSize:1,precision:0}}}
+    });
   }
 }
 
