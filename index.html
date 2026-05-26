@@ -2264,12 +2264,6 @@ function _fetchDetail(ky, nam) {
   google.script.run
     .withSuccessHandler(d => applyDetail(d?.chiTietRows))
     .withFailureHandler(()=>{})
-    .getChiTieuDetail({ nam, kyBaoCao: ky });ietRows = d.chiTietRows;
-        if (pg === 'chitieu6') filterCt6Table();
-      }
-      toast('Đã tải đủ ' + d.chiTietRows.length + ' chỉ tiêu ' + (ky==='12thang'?'12T':'6T'), 'success', 2000);
-    })
-    .withFailureHandler(()=>{})
     .getChiTieuDetail({ nam, kyBaoCao: ky });
 }
 
