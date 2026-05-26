@@ -2247,18 +2247,12 @@ function renderChiTieu12() {
                 : d.chiTietRows?.length       ? d.chiTietRows
                 : [];
 
-  // Nếu chiTietRows từ response có data → đánh dấu real ngay, không cần _fetchDetail
+  // Nếu chiTietRows từ response có data → đánh dấu real ngay
   if (!DATA12._ctDetailAll?.length && d.chiTietRows?.length) {
     DATA12._ctDetailAll   = d.chiTietRows;
     DATA12._ctDetailIsReal = true;
     allDetail = d.chiTietRows;
   }
-
-  // DEBUG: xem data thực tế nhận được
-  console.log('[renderChiTieu12] d.chiTietRows.length=', d.chiTietRows?.length,
-    '| _ctDetailAll.length=', DATA12._ctDetailAll?.length,
-    '| allDetail.length=', allDetail.length,
-    '| row[0]=', allDetail[0] ? JSON.stringify(allDetail[0]).slice(0,150) : 'EMPTY');
 
   populateKVFilter(allRows.map(r => r.donVi).filter(Boolean));
   _renderChiTieuCommon({
@@ -2775,7 +2769,9 @@ function _renderChiTieuCommon({ allRows, allDetail,
   console.log('[CT] allRows:', allRows?.length, '| allDetail:', allDetail?.length,
     '| sample row:', allRows?.[0], '| sample detail:', allDetail?.[0]);
 
-  // Luôn rebuild dvSummary từ chiTietRows (allDetail) để đảm bảo khớp với bảng chi tiết
+  // Rebuild dvSummary từ chiTietRows để biểu đồ khớp với bảng chi tiết
+  // Lấy filter đơn vị hiện tại (nếu đang lọc 1 KV)
+  const _curDVDet = $(idDVDet) ? v(idDVDet) : '';
   let rows = [];
   if (allDetail && allDetail.length > 0) {
     const dvMap = {};
@@ -2792,7 +2788,6 @@ function _renderChiTieuCommon({ allRows, allDetail,
     rows = Object.values(dvMap).sort((a,b) =>
       a.donVi.localeCompare(b.donVi, undefined, {numeric:true}));
   } else {
-    // Fallback sang dvSummary từ GAS nếu chưa có chiTietRows
     rows = allRows || [];
   }
   // KPI — luôn đếm trực tiếp từ chiTietRows (không dùng uniqueDat/GAS vì có thể sai)
@@ -2957,6 +2952,14 @@ function syncCtKV() {
 }
 
 function filterCtTable() {
+  // Đồng bộ từ topbar fKV nếu fCtDVDet chưa chọn gì và topbar đang chọn 1 KV
+  const topKV = v('fKV');
+  const fDVDetEl = $('fCtDVDet');
+  if (fDVDetEl && topKV && !fDVDetEl.value) {
+    const opts = Array.from(fDVDetEl.options).map(o => o.value);
+    if (opts.includes(topKV)) fDVDetEl.value = topKV;
+  }
+
   // Đọc filter từ dropdown đơn vị (fCtDVDet) và tên chỉ tiêu (fCtTen)
   const dvd = v('fCtDVDet'); // đơn vị đang chọn (KV1...KV14 hoặc rỗng = tất cả)
   const ten = v('fCtTen');
@@ -3077,6 +3080,13 @@ function renderCt6Detail() {
 }
 
 function filterCt6Table() {
+  // Đồng bộ từ topbar fKV
+  const topKV6 = v('fKV');
+  const fDV6El = $('fCt6DVDet');
+  if (fDV6El && topKV6 && !fDV6El.value) {
+    const opts = Array.from(fDV6El.options).map(o => o.value);
+    if (opts.includes(topKV6)) fDV6El.value = topKV6;
+  }
   renderCt6Detail();
 }
 function filterCtDetail() { filterCtTable(); }
