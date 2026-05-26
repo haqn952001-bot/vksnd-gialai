@@ -1657,10 +1657,16 @@ const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIr
 async function gasAPI(action, params={}) {
   const url = new URL(GAS_API_URL);
   url.searchParams.set('action', action);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const res  = await fetch(url.toString());
-  if (!res.ok) throw new Error('GAS API HTTP ' + res.status);
-  return res.json();
+  // Flatten params — chuyển tất cả value thành string
+  Object.entries(params).forEach(([k,v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+  });
+  console.log('[gasAPI]', action, url.search);
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch(e) { console.error('[gasAPI] parse error:', text.slice(0,200)); throw e; }
 }
 
 /** Gọi askAI qua POST (dùng khi chạy từ Vercel) */
@@ -3609,12 +3615,15 @@ function _loadTabAndRender(tab, renderFn) {
   if (!GAS && typeof GAS_API_URL !== 'undefined') {
     gasAPI('getTabData', { tab, ...p })
       .then(d => {
+        console.log('[TabData] tab='+tab+' keys='+Object.keys(d||{}).join(','));
+        console.log('[TabData] shHsva=', d?.shHsva ? 'có (numCols='+d.shHsva.numCols?.length+')' : 'KHÔNG CÓ');
+        console.log('[TabData] thNq205=', d?.thNq205 ? 'có' : 'KHÔNG CÓ');
         if (tab === 'shhsva')  DATA = { ...DATA, shHsva:  d.shHsva  };
         if (tab === 'thnq205') DATA = { ...DATA, thNq205: d.thNq205 };
         hideLoader();
         renderFn();
       })
-      .catch(() => { hideLoader(); toast('Lỗi tải dữ liệu tab', 'error'); });
+      .catch(e => { hideLoader(); console.error('[TabData] lỗi:', e); toast('Lỗi tải dữ liệu tab', 'error'); });
     return;
   }
 
