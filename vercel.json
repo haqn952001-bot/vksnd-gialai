@@ -1,14 +1,14 @@
 {
-  "version": 2,
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "headers": [
+  "redirects": [
     {
-      "source": "/index.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
+      "source": "/",
+      "destination": "https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIrG3D4YgHJZ21C4JXrdhW4CsvziFRa4R-3LHa2ChpLQEJPBknDAw/exec",
+      "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIrG3D4YgHJZ21C4JXrdhW4CsvziFRa4R-3LHa2ChpLQEJPBknDAw/exec",
+      "permanent": false
     }
   ]
 }
