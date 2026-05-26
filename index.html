@@ -919,7 +919,7 @@ body::after{
     </div>
 
     <!-- Nút xác nhận -->
-    <button class="ws-confirm" id="wsConfirmBtn" onclick="wsConfirm()" disabled>
+    <button class="ws-confirm" id="wsConfirmBtn" onclick="wsConfirm()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
@@ -3925,6 +3925,49 @@ window.addEventListener('load', () => {
   wsCheckAndInit();
 });
 </script>
+
+<script>
+// Auto-enable confirm button và highlight kỳ đầu tiên
+(function() {
+  function initWS() {
+    // Enable button ngay
+    var btn = document.getElementById('wsConfirmBtn');
+    if (btn) { btn.disabled = false; btn.removeAttribute('disabled'); }
+
+    // Auto-select "Cả năm 2026" làm mặc định
+    var defaultBtn = document.querySelector('.ws-ky-btn[data-preset="12thang"]');
+    if (defaultBtn && typeof wsSelectPreset === 'function') {
+      wsSelectPreset(defaultBtn);
+    }
+
+    // Gán lại onclick cho tất cả ws-ky-btn (phòng trường hợp event không bind)
+    document.querySelectorAll('.ws-ky-btn').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (typeof wsSelectPreset === 'function') wsSelectPreset(el);
+        var cb = document.getElementById('wsConfirmBtn');
+        if (cb) { cb.disabled = false; cb.removeAttribute('disabled'); }
+      });
+    });
+
+    // Gán onclick cho confirm button
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof wsConfirm === 'function') wsConfirm();
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWS);
+  } else {
+    setTimeout(initWS, 100);
+  }
+})();
+</script>
+
 </body>
 </html>
 <div id="aiChat" style="
