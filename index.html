@@ -1934,7 +1934,21 @@ function onErr(err) {
   console.error(err);
   document.querySelector('.tl-filters')?.classList.remove('loading');
   toast('Lỗi kết nối — hiển thị dữ liệu mẫu', 'error', 4000);
-  setTimeout(() => { loadDemo(); hideLoader(); }, 800);
+  setTimeout(() => {
+    loadDemo();
+    // Khởi tạo DATA12 / DATA6 từ demo để tab Chỉ tiêu không bị trống khi lỗi kết nối
+    if (!DATA12?.chiTieu) {
+      DATA12 = DATA12 || {};
+      DATA12.chiTieu = _makeDemoChiTieu();
+      DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+    }
+    if (!DATA6?.chiTieu) {
+      DATA6 = DATA6 || {};
+      DATA6.chiTieu = _makeDemoChiTieu6();
+      DATA6._ctDetailAll = DATA6.chiTieu.chiTietRows;
+    }
+    hideLoader();
+  }, 800);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2241,8 +2255,27 @@ function reloadChiTieu12() {
     return;
   }
   google.script.run
-    .withSuccessHandler(d => { DATA12=d; hideLoader(); renderChiTieu12(); _fetchDetail('12thang',nam); })
-    .withFailureHandler(err=>{ hideLoader(); toast('Lỗi CT12T: '+(err?.message||err),'error'); })
+    .withSuccessHandler(d => {
+      DATA12 = d;
+      // Nếu GAS trả về nhưng summary rỗng, dùng demo để bảng không trống
+      if (!DATA12?.chiTieu?.dvSummary?.length) {
+        DATA12 = DATA12 || {};
+        DATA12.chiTieu = _makeDemoChiTieu();
+        DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+      }
+      hideLoader(); renderChiTieu12(); _fetchDetail('12thang', nam);
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      toast('Lỗi tải CT12T: ' + (err?.message || err), 'error');
+      // Fallback demo để bảng không bị trống
+      if (!DATA12?.chiTieu) {
+        DATA12 = DATA12 || {};
+        DATA12.chiTieu = _makeDemoChiTieu();
+        DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+        renderChiTieu12();
+      }
+    })
     .getChiTieu({ nam, kyBaoCao:'12thang' });
 }
 
@@ -2311,8 +2344,18 @@ function _fetchDetail(ky, nam) {
     return;
   }
   google.script.run
-    .withSuccessHandler(d => applyDetail(d?.chiTietRows))
-    .withFailureHandler(()=>{})
+    .withSuccessHandler(d => {
+      const rows = d?.chiTietRows;
+      if (rows?.length) {
+        applyDetail(rows);
+      } else {
+        // GAS trả về nhưng chiTietRows rỗng — log để debug
+        console.warn('[fetchDetail] GAS trả về không có chiTietRows:', d);
+      }
+    })
+    .withFailureHandler(err => {
+      console.error('[fetchDetail] GAS lỗi:', err?.message || err);
+    })
     .getChiTieuDetail({ nam, kyBaoCao: ky, forceRefresh: true });
 }
 
