@@ -1196,28 +1196,15 @@ body::after{
           <div class="cw cw-lg"><canvas id="cCtPB"></canvas></div>
         </div>
       </div>
+      <!-- YC4: Bảng Chi tiết theo đơn vị đã được ẩn theo yêu cầu -->
+      <!-- fCtKV vẫn giữ (dùng để filter scorecard) nhưng ẩn bảng -->
+      <div style="display:none"><select id="fCtKV" onchange="filterCtTable()"><option value="">Tất cả KV</option></select><tbody id="ctBody"></tbody></div>
       <div class="tw fi fi3">
-        <div class="tw-hd">
-          <div class="tw-title">Chi tiết theo đơn vị</div>
-          <select id="fCtKV" onchange="filterCtTable()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer">
-            <option value="">Tất cả KV</option>
-          </select>
-        </div>
-        <table><thead><tr>
-          <th>Đơn vị</th><th>Cụm</th>
-          <th style="color:var(--emerald)">Đạt</th>
-          <th style="color:var(--cyan)">Vượt</th>
-          <th style="color:var(--coral)">Không đạt</th>
-          <th style="color:var(--amber)">Không PS</th>
-          <th>Tổng</th>
-          <th style="color:var(--cyan);min-width:90px">% Đạt</th>
-        </tr></thead><tbody id="ctBody"></tbody></table>
-      </div>
-      <div class="tw fi fi4">
         <div class="tw-hd">
           <div class="tw-title">Chi tiết từng chỉ tiêu</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <select id="fCtDVDet" onchange="filterCtDetail()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer">
+            <!-- YC3: Filter KV cho scorecard + bảng chi tiết -->
+            <select id="fCtDVDet" onchange="filterCtDetail();syncCtKV()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer">
               <option value="">Tất cả đơn vị</option>
             </select>
             <select id="fCtTen" onchange="filterCtDetail()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer;max-width:300px">
@@ -2013,13 +2000,27 @@ function renderOverview() {
   animateCount('k-tamgiam',  d.kpi.tamGiam);
   animateCount('k-tamgiu',   d.kpi.tamGiu);
   animateCount('k-dontl',    d.kpi.donThuLyMoi);
-  // THADS: hiển thị dạng "X việc / Y đồng" nếu có cột tiền
-  const thadsViec = d.kpi.daThuLyKS || 0;
-  const thadsDong = d.kpi.thuLyTHADS_dong || 0;
+
+  // YC1: HC,KDTM,LĐ — hiển thị "X vụ / Y việc" hoặc "X vụ"
+  const hcVu   = d.kpi.thuLyMoiHC      || 0;
+  const hcViec = d.kpi.thuLyMoiHC_viec || 0;
+  $('k-thhc').textContent = hcViec > 0
+    ? `${F(hcVu)} vụ / ${F(hcViec)} việc`
+    : `${F(hcVu)} vụ`;
+
+  // YC1: DS,HNGĐ — hiển thị "X vụ / Y việc" hoặc "X vụ"
+  const dsVu   = d.kpi.thuLyMoiDS      || 0;
+  const dsViec = d.kpi.thuLyMoiDS_viec || 0;
+  $('k-thds').textContent = dsViec > 0
+    ? `${F(dsVu)} vụ / ${F(dsViec)} việc`
+    : `${F(dsVu)} vụ`;
+
+  // YC2: THADS — hiển thị "X việc / Y đồng"
+  const thadsViec = d.kpi.daThuLyKS        || 0;
+  const thadsDong = d.kpi.thuLyTHADS_dong  || 0;
   $('k-thads').textContent = thadsDong > 0
     ? `${F(thadsViec)} việc / ${F(thadsDong)} đồng`
     : `${F(thadsViec)} việc`;
-  animateCount('k-thds', d.kpi.thuLyMoiDS);
 
   // ── Charts: Tin báo & Khởi tố theo đơn vị ──────────────────────
   const perKV = d.perKV || [];
@@ -2790,6 +2791,30 @@ function renderCtTable(rows) {
   _renderSummaryRows('ctBody', rows);
 }
 
+/** YC3: Đồng bộ filter fCtDVDet → scorecard CT12 */
+function syncCtKV() {
+  const kv = v('fCtDVDet');
+  // Cập nhật fCtKV ẩn để filterCtTable dùng
+  const sel = $('fCtKV');
+  if (sel) sel.value = kv;
+  // Tính lại scorecard theo KV đã chọn
+  const detailAll = DATA12?._ctDetailAll || [];
+  const filtered  = kv ? detailAll.filter(r => r.donVi === kv) : detailAll;
+  if (filtered.length === 0) return;
+  let dat=0, vuot=0, kdat=0, kps=0;
+  filtered.forEach(r => {
+    const ts = (r.trangThai||'').trim();
+    if      (ts === 'Đạt')             dat++;
+    else if (ts === 'Vượt')            vuot++;
+    else if (ts === 'Không đạt')       kdat++;
+    else if (ts === 'Không phát sinh') kps++;
+  });
+  $('ct-dat')  && ($('ct-dat').textContent  = F(dat));
+  $('ct-vuot') && ($('ct-vuot').textContent = F(vuot));
+  $('ct-kdat') && ($('ct-kdat').textContent = F(kdat));
+  $('ct-kps')  && ($('ct-kps').textContent  = F(kps));
+}
+
 function filterCtTable() {
   const kv   = v('fCtKV');
   const rows = (DATA12?._dvSummaryAll || DATA12?.chiTieu?.dvSummary || [])
@@ -2798,11 +2823,9 @@ function filterCtTable() {
   renderCtDetail();
   // Cập nhật KPI
   if (kv && DATA12?._ctDetailAll) {
-    // Lọc 1 KV: đếm trực tiếp 120 rows của KV đó
     const detailRows = DATA12._ctDetailAll.filter(r => r.donVi === kv);
     _updateChiTieuKPI(detailRows, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
   } else if (DATA12?.chiTieu) {
-    // Tất cả KV: dùng uniqueDat từ backend (đã tính đúng)
     $('ct-dat').textContent  = F(DATA12.chiTieu.uniqueDat);
     $('ct-vuot').textContent = F(DATA12.chiTieu.uniqueVuot);
     $('ct-kdat').textContent = F(DATA12.chiTieu.uniqueKDat);
