@@ -1653,10 +1653,6 @@ body::after{
 // ══════════════════════════════════════════════════════════════
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIrG3D4YgHJZ21C4JXrdhW4CsvziFRa4R-3LHa2ChpLQEJPBknDAw/exec';
 
-// Detect môi trường: GAS hay Vercel
-const GAS  = (typeof google !== 'undefined' && google.script && google.script.run);
-const MODE = GAS ? 'GAS' : 'VERCEL';
-
 /** Gọi GAS API qua fetch (dùng khi chạy từ Vercel) */
 async function gasAPI(action, params={}) {
   const url = new URL(GAS_API_URL);
@@ -1744,6 +1740,7 @@ function nav(el) {
 //        hoặc fallback sang demo data khi mở file HTML trực tiếp
 // ══════════════════════════════════════════════════════════════
 const GAS = (typeof google !== 'undefined' && google.script && google.script.run);
+const MODE = GAS ? 'GAS' : 'VERCEL';
 
 let _reloadTimer = null;
 // ── Filter dirty state — chỉ load khi bấm Xác nhận ─────────
@@ -3932,6 +3929,7 @@ window.addEventListener('load', () => {
   wsCheckAndInit();
 });
 </script>
+
 </body>
 </html>
 <div id="aiChat" style="
