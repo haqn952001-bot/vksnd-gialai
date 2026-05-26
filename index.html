@@ -1894,38 +1894,43 @@ function _prefetchBackground() {
   const nam12 = v('fCtNam') || p.namDen || '2026';
   const nam6  = v('fCt6Nam') || p.namDen || '2026';
 
-  // CT 12 tháng — summary
-  if (!DATA12?.chiTieu) {
+  // CT 12 tháng — luôn forceRefresh để lấy data mới nhất từ sheet
+  if (!DATA12?._ctDetailIsReal) {
     google.script.run
       .withSuccessHandler(d => {
         if (d?.chiTieu) {
           DATA12 = d;
-          // Sau khi có summary, fetch detail ngay (delay 200ms)
-          setTimeout(() => _fetchDetail('12thang', nam12), 200);
+          // chiTietRows đã có trong d.chiTieu.chiTietRows
+          if (d.chiTieu.chiTietRows?.length) {
+            DATA12._ctDetailAll    = d.chiTieu.chiTietRows;
+            DATA12._ctDetailIsReal = true;
+          }
+          const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+          if (pg === 'chitieu12') renderChiTieu12();
         }
       })
       .withFailureHandler(()=>{})
-      .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
-  } else if (!DATA12._ctDetailIsReal) {
-    // Summary đã có nhưng detail chưa real → fetch ngay
-    _fetchDetail('12thang', nam12);
+      .getChiTieu({ nam: nam12, kyBaoCao:'12thang', forceRefresh: true });
   }
-  // CT 6 tháng (delay 600ms)
+  // CT 6 tháng (delay 400ms)
   setTimeout(() => {
-    if (!DATA6?.chiTieu) {
+    if (!DATA6?._ctDetailIsReal) {
       google.script.run
         .withSuccessHandler(d => {
           if (d?.chiTieu) {
             DATA6 = d;
-            setTimeout(() => _fetchDetail('6thang', nam6), 200);
+            if (d.chiTieu.chiTietRows?.length) {
+              DATA6._ctDetailAll    = d.chiTieu.chiTietRows;
+              DATA6._ctDetailIsReal = true;
+            }
+            const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+            if (pg === 'chitieu6') renderChiTieu6();
           }
         })
         .withFailureHandler(()=>{})
-        .getChiTieu({ nam: nam6, kyBaoCao:'6thang' });
-    } else if (!DATA6._ctDetailIsReal) {
-      _fetchDetail('6thang', nam6);
+        .getChiTieu({ nam: nam6, kyBaoCao:'6thang', forceRefresh: true });
     }
-  }, 600);
+  }, 400);
   // CĐS (delay 800ms)
   setTimeout(() => {
     if (!DATA?.shHsva?.numCols?.length) {
@@ -2300,19 +2305,24 @@ function reloadChiTieu12() {
   }
   google.script.run
     .withSuccessHandler(d => {
+      // Nhận data mới từ GAS — reset hoàn toàn, không dùng lại data cũ
       DATA12 = d;
-      // Nếu GAS trả về nhưng summary rỗng, dùng demo để bảng không trống
+      DATA12._ctDetailIsReal = false;
+      DATA12._ctDetailAll    = null;
+
       if (!DATA12?.chiTieu?.dvSummary?.length) {
-        DATA12 = DATA12 || {};
-        DATA12.chiTieu = _makeDemoChiTieu();
-        DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
-        DATA12._ctDetailIsReal = false; // demo data
+        // GAS trả rỗng → dùng demo
+        DATA12.chiTieu         = _makeDemoChiTieu();
+        DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows;
+        DATA12._ctDetailIsReal = false;
+      } else if (DATA12.chiTieu.chiTietRows?.length) {
+        // chiTietRows đã đầy đủ từ GAS → dùng luôn
+        DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows;
+        DATA12._ctDetailIsReal = true;
       }
-      hideLoader(); renderChiTieu12();
-      // Chỉ fetch detail bổ sung nếu chiTietRows từ getChiTieu chưa có soLuong
-      const hasSlData = DATA12?.chiTieu?.chiTietRows?.some(r => r.soLuong && r.soLuong !== '');
-      if (!hasSlData) _fetchDetail('12thang', nam);
-      else console.log('[reloadChiTieu12] chiTietRows đã có soLuong — bỏ qua _fetchDetail');
+      hideLoader();
+      renderChiTieu12();
+      if (!DATA12._ctDetailIsReal) _fetchDetail('12thang', nam);
     })
     .withFailureHandler(err => {
       hideLoader();
@@ -2361,7 +2371,16 @@ function reloadChiTieu6() {
     return;
   }
   google.script.run
-    .withSuccessHandler(d => { DATA6=d; hideLoader(); renderChiTieu6(); _fetchDetail('6thang',nam); })
+    .withSuccessHandler(d => {
+      DATA6 = d;
+      DATA6._ctDetailIsReal = false;
+      if (DATA6?.chiTieu?.chiTietRows?.length) {
+        DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows;
+        DATA6._ctDetailIsReal = true;
+      }
+      hideLoader(); renderChiTieu6();
+      if (!DATA6._ctDetailIsReal) _fetchDetail('6thang', nam);
+    })
     .withFailureHandler(err=>{ hideLoader(); toast('Lỗi CT6T: '+(err?.message||err),'error'); })
     .getChiTieu({ nam, kyBaoCao:'6thang', forceRefresh: true });
 }
