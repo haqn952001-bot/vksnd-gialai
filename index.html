@@ -1894,22 +1894,38 @@ function _prefetchBackground() {
   const nam12 = v('fCtNam') || p.namDen || '2026';
   const nam6  = v('fCt6Nam') || p.namDen || '2026';
 
-  // CT 12 tháng
+  // CT 12 tháng — summary
   if (!DATA12?.chiTieu) {
     google.script.run
-      .withSuccessHandler(d => { if (d?.chiTieu) DATA12 = d; })
+      .withSuccessHandler(d => {
+        if (d?.chiTieu) {
+          DATA12 = d;
+          // Sau khi có summary, fetch detail ngay (delay 200ms)
+          setTimeout(() => _fetchDetail('12thang', nam12), 200);
+        }
+      })
       .withFailureHandler(()=>{})
       .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
+  } else if (!DATA12._ctDetailIsReal) {
+    // Summary đã có nhưng detail chưa real → fetch ngay
+    _fetchDetail('12thang', nam12);
   }
-  // CT 6 tháng (delay 400ms để không cùng lúc với CT12)
+  // CT 6 tháng (delay 600ms)
   setTimeout(() => {
     if (!DATA6?.chiTieu) {
       google.script.run
-        .withSuccessHandler(d => { if (d?.chiTieu) DATA6 = d; })
+        .withSuccessHandler(d => {
+          if (d?.chiTieu) {
+            DATA6 = d;
+            setTimeout(() => _fetchDetail('6thang', nam6), 200);
+          }
+        })
         .withFailureHandler(()=>{})
         .getChiTieu({ nam: nam6, kyBaoCao:'6thang' });
+    } else if (!DATA6._ctDetailIsReal) {
+      _fetchDetail('6thang', nam6);
     }
-  }, 400);
+  }, 600);
   // CĐS (delay 800ms)
   setTimeout(() => {
     if (!DATA?.shHsva?.numCols?.length) {
@@ -2357,7 +2373,28 @@ function _fetchDetail(ky, nam) {
       if (rows?.length) {
         applyDetail(rows);
       } else {
-        console.warn('[fetchDetail] GAS trả về chiTietRows rỗng hoặc thiếu:', JSON.stringify(d)?.slice(0,200));
+        // GAS trả về rỗng — hiển thị thông tin debug
+        console.warn('[fetchDetail] ⚠️ GAS trả về chiTietRows rỗng. Debug info:', d?._debug || d);
+        // Thử lại 1 lần sau 2 giây (phòng trường hợp GAS timeout lần đầu)
+        if (!_fetchDetail._retried) {
+          _fetchDetail._retried = true;
+          console.log('[fetchDetail] Thử lại sau 2 giây...');
+          setTimeout(() => {
+            _fetchDetail._retried = false;
+            google.script.run
+              .withSuccessHandler(d2 => {
+                const rows2 = d2?.chiTietRows;
+                if (rows2?.length) {
+                  applyDetail(rows2);
+                  console.log('[fetchDetail] ✅ Thử lại thành công: ' + rows2.length + ' rows');
+                } else {
+                  console.error('[fetchDetail] ❌ Thử lại vẫn rỗng. Debug:', d2?._debug);
+                }
+              })
+              .withFailureHandler(err => console.error('[fetchDetail] Lỗi lần 2:', err?.message || err))
+              .getChiTieuDetail({ nam, kyBaoCao: ky, forceRefresh: true });
+          }, 2000);
+        }
       }
     })
     .withFailureHandler(err => {
@@ -2846,6 +2883,13 @@ function _renderCtDetailPage() {
       </div></td></tr>`;
     $('ctDetailInfo').textContent    = 'Đang tải…';
     $('ctDetailPageNum').textContent = '—';
+    // Tự kích _fetchDetail nếu chưa đang fetch
+    const nam12 = v('fCtNam') || '2026';
+    if (!_fetchDetail._running12) {
+      _fetchDetail._running12 = true;
+      setTimeout(() => { _fetchDetail._running12 = false; }, 10000);
+      _fetchDetail('12thang', nam12);
+    }
     return;
   }
 
