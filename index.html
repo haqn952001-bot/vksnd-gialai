@@ -3208,15 +3208,11 @@ function wsUpdateNote() {
 
 function wsConfirm() {
   let r = wsGetSelectedRange();
-  // Nếu chưa chọn kỳ → tự động chọn "Cả năm 2026" làm mặc định
   if (!r) {
-    const defaultBtn = document.querySelector('.ws-ky-btn[data-ky="namday"]') ||
-                       document.querySelector('.ws-ky-btn');
-    if (defaultBtn) { defaultBtn.click(); r = wsGetSelectedRange(); }
-    if (!r) {
-      // Fallback cứng: cả năm 2026
-      r = { thangTu:'1', namTu:'2026', thangDen:'12', namDen:'2026' };
-    }
+    // Fallback: cả năm 2026
+    r = { thangTu:'1', namTu:'2026', thangDen:'12', namDen:'2026' };
+    _wsPreset = '12thang';
+    _wsTargetTab = null;
   }
 
   // Ghi giá trị vào filter topbar
@@ -3227,50 +3223,34 @@ function wsConfirm() {
   set('fNamDen',   r.namDen);
 
   // Ẩn welcome screen
-  $('welcomeScreen').classList.add('hide');
+  const ws = $('welcomeScreen');
+  if (ws) { ws.style.display = 'none'; ws.classList.add('hide'); }
 
-  // Lưu sessionStorage
+  // Lưu state (dùng biến JS, không phụ thuộc sessionStorage)
+  window._vksndWelcomed = true;
+  window._vksndFilter = r;
+
+  // Cố gắng lưu sessionStorage (không bắt buộc)
   try {
-    sessionStorage.setItem('vksnd_filter', JSON.stringify({
-      thangTu: r.thangTu, namTu: r.namTu,
-      thangDen: r.thangDen, namDen: r.namDen, kv: ''
-    }));
+    sessionStorage.setItem('vksnd_filter', JSON.stringify(r));
     sessionStorage.setItem('vksnd_welcomed', '1');
     if (_wsTargetTab) sessionStorage.setItem('vksnd_target_tab', _wsTargetTab);
-    else sessionStorage.removeItem('vksnd_target_tab');
   } catch(_) {}
 
   // Xử lý điều hướng
-  if (_wsTargetTab === 'chitieu6' || _wsTargetTab === 'chitieu12') {
-    // Chuyển thẳng đến tab chỉ tiêu — nav() sẽ tự gọi reloadChiTieu6/12()
-    // Không cần gọi getData() vì tab chỉ tiêu dùng API riêng (getChiTieu)
-    const navEl = document.querySelector(`.nav-item[data-page="${_wsTargetTab}"]`);
+  const targetTab = _wsTargetTab;
+  if (targetTab === 'chitieu6' || targetTab === 'chitieu12') {
+    const navEl = document.querySelector('.nav-item[data-page="' + targetTab + '"]');
     if (navEl) nav(navEl);
   } else {
-    // Tổng quan / khu vực / án hủy → load bình thường
     reload(true);
   }
 }
 
 // Kiểm tra xem đã chọn kỳ trong session này chưa
 function wsCheckAndInit() {
-  try {
-    const welcomed = sessionStorage.getItem('vksnd_welcomed');
-    if (welcomed === '1') {
-      const restored = loadSavedFilter();
-      $('welcomeScreen').classList.add('hide');
-      const targetTab = sessionStorage.getItem('vksnd_target_tab');
-      if (restored) toast('Đã khôi phục bộ lọc từ lần trước', 'info', 2000);
-      if (targetTab === 'chitieu6' || targetTab === 'chitieu12') {
-        // Chuyển thẳng tab chỉ tiêu, không cần getData
-        const navEl = document.querySelector(`.nav-item[data-page="${targetTab}"]`);
-        if (navEl) nav(navEl);
-      } else {
-        reload(true);
-      }
-      return;
-    }
-  } catch(_) {}
+  // Luôn hiện welcome screen để chọn kỳ báo cáo
+  // (không lưu session để tránh lỗi cross-origin)
   // Lần đầu mở → chỉ hiện welcome screen
 }
 
