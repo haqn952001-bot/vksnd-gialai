@@ -1894,41 +1894,21 @@ function _prefetchBackground() {
   const nam12 = v('fCtNam') || p.namDen || '2026';
   const nam6  = v('fCt6Nam') || p.namDen || '2026';
 
-  // CT 12 tháng — luôn forceRefresh để lấy data mới nhất từ sheet
-  if (!DATA12?._ctDetailIsReal) {
+  // CT 12 tháng — prefetch summary only, không cache _ctDetailAll ở đây
+  // _ctDetailAll sẽ được set khi user thực sự vào tab (reloadChiTieu12)
+  if (!DATA12?.chiTieu?.dvSummary?.length) {
     google.script.run
-      .withSuccessHandler(d => {
-        if (d?.chiTieu) {
-          DATA12 = d;
-          // chiTietRows đã có trong d.chiTieu.chiTietRows
-          if (d.chiTieu.chiTietRows?.length) {
-            DATA12._ctDetailAll    = d.chiTieu.chiTietRows;
-            DATA12._ctDetailIsReal = true;
-          }
-          const pg = document.querySelector('.nav-item.active')?.dataset?.page;
-          if (pg === 'chitieu12') renderChiTieu12();
-        }
-      })
+      .withSuccessHandler(d => { if (d?.chiTieu?.dvSummary?.length) DATA12 = d; })
       .withFailureHandler(()=>{})
-      .getChiTieu({ nam: nam12, kyBaoCao:'12thang', forceRefresh: true });
+      .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
   }
   // CT 6 tháng (delay 400ms)
   setTimeout(() => {
-    if (!DATA6?._ctDetailIsReal) {
+    if (!DATA6?.chiTieu?.dvSummary?.length) {
       google.script.run
-        .withSuccessHandler(d => {
-          if (d?.chiTieu) {
-            DATA6 = d;
-            if (d.chiTieu.chiTietRows?.length) {
-              DATA6._ctDetailAll    = d.chiTieu.chiTietRows;
-              DATA6._ctDetailIsReal = true;
-            }
-            const pg = document.querySelector('.nav-item.active')?.dataset?.page;
-            if (pg === 'chitieu6') renderChiTieu6();
-          }
-        })
+        .withSuccessHandler(d => { if (d?.chiTieu?.dvSummary?.length) DATA6 = d; })
         .withFailureHandler(()=>{})
-        .getChiTieu({ nam: nam6, kyBaoCao:'6thang', forceRefresh: true });
+        .getChiTieu({ nam: nam6, kyBaoCao:'6thang' });
     }
   }, 400);
   // CĐS (delay 800ms)
@@ -2290,13 +2270,8 @@ let _forceReloadCT = false; // true khi người dùng đổi năm thủ công
 
 function reloadChiTieu12() {
   const nam = v('fCtNam') || '2026';
-  // Fast-path chỉ khi: có summary VÀ có chiTietRows thật (không phải placeholder rỗng)
-  const hasRealDetail = DATA12?._ctDetailIsReal && DATA12?._ctDetailAll?.length > 0;
-  const hasSummary    = DATA12?.chiTieu?.dvSummary?.length > 0;
-  if (hasSummary && hasRealDetail && !_forceReloadCT) {
-    renderChiTieu12();
-    return;
-  }
+  // Không dùng fast-path — luôn fetch fresh từ GAS để đảm bảo data chính xác
+  // (fast-path bị tắt vì gây ra việc dùng data cũ sai)
   _forceReloadCT = false;
   showLoader('Đang tải chỉ tiêu 12 tháng…');
   if (!GAS) {
@@ -2305,24 +2280,19 @@ function reloadChiTieu12() {
   }
   google.script.run
     .withSuccessHandler(d => {
-      // Nhận data mới từ GAS — reset hoàn toàn, không dùng lại data cũ
-      DATA12 = d;
-      DATA12._ctDetailIsReal = false;
-      DATA12._ctDetailAll    = null;
-
-      if (!DATA12?.chiTieu?.dvSummary?.length) {
-        // GAS trả rỗng → dùng demo
+      // Reset hoàn toàn — không dùng lại bất kỳ data cũ nào
+      DATA12 = { chiTieu: d?.chiTieu || null };
+      if (!DATA12.chiTieu?.dvSummary?.length) {
         DATA12.chiTieu         = _makeDemoChiTieu();
         DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows;
         DATA12._ctDetailIsReal = false;
-      } else if (DATA12.chiTieu.chiTietRows?.length) {
-        // chiTietRows đã đầy đủ từ GAS → dùng luôn
-        DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows;
-        DATA12._ctDetailIsReal = true;
+      } else {
+        // Luôn lấy chiTietRows từ response mới nhất
+        DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows || [];
+        DATA12._ctDetailIsReal = DATA12._ctDetailAll.length > 0;
       }
       hideLoader();
       renderChiTieu12();
-      if (!DATA12._ctDetailIsReal) _fetchDetail('12thang', nam);
     })
     .withFailureHandler(err => {
       hideLoader();
@@ -2341,12 +2311,7 @@ function reloadChiTieu12() {
 
 function reloadChiTieu6() {
   const nam = v('fCt6Nam') || '2026';
-  const hasRealDetail6 = DATA6?._ctDetailIsReal && DATA6?._ctDetailAll?.length > 0;
-  const hasSummary6    = DATA6?.chiTieu?.dvSummary?.length > 0;
-  if (hasSummary6 && hasRealDetail6 && !_forceReloadCT) {
-    renderChiTieu6();
-    return;
-  }
+  // fast-path tắt — luôn fetch fresh
   _forceReloadCT = false;
   showLoader('Đang tải chỉ tiêu 6 tháng…');
   if (!GAS) {
@@ -2372,14 +2337,16 @@ function reloadChiTieu6() {
   }
   google.script.run
     .withSuccessHandler(d => {
-      DATA6 = d;
-      DATA6._ctDetailIsReal = false;
-      if (DATA6?.chiTieu?.chiTietRows?.length) {
+      DATA6 = { chiTieu: d?.chiTieu || null };
+      if (!DATA6.chiTieu?.dvSummary?.length) {
+        DATA6.chiTieu         = _makeDemoChiTieu6();
         DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows;
-        DATA6._ctDetailIsReal = true;
+        DATA6._ctDetailIsReal = false;
+      } else {
+        DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows || [];
+        DATA6._ctDetailIsReal = DATA6._ctDetailAll.length > 0;
       }
       hideLoader(); renderChiTieu6();
-      if (!DATA6._ctDetailIsReal) _fetchDetail('6thang', nam);
     })
     .withFailureHandler(err=>{ hideLoader(); toast('Lỗi CT6T: '+(err?.message||err),'error'); })
     .getChiTieu({ nam, kyBaoCao:'6thang', forceRefresh: true });
@@ -2847,9 +2814,9 @@ function _renderChiTieuCommon({ allRows, allDetail,
     });
   }
 
-  // Lưu data — TRƯỚC khi gọi filter để filter đọc được
-  if (storeKey12) { DATA12=DATA12||{}; DATA12._ctDetailAll=allDetail; DATA12._dvSummaryAll=rows; }
-  else            { DATA6._ctDetailAll=allDetail; DATA6._dvSummaryAll=rows; }
+  // Lưu dvSummary (đã rebuild từ chiTietRows) — KHÔNG ghi đè _ctDetailAll
+  if (storeKey12) { DATA12=DATA12||{}; DATA12._dvSummaryAll=rows; }
+  else            { DATA6=DATA6||{};   DATA6._dvSummaryAll=rows; }
 
   // Xóa chart cũ — filterCtTable/filterCt6Table sẽ tạo lại đúng theo filter
   if (CHS[idChartDV]) { CHS[idChartDV].destroy(); delete CHS[idChartDV]; }
