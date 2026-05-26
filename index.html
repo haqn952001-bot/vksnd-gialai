@@ -2240,9 +2240,20 @@ function populateKVFilter(donViList) {
 function renderChiTieu12() {
   const d = DATA12?.chiTieu;
   if (!d) return;
-  const allRows   = d.dvSummary   || [];
-  // Ưu tiên _ctDetailAll đã có (từ lazy load hoặc load đầy đủ)
-  const allDetail = DATA12._ctDetailAll || d.chiTietRows || [];
+  const allRows = d.dvSummary || [];
+
+  // Ưu tiên: (1) _ctDetailAll đã fetch, (2) chiTietRows từ getChiTieu response, (3) rỗng
+  let allDetail = DATA12._ctDetailAll?.length ? DATA12._ctDetailAll
+                : d.chiTietRows?.length       ? d.chiTietRows
+                : [];
+
+  // Nếu chiTietRows từ response có data → đánh dấu real ngay, không cần _fetchDetail
+  if (!DATA12._ctDetailAll?.length && d.chiTietRows?.length) {
+    DATA12._ctDetailAll   = d.chiTietRows;
+    DATA12._ctDetailIsReal = true;
+    allDetail = d.chiTietRows;
+  }
+
   populateKVFilter(allRows.map(r => r.donVi).filter(Boolean));
   _renderChiTieuCommon({
     allRows, allDetail,
@@ -2562,8 +2573,15 @@ function _makeDemoChiTieu6() {
 function renderChiTieu6() {
   const d = DATA6?.chiTieu;
   if (!d) return;
-  // Ưu tiên _ctDetailAll đã có (từ lazy load hoặc load đầy đủ)
-  const allDetail = DATA6._ctDetailAll || d.chiTietRows || [];
+  // Ưu tiên: (1) _ctDetailAll đã fetch, (2) chiTietRows từ getChiTieu response
+  let allDetail = DATA6._ctDetailAll?.length ? DATA6._ctDetailAll
+                : d.chiTietRows?.length       ? d.chiTietRows
+                : [];
+  if (!DATA6._ctDetailAll?.length && d.chiTietRows?.length) {
+    DATA6._ctDetailAll   = d.chiTietRows;
+    DATA6._ctDetailIsReal = true;
+    allDetail = d.chiTietRows;
+  }
 
   // Populate fKV topbar từ danh sách đơn vị
   const allDVs = [...new Set(allDetail.map(r=>r.donVi).filter(Boolean))];
