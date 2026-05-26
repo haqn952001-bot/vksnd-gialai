@@ -1,14 +1,22 @@
 {
-  "redirects": [
+  "version": 2,
+  "functions": {
+    "api/proxy.js": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
     {
-      "source": "/",
-      "destination": "https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIrG3D4YgHJZ21C4JXrdhW4CsvziFRa4R-3LHa2ChpLQEJPBknDAw/exec",
-      "permanent": false
+      "src": "/api/proxy",
+      "dest": "/api/proxy.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "https://script.google.com/macros/s/AKfycbzuuUbReIflxFNR1nIrG3D4YgHJZ21C4JXrdhW4CsvziFRa4R-3LHa2ChpLQEJPBknDAw/exec",
-      "permanent": false
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
     }
   ]
 }
