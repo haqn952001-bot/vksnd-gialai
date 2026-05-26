@@ -2748,6 +2748,31 @@ function renderChiTieu6() {
   filterCt6Detail();
 }
 
+/** Debug helper — gọi từ console: _debugState() */
+window._debugState = function() {
+  const d = DATA12?._ctDetailAll;
+  if (!d) { console.log('DATA12._ctDetailAll = NULL/UNDEFINED'); return; }
+  const kv1 = d.filter(r => r.donVi === 'KV1');
+  console.log('DATA12._ctDetailAll.length =', d.length);
+  console.log('KV1 rows =', kv1.length);
+  console.log('KV1 Đạt =',  kv1.filter(r=>r.trangThai==='Đạt').length);
+  console.log('KV1 Vượt =', kv1.filter(r=>r.trangThai==='Vượt').length);
+  console.log('KV1 KĐạt =', kv1.filter(r=>r.trangThai==='Không đạt').length);
+  console.log('KV1 KPS =',  kv1.filter(r=>r.trangThai==='Không phát sinh').length);
+  console.log('Sample row[0]:', JSON.stringify(d[0]));
+  console.log('fKV =', v('fKV'), '| fCtDVDet =', v('fCtDVDet'));
+  const topKV = v('fKV')||'';
+  const tabDV = v('fCtDVDet')||'';
+  const dvd = tabDV || topKV;
+  console.log('→ dvd used for KPI =', dvd || '(tất cả)');
+  const kpiRows = dvd ? d.filter(r=>r.donVi===dvd) : d;
+  console.log('→ kpiRows.length =', kpiRows.length,
+    '| Đạt=', kpiRows.filter(r=>r.trangThai==='Đạt').length,
+    '| Vượt=', kpiRows.filter(r=>r.trangThai==='Vượt').length,
+    '| KĐạt=', kpiRows.filter(r=>r.trangThai==='Không đạt').length,
+    '| KPS=', kpiRows.filter(r=>r.trangThai==='Không phát sinh').length);
+};
+
 /** Đếm trực tiếp từng row chiTietRows → cập nhật scorecard
  *  Mỗi row = 1 chỉ tiêu của 1 đơn vị → đếm theo đơn vị đang chọn hoặc tất cả
  */
