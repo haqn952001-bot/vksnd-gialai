@@ -2254,6 +2254,20 @@ function renderChiTieu12() {
     allDetail = d.chiTietRows;
   }
 
+  // LOG: xem donVi và trangThai thực tế trong chiTietRows
+  if (allDetail.length > 0) {
+    const dvVals = [...new Set(allDetail.map(r => r.donVi))];
+    const tsVals = [...new Set(allDetail.map(r => r.trangThai))];
+    const kv1Count = allDetail.filter(r => r.donVi === 'KV1').length;
+    const kv1Dat   = allDetail.filter(r => r.donVi === 'KV1' && r.trangThai === 'Đạt').length;
+    const kv1Vuot  = allDetail.filter(r => r.donVi === 'KV1' && r.trangThai === 'Vượt').length;
+    const kv1Kdat  = allDetail.filter(r => r.donVi === 'KV1' && r.trangThai === 'Không đạt').length;
+    const kv1Kps   = allDetail.filter(r => r.donVi === 'KV1' && r.trangThai === 'Không phát sinh').length;
+    console.log('[renderChiTieu12] total=', allDetail.length, '| dvList=', dvVals.join(','), '| tsValues=', tsVals);
+    console.log('[renderChiTieu12] KV1: total=', kv1Count, 'Đạt=', kv1Dat, 'Vượt=', kv1Vuot, 'KhôngĐạt=', kv1Kdat, 'KhôngPS=', kv1Kps);
+    console.log('[renderChiTieu12] row[0]=', JSON.stringify(allDetail[0]));
+  }
+
   populateKVFilter(allRows.map(r => r.donVi).filter(Boolean));
   _renderChiTieuCommon({
     allRows, allDetail,
@@ -2936,6 +2950,9 @@ function filterCtTable() {
   const selKV = $('fCtKV');
   if (selKV) selKV.value = dvd;
 
+  console.log('[filterCtTable] topKV="' + v('fKV') + '" dvd="' + dvd + '" ten="' + ten
+    + '" allRows=' + (DATA12?._ctDetailAll?.length||0));
+
   const allRows = DATA12._ctDetailAll;
 
   // ── Bước 3: Filter bảng chi tiết ──
@@ -2948,6 +2965,9 @@ function filterCtTable() {
 
   // ── Bước 4: KPI — đếm từ KV đang chọn (bỏ qua filter tên chỉ tiêu) ──
   const kpiRows = dvd ? allRows.filter(r => r.donVi === dvd) : allRows;
+  console.log('[filterCtTable] dvd="' + dvd + '" kpiRows=' + kpiRows.length
+    + ' sample donVi=' + JSON.stringify(allRows[0]?.donVi)
+    + ' match=' + (allRows[0]?.donVi === dvd));
   _countAndSetKPI(kpiRows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
 
   // ── Bước 5: Biểu đồ — build từ chiTietRows theo dvd ──
