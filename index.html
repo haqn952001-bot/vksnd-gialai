@@ -2814,8 +2814,24 @@ function _renderChiTieuCommon({ allRows, allDetail,
   const fTen = $(idTen);
   if (fTen) {
     fTen.innerHTML = '<option value="">Tất cả chỉ tiêu</option>';
-    [...new Set(allDetail.map(r=>r.tenChiTieu).filter(Boolean))].forEach(t => {
-      const o=document.createElement('option'); o.value=t; o.textContent=t.length>70?t.slice(0,70)+'…':t; fTen.appendChild(o);
+    // Đếm tần suất mỗi tên để phát hiện trùng
+    const tenFreq = {};
+    allDetail.forEach(r => { if (r.tenChiTieu) tenFreq[r.tenChiTieu] = (tenFreq[r.tenChiTieu]||0)+1; });
+    const seenKey = new Set();
+    allDetail.forEach(r => {
+      if (!r.tenChiTieu) return;
+      // Key = ten + ctd để phân biệt chỉ tiêu trùng tên ở cụm khác nhau
+      const key = r.tenChiTieu + '||' + (r.ctd||'');
+      if (seenKey.has(key)) return;
+      seenKey.add(key);
+      const o = document.createElement('option');
+      o.value = r.tenChiTieu; // filter vẫn theo tên (lấy hết)
+      const isDup = tenFreq[r.tenChiTieu] > 1;
+      const base  = r.tenChiTieu.length > 65 ? r.tenChiTieu.slice(0,65)+'…' : r.tenChiTieu;
+      // Nếu tên trùng → thêm tên cụm để phân biệt
+      o.textContent = isDup ? base + ' [' + (r.ctd||'') + ']' : base;
+      o.title = r.tenChiTieu + (isDup ? ' — '+r.ctd : '');
+      fTen.appendChild(o);
     });
   }
 
