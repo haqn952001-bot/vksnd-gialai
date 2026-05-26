@@ -3207,63 +3207,45 @@ function wsUpdateNote() {
 }
 
 function wsConfirm() {
-  const r = wsGetSelectedRange();
-  if (!r) return;
-
-  // Ghi giá trị vào filter topbar
+  let r = wsGetSelectedRange();
+  if (!r) {
+    _wsPreset = '12thang';
+    r = { thangTu:'1', namTu:'2026', thangDen:'12', namDen:'2026' };
+  }
   const set = (id, val) => { const el=$(id); if(el) el.value=val; };
-  set('fThangTu',  r.thangTu);
-  set('fNamTu',    r.namTu);
-  set('fThangDen', r.thangDen);
-  set('fNamDen',   r.namDen);
+  set('fThangTu', r.thangTu); set('fNamTu', r.namTu);
+  set('fThangDen', r.thangDen); set('fNamDen', r.namDen);
 
-  // Ẩn welcome screen
-  $('welcomeScreen').classList.add('hide');
-
-  // Lưu sessionStorage
+  // Force ẩn welcome screen hoàn toàn
+  const ws = $('welcomeScreen');
+  if (ws) {
+    ws.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;';
+    ws.classList.add('hide');
+  }
+  window._vksndWelcomed = true;
   try {
-    sessionStorage.setItem('vksnd_filter', JSON.stringify({
-      thangTu: r.thangTu, namTu: r.namTu,
-      thangDen: r.thangDen, namDen: r.namDen, kv: ''
-    }));
-    sessionStorage.setItem('vksnd_welcomed', '1');
+    sessionStorage.setItem('vksnd_welcomed','1');
+    sessionStorage.setItem('vksnd_filter', JSON.stringify(r));
     if (_wsTargetTab) sessionStorage.setItem('vksnd_target_tab', _wsTargetTab);
     else sessionStorage.removeItem('vksnd_target_tab');
   } catch(_) {}
 
-  // Xử lý điều hướng
-  if (_wsTargetTab === 'chitieu6' || _wsTargetTab === 'chitieu12') {
-    // Chuyển thẳng đến tab chỉ tiêu — nav() sẽ tự gọi reloadChiTieu6/12()
-    // Không cần gọi getData() vì tab chỉ tiêu dùng API riêng (getChiTieu)
-    const navEl = document.querySelector(`.nav-item[data-page="${_wsTargetTab}"]`);
+  const targetTab = _wsTargetTab;
+  if (targetTab === 'chitieu6' || targetTab === 'chitieu12') {
+    const navEl = document.querySelector('.nav-item[data-page="'+targetTab+'"]');
     if (navEl) nav(navEl);
   } else {
-    // Tổng quan / khu vực / án hủy → load bình thường
     reload(true);
   }
 }
 
-// Kiểm tra xem đã chọn kỳ trong session này chưa
+
 function wsCheckAndInit() {
-  try {
-    const welcomed = sessionStorage.getItem('vksnd_welcomed');
-    if (welcomed === '1') {
-      const restored = loadSavedFilter();
-      $('welcomeScreen').classList.add('hide');
-      const targetTab = sessionStorage.getItem('vksnd_target_tab');
-      if (restored) toast('Đã khôi phục bộ lọc từ lần trước', 'info', 2000);
-      if (targetTab === 'chitieu6' || targetTab === 'chitieu12') {
-        // Chuyển thẳng tab chỉ tiêu, không cần getData
-        const navEl = document.querySelector(`.nav-item[data-page="${targetTab}"]`);
-        if (navEl) nav(navEl);
-      } else {
-        reload(true);
-      }
-      return;
-    }
-  } catch(_) {}
-  // Lần đầu mở → chỉ hiện welcome screen
+  // Luôn show welcome screen để chọn kỳ báo cáo
+  const ws = $('welcomeScreen');
+  if (ws) ws.style.cssText = '';
 }
+
 
 function toast(msg, type='info', duration=3000) {
   const el = document.createElement('div');
