@@ -1842,28 +1842,32 @@ function onData(d) {
   updateWarnBadge(d);
 
   // ── Pre-fetch ngầm: load sẵn CT12T, CT6T, CĐS, NQ205 vào background ──
-  // Sau 800ms để không block render trang hiện tại
-  if (GAS) setTimeout(_prefetchBackground, 800);
+  setTimeout(_prefetchBackground, 800);
 }
 
 /** Pre-fetch ngầm — chạy sau khi Tổng quan đã render xong */
 function _prefetchBackground() {
-  if (!GAS) return;
-  const p = getFilterParams();
-  const nam12 = v('fCtNam') || p.namDen || '2026';
+  const p    = getFilterParams();
+  const nam12 = v('fCtNam')  || p.namDen || '2026';
   const nam6  = v('fCt6Nam') || p.namDen || '2026';
+  const isVercel = !GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com');
 
   // CT 12 tháng
   if (!DATA12?.chiTieu) {
-    google.script.run
-      .withSuccessHandler(d => { if (d?.chiTieu) DATA12 = d; })
-      .withFailureHandler(()=>{})
-      .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
+    if (isVercel) {
+      gasAPI('getChiTieu', { nam: nam12, kyBaoCao:'12thang' })
+        .then(d => { if (d?.chiTieu) DATA12 = d; }).catch(()=>{});
+    } else if (GAS) {
+      google.script.run
+        .withSuccessHandler(d => { if (d?.chiTieu) DATA12 = d; })
+        .withFailureHandler(()=>{})
+        .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
+    }
   }
   // CT 6 tháng (delay 400ms)
   setTimeout(() => {
     if (!DATA6?.chiTieu) {
-      if (!GAS && typeof GAS_API_URL !== 'undefined') {
+      if (isVercel) {
         gasAPI('getChiTieu', { nam: nam6, kyBaoCao:'6thang' })
           .then(d => { if (d?.chiTieu) DATA6 = d; }).catch(()=>{});
       } else if (GAS) {
@@ -1877,9 +1881,16 @@ function _prefetchBackground() {
   // CĐS (delay 800ms)
   setTimeout(() => {
     if (!DATA?.shHsva?.numCols?.length) {
-      if (!GAS && typeof GAS_API_URL !== 'undefined') {
-        gasAPI('getTabData', { tab:'shhsva', ...p })
-          .then(d => { if (d?.shHsva) DATA = { ...DATA, shHsva: d.shHsva }; }).catch(()=>{});
+      if (isVercel) {
+        gasAPI('getTabData', { tab:'shhsva', namTu:p.namTu, namDen:p.namDen, thangTu:p.thangTu, thangDen:p.thangDen, kv:p.kv||'' })
+          .then(d => {
+            console.log('[Prefetch] shhsva numCols=', d?.shHsva?.numCols?.length);
+            if (d?.shHsva) {
+              DATA = { ...DATA, shHsva: d.shHsva };
+              const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+              if (pg === 'shhsva') renderShHsva();
+            }
+          }).catch(e => console.error('[Prefetch] shhsva error:', e));
       } else if (GAS) {
         google.script.run
           .withSuccessHandler(d => { if (d?.shHsva) DATA = { ...DATA, shHsva: d.shHsva }; })
@@ -1888,12 +1899,19 @@ function _prefetchBackground() {
       }
     }
   }, 800);
-  // NQ205 (delay 1200ms)
+  // NQ205 (delay 1500ms)
   setTimeout(() => {
     if (!DATA?.thNq205?.colMap?.colE) {
-      if (!GAS && typeof GAS_API_URL !== 'undefined') {
-        gasAPI('getTabData', { tab:'thnq205', ...p })
-          .then(d => { if (d?.thNq205) DATA = { ...DATA, thNq205: d.thNq205 }; }).catch(()=>{});
+      if (isVercel) {
+        gasAPI('getTabData', { tab:'thnq205', namTu:p.namTu, namDen:p.namDen, thangTu:p.thangTu, thangDen:p.thangDen, kv:p.kv||'' })
+          .then(d => {
+            console.log('[Prefetch] thnq205 colE=', d?.thNq205?.colMap?.colE);
+            if (d?.thNq205) {
+              DATA = { ...DATA, thNq205: d.thNq205 };
+              const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+              if (pg === 'thnq205') renderThNq205();
+            }
+          }).catch(e => console.error('[Prefetch] thnq205 error:', e));
       } else if (GAS) {
         google.script.run
           .withSuccessHandler(d => { if (d?.thNq205) DATA = { ...DATA, thNq205: d.thNq205 }; })
@@ -1901,7 +1919,7 @@ function _prefetchBackground() {
           .getTabData({ tab:'thnq205', ...p });
       }
     }
-  }, 1200);
+  }, 1500);
 }
 
 function onErr(err) {
@@ -3603,21 +3621,19 @@ function hideLoader() { $('ld').classList.add('hide'); }
 
 // Lazy load tab nặng — chỉ gọi GAS khi user thực sự vào tab
 function _loadTabAndRender(tab, renderFn) {
-  // Nếu đã pre-fetch → render ngay, không cần loading
+  // Nếu đã có data → render ngay
   if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(); return; }
   if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(); return; }
-  if (!GAS) { renderFn(); return; }
 
   showLoader('Đang tải dữ liệu…');
   const p = getFilterParams();
 
   // Vercel mode: gọi GAS REST API qua fetch
-  if (!GAS && typeof GAS_API_URL !== 'undefined') {
-    gasAPI('getTabData', { tab, ...p })
+  if (!GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com')) {
+    gasAPI('getTabData', { tab: tab, namTu: p.namTu, namDen: p.namDen, thangTu: p.thangTu, thangDen: p.thangDen, kv: p.kv||'' })
       .then(d => {
-        console.log('[TabData] tab='+tab+' keys='+Object.keys(d||{}).join(','));
-        console.log('[TabData] shHsva=', d?.shHsva ? 'có (numCols='+d.shHsva.numCols?.length+')' : 'KHÔNG CÓ');
-        console.log('[TabData] thNq205=', d?.thNq205 ? 'có' : 'KHÔNG CÓ');
+        console.log('[TabData] tab='+tab+' keys='+Object.keys(d||{}).join(','),
+          '| shHsva=', d?.shHsva?.numCols?.length||0, '| thNq205=', !!d?.thNq205);
         if (tab === 'shhsva')  DATA = { ...DATA, shHsva:  d.shHsva  };
         if (tab === 'thnq205') DATA = { ...DATA, thNq205: d.thNq205 };
         hideLoader();
@@ -3626,6 +3642,9 @@ function _loadTabAndRender(tab, renderFn) {
       .catch(e => { hideLoader(); console.error('[TabData] lỗi:', e); toast('Lỗi tải dữ liệu tab', 'error'); });
     return;
   }
+
+  // Demo mode (không có GAS và không có GAS_API_URL hợp lệ)
+  if (!GAS) { hideLoader(); renderFn(); return; }
 
   // GAS mode
   google.script.run
