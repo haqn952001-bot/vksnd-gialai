@@ -2301,7 +2301,11 @@ function reloadChiTieu12() {
         DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
         DATA12._ctDetailIsReal = false; // demo data
       }
-      hideLoader(); renderChiTieu12(); _fetchDetail('12thang', nam);
+      hideLoader(); renderChiTieu12();
+      // Chỉ fetch detail bổ sung nếu chiTietRows từ getChiTieu chưa có soLuong
+      const hasSlData = DATA12?.chiTieu?.chiTietRows?.some(r => r.soLuong && r.soLuong !== '');
+      if (!hasSlData) _fetchDetail('12thang', nam);
+      else console.log('[reloadChiTieu12] chiTietRows đã có soLuong — bỏ qua _fetchDetail');
     })
     .withFailureHandler(err => {
       hideLoader();
@@ -2363,19 +2367,33 @@ function _fetchDetail(ky, nam) {
 
   const applyDetail = (rows) => {
     if (!rows?.length) return;
+
+    // Kiểm tra data mới có soLuong không — nếu không, không ghi đè data hiện tại
+    const newHasSL  = rows.some(r => r.soLuong && r.soLuong !== '');
     const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+
     if (ky === '12thang') {
+      const curHasSL = DATA12?._ctDetailAll?.some(r => r.soLuong && r.soLuong !== '');
+      if (curHasSL && !newHasSL) {
+        console.warn('[fetchDetail] ⚠️ Data mới KHÔNG có soLuong — giữ nguyên data hiện tại');
+        return;
+      }
       DATA12._ctDetailAll   = rows;
-      DATA12._ctDetailIsReal = true; // đánh dấu là dữ liệu thật từ GAS
+      DATA12._ctDetailIsReal = true;
       if (DATA12?.chiTieu) DATA12.chiTieu.chiTietRows = rows;
       if (pg === 'chitieu12') filterCtTable();
     } else {
+      const curHasSL6 = DATA6?._ctDetailAll?.some(r => r.soLuong && r.soLuong !== '');
+      if (curHasSL6 && !newHasSL) {
+        console.warn('[fetchDetail] ⚠️ Data mới KHÔNG có soLuong — giữ nguyên data hiện tại');
+        return;
+      }
       DATA6._ctDetailAll   = rows;
       DATA6._ctDetailIsReal = true;
       if (DATA6?.chiTieu) DATA6.chiTieu.chiTietRows = rows;
       if (pg === 'chitieu6') filterCt6Table();
     }
-    console.log('[fetchDetail] ✅ ' + ky + ': ' + rows.length + ' rows từ GAS');
+    console.log('[fetchDetail] ✅ ' + ky + ': ' + rows.length + ' rows, hasSoLuong=' + newHasSL);
   };
 
   if (!GAS) {
