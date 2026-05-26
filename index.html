@@ -2864,12 +2864,16 @@ function _updateChiTieuKPI(rows, idDat, idVuot, idKdat, idKps) {
 function renderCtDetail() {
   const dvDet = v('fCtDVDet');
   const ten   = v('fCtTen');
+  // Đọc trực tiếp từ DATA12._ctDetailAll (giống cách tab 6 tháng đọc DATA6._ctDetailAll)
   let rows = DATA12?._ctDetailAll || [];
   if (dvDet) rows = rows.filter(r => r.donVi === dvDet);
   if (ten)   rows = rows.filter(r => r.tenChiTieu === ten);
   _ctDetailRows = rows;
   _ctDetailPage = 0;
   _renderCtDetailPage();
+  // Debug log
+  console.log('[renderCtDetail] DATA12._ctDetailAll=', DATA12?._ctDetailAll?.length,
+    '_ctDetailIsReal=', DATA12?._ctDetailIsReal, 'rows=', rows.length);
 }
 
 function ctDetailPage(dir) {
@@ -2884,33 +2888,14 @@ function _renderCtDetailPage() {
   const start    = _ctDetailPage * CT_PAGE_SIZE;
   const pageRows = _ctDetailRows.slice(start, start + CT_PAGE_SIZE);
 
+  // Cập nhật thông tin phân trang
   $('ctDetailInfo').textContent    = total > 0
     ? `Hiển thị ${start+1}–${Math.min(start+CT_PAGE_SIZE,total)} / ${total} bản ghi`
     : 'Không có dữ liệu';
   $('ctDetailPageNum').textContent = total > 0
-    ? `Trang ${_ctDetailPage+1} / ${maxPage}`
-    : '—';
+    ? `Trang ${_ctDetailPage+1} / ${maxPage}` : '—';
 
-  // Nếu chưa có dữ liệu và đang chờ GAS → hiện loading thay vì "Không có dữ liệu"
-  if (total === 0 && GAS && (!DATA12?._ctDetailIsReal)) {
-    const tbody = $('ctDetail');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ts);font-size:12px">
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
-        <div class="ring" style="width:20px;height:20px;border-width:2px"></div>
-        Đang tải dữ liệu từ Google Sheets…
-      </div></td></tr>`;
-    $('ctDetailInfo').textContent    = 'Đang tải…';
-    $('ctDetailPageNum').textContent = '—';
-    // Tự kích _fetchDetail nếu chưa đang fetch
-    const nam12 = v('fCtNam') || '2026';
-    if (!_fetchDetail._running12) {
-      _fetchDetail._running12 = true;
-      setTimeout(() => { _fetchDetail._running12 = false; }, 10000);
-      _fetchDetail('12thang', nam12);
-    }
-    return;
-  }
-
+  // Render trực tiếp — không có guard/return sớm (giống tab 6 tháng)
   _renderDetailRows('ctDetail', pageRows);
 
   // Scroll bảng về đầu khi chuyển trang
@@ -2947,20 +2932,37 @@ function syncCtKV() {
 }
 
 function filterCtTable() {
-  const kv   = v('fCtKV');
-  const rows = (DATA12?._dvSummaryAll || DATA12?.chiTieu?.dvSummary || [])
-                .filter(r => !kv || r.donVi === kv);
-  renderCtTable(rows);
-  renderCtDetail();
+  const kv  = v('fCtKV');
+  const dvd = v('fCtDVDet') || kv; // đồng bộ 2 filter
+  const ten = v('fCtTen');
+
+  // Render bảng chi tiết — giống hệt cách tab 6 tháng
+  let detailRows = DATA12?._ctDetailAll || [];
+  if (dvd) detailRows = detailRows.filter(r => r.donVi === dvd);
+  if (ten) detailRows = detailRows.filter(r => r.tenChiTieu === ten);
+  _ctDetailRows = detailRows;
+  _ctDetailPage = 0;
+
+  console.log('[filterCtTable] _ctDetailAll=', DATA12?._ctDetailAll?.length,
+    'after filter=', detailRows.length, 'dvd=', dvd, 'ten=', ten);
+
+  // Render trực tiếp (không qua _renderCtDetailPage để tránh guard logic)
+  _renderCtDetailPage();
+
+  // Render summary bên trên
+  const summaryRows = (DATA12?._dvSummaryAll || DATA12?.chiTieu?.dvSummary || [])
+                       .filter(r => !kv || r.donVi === kv);
+  renderCtTable(summaryRows);
+
   // Cập nhật KPI
-  if (kv && DATA12?._ctDetailAll) {
-    const detailRows = DATA12._ctDetailAll.filter(r => r.donVi === kv);
-    _updateChiTieuKPI(detailRows, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
+  if (DATA12?._ctDetailAll?.length) {
+    const kpiRows = kv ? DATA12._ctDetailAll.filter(r => r.donVi === kv) : DATA12._ctDetailAll;
+    _updateChiTieuKPI(kpiRows, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
   } else if (DATA12?.chiTieu) {
-    $('ct-dat').textContent  = F(DATA12.chiTieu.uniqueDat);
-    $('ct-vuot').textContent = F(DATA12.chiTieu.uniqueVuot);
-    $('ct-kdat').textContent = F(DATA12.chiTieu.uniqueKDat);
-    $('ct-kps').textContent  = F(DATA12.chiTieu.uniqueKPS);
+    $('ct-dat')  && ($('ct-dat').textContent  = F(DATA12.chiTieu.uniqueDat));
+    $('ct-vuot') && ($('ct-vuot').textContent = F(DATA12.chiTieu.uniqueVuot));
+    $('ct-kdat') && ($('ct-kdat').textContent = F(DATA12.chiTieu.uniqueKDat));
+    $('ct-kps')  && ($('ct-kps').textContent  = F(DATA12.chiTieu.uniqueKPS));
   }
 }
 
