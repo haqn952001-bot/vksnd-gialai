@@ -1941,11 +1941,13 @@ function onErr(err) {
       DATA12 = DATA12 || {};
       DATA12.chiTieu = _makeDemoChiTieu();
       DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+      DATA12._ctDetailIsReal = false; // demo data
     }
     if (!DATA6?.chiTieu) {
       DATA6 = DATA6 || {};
       DATA6.chiTieu = _makeDemoChiTieu6();
       DATA6._ctDetailAll = DATA6.chiTieu.chiTietRows;
+      DATA6._ctDetailIsReal  = false; // demo data
     }
     hideLoader();
   }, 800);
@@ -2245,7 +2247,7 @@ function reloadChiTieu12() {
   const nam = v('fCtNam') || '2026';
   if (DATA12?.chiTieu?.dvSummary?.length > 0 && !_forceReloadCT) {
     renderChiTieu12();
-    if (!DATA12._ctDetailAll?.length) _fetchDetail('12thang', nam);
+    if (!DATA12._ctDetailAll?.length || !DATA12._ctDetailIsReal) _fetchDetail('12thang', nam);
     return;
   }
   _forceReloadCT = false;
@@ -2262,6 +2264,7 @@ function reloadChiTieu12() {
         DATA12 = DATA12 || {};
         DATA12.chiTieu = _makeDemoChiTieu();
         DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+        DATA12._ctDetailIsReal = false; // demo data
       }
       hideLoader(); renderChiTieu12(); _fetchDetail('12thang', nam);
     })
@@ -2273,6 +2276,7 @@ function reloadChiTieu12() {
         DATA12 = DATA12 || {};
         DATA12.chiTieu = _makeDemoChiTieu();
         DATA12._ctDetailAll = DATA12.chiTieu.chiTietRows;
+        DATA12._ctDetailIsReal = false; // demo data
         renderChiTieu12();
       }
     })
@@ -2283,7 +2287,7 @@ function reloadChiTieu6() {
   const nam = v('fCt6Nam') || '2026';
   if (DATA6?.chiTieu?.dvSummary?.length > 0 && !_forceReloadCT) {
     renderChiTieu6();
-    if (!DATA6._ctDetailAll?.length) _fetchDetail('6thang', nam);
+    if (!DATA6._ctDetailAll?.length || !DATA6._ctDetailIsReal) _fetchDetail('6thang', nam);
     return;
   }
   _forceReloadCT = false;
@@ -2318,21 +2322,24 @@ function reloadChiTieu6() {
 /** Fetch detail rows ngay sau khi summary render — không delay */
 function _fetchDetail(ky, nam) {
   const store = ky === '12thang' ? DATA12 : DATA6;
-  if (store?._ctDetailAll?.length) return; // đã có rồi
+  // Bỏ qua nếu đã có dữ liệu THẬT từ GAS (không phải demo)
+  if (store?._ctDetailAll?.length && store?._ctDetailIsReal) return;
 
   const applyDetail = (rows) => {
     if (!rows?.length) return;
     const pg = document.querySelector('.nav-item.active')?.dataset?.page;
     if (ky === '12thang') {
-      DATA12._ctDetailAll = rows;
+      DATA12._ctDetailAll   = rows;
+      DATA12._ctDetailIsReal = true; // đánh dấu là dữ liệu thật từ GAS
       if (DATA12?.chiTieu) DATA12.chiTieu.chiTietRows = rows;
       if (pg === 'chitieu12') filterCtTable();
     } else {
-      DATA6._ctDetailAll = rows;
+      DATA6._ctDetailAll   = rows;
+      DATA6._ctDetailIsReal = true;
       if (DATA6?.chiTieu) DATA6.chiTieu.chiTietRows = rows;
       if (pg === 'chitieu6') filterCt6Table();
     }
-    console.log('[fetchDetail] ' + ky + ': ' + rows.length + ' rows');
+    console.log('[fetchDetail] ✅ ' + ky + ': ' + rows.length + ' rows từ GAS');
   };
 
   if (!GAS) {
@@ -2343,14 +2350,14 @@ function _fetchDetail(ky, nam) {
     }
     return;
   }
+  console.log('[fetchDetail] Đang tải ' + ky + ' nam=' + nam + ' từ GAS...');
   google.script.run
     .withSuccessHandler(d => {
       const rows = d?.chiTietRows;
       if (rows?.length) {
         applyDetail(rows);
       } else {
-        // GAS trả về nhưng chiTietRows rỗng — log để debug
-        console.warn('[fetchDetail] GAS trả về không có chiTietRows:', d);
+        console.warn('[fetchDetail] GAS trả về chiTietRows rỗng hoặc thiếu:', JSON.stringify(d)?.slice(0,200));
       }
     })
     .withFailureHandler(err => {
@@ -2828,6 +2835,19 @@ function _renderCtDetailPage() {
   $('ctDetailPageNum').textContent = total > 0
     ? `Trang ${_ctDetailPage+1} / ${maxPage}`
     : '—';
+
+  // Nếu chưa có dữ liệu và đang chờ GAS → hiện loading thay vì "Không có dữ liệu"
+  if (total === 0 && GAS && (!DATA12?._ctDetailIsReal)) {
+    const tbody = $('ctDetail');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ts);font-size:12px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div class="ring" style="width:20px;height:20px;border-width:2px"></div>
+        Đang tải dữ liệu từ Google Sheets…
+      </div></td></tr>`;
+    $('ctDetailInfo').textContent    = 'Đang tải…';
+    $('ctDetailPageNum').textContent = '—';
+    return;
+  }
 
   _renderDetailRows('ctDetail', pageRows);
 
