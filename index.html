@@ -2297,7 +2297,7 @@ function _fetchDetail(ky, nam) {
 
   if (!GAS) {
     if (typeof GAS_API_URL !== 'undefined') {
-      gasAPI('getChiTieuDetail', { nam, kyBaoCao: ky })
+      gasAPI('getChiTieuDetail', { nam, kyBaoCao: ky, forceRefresh: '1' })
         .then(d => applyDetail(d?.chiTietRows))
         .catch(e => console.error('[fetchDetail] error:', e));
     }
@@ -2306,7 +2306,7 @@ function _fetchDetail(ky, nam) {
   google.script.run
     .withSuccessHandler(d => applyDetail(d?.chiTietRows))
     .withFailureHandler(()=>{})
-    .getChiTieuDetail({ nam, kyBaoCao: ky });
+    .getChiTieuDetail({ nam, kyBaoCao: ky, forceRefresh: true });
 }
 
 // Demo data cho chỉ tiêu 12 tháng
