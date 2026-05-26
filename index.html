@@ -2212,7 +2212,19 @@ function reloadChiTieu6() {
   _forceReloadCT = false;
   showLoader('Đang tải chỉ tiêu 6 tháng…');
   if (!GAS) {
-    setTimeout(()=>{ DATA6=DATA6||{}; if(!DATA6.chiTieu) DATA6.chiTieu=_makeDemoChiTieu6(); hideLoader(); renderChiTieu6(); },300);
+    if (typeof GAS_API_URL !== 'undefined') {
+      // Vercel mode: gọi qua proxy
+      gasAPI('getChiTieu', { nam, kyBaoCao:'6thang' })
+        .then(d => {
+          DATA6 = d;
+          hideLoader();
+          renderChiTieu6();
+          _fetchDetail('6thang', nam);
+        })
+        .catch(err => { hideLoader(); toast('Lỗi CT6T: ' + err.message, 'error'); });
+    } else {
+      setTimeout(()=>{ DATA6=DATA6||{}; if(!DATA6.chiTieu) DATA6.chiTieu=_makeDemoChiTieu6(); hideLoader(); renderChiTieu6(); },300);
+    }
     return;
   }
   google.script.run
@@ -2223,20 +2235,36 @@ function reloadChiTieu6() {
 
 /** Fetch detail rows ngay sau khi summary render — không delay */
 function _fetchDetail(ky, nam) {
-  if (!GAS) return;
   const store = ky === '12thang' ? DATA12 : DATA6;
   if (store?._ctDetailAll?.length) return; // đã có rồi
+
+  const applyDetail = (rows) => {
+    if (!rows?.length) return;
+    const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+    if (ky === '12thang') {
+      DATA12._ctDetailAll = rows;
+      if (DATA12?.chiTieu) DATA12.chiTieu.chiTietRows = rows;
+      if (pg === 'chitieu12') filterCtTable();
+    } else {
+      DATA6._ctDetailAll = rows;
+      if (DATA6?.chiTieu) DATA6.chiTieu.chiTietRows = rows;
+      if (pg === 'chitieu6') filterCt6Table();
+    }
+    console.log('[fetchDetail] ' + ky + ': ' + rows.length + ' rows');
+  };
+
+  if (!GAS) {
+    if (typeof GAS_API_URL !== 'undefined') {
+      gasAPI('getChiTieuDetail', { nam, kyBaoCao: ky })
+        .then(d => applyDetail(d?.chiTietRows))
+        .catch(e => console.error('[fetchDetail] error:', e));
+    }
+    return;
+  }
   google.script.run
-    .withSuccessHandler(d => {
-      if (!d?.chiTietRows?.length) return;
-      const pg = document.querySelector('.nav-item.active')?.dataset?.page;
-      if (ky === '12thang') {
-        DATA12._ctDetailAll = d.chiTietRows;
-        if (DATA12?.chiTieu) DATA12.chiTieu.chiTietRows = d.chiTietRows;
-        if (pg === 'chitieu12') filterCtTable();
-      } else {
-        DATA6._ctDetailAll = d.chiTietRows;
-        if (DATA6?.chiTieu) DATA6.chiTieu.chiTietRows = d.chiTietRows;
+    .withSuccessHandler(d => applyDetail(d?.chiTietRows))
+    .withFailureHandler(()=>{})
+    .getChiTieuDetail({ nam, kyBaoCao: ky });ietRows = d.chiTietRows;
         if (pg === 'chitieu6') filterCt6Table();
       }
       toast('Đã tải đủ ' + d.chiTietRows.length + ' chỉ tiêu ' + (ky==='12thang'?'12T':'6T'), 'success', 2000);
