@@ -1856,26 +1856,76 @@ function _prefetchBackground() {
   if (!DATA12?.chiTieu) {
     if (isVercel) {
       gasAPI('getChiTieu', { nam: nam12, kyBaoCao:'12thang' })
-        .then(d => { if (d?.chiTieu) DATA12 = d; }).catch(()=>{});
+        .then(d => {
+          if (d?.chiTieu) {
+            DATA12 = d;
+            gasAPI('getChiTieuDetail', { nam: nam12, kyBaoCao:'12thang' })
+              .then(dd => {
+                if (dd?.chiTietRows?.length) {
+                  DATA12._ctDetailAll = dd.chiTietRows;
+                  if (DATA12.chiTieu) DATA12.chiTieu.chiTietRows = dd.chiTietRows;
+                  const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+                  if (pg === 'chitieu12') filterCtTable();
+                  console.log('[Prefetch] CT12 detail:', dd.chiTietRows.length, 'rows');
+                }
+              }).catch(()=>{});
+          }
+        }).catch(()=>{});
     } else if (GAS) {
       google.script.run
         .withSuccessHandler(d => { if (d?.chiTieu) DATA12 = d; })
         .withFailureHandler(()=>{})
         .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
     }
+  } else if (!DATA12?._ctDetailAll?.length && isVercel) {
+    gasAPI('getChiTieuDetail', { nam: nam12, kyBaoCao:'12thang' })
+      .then(dd => {
+        if (dd?.chiTietRows?.length) {
+          DATA12._ctDetailAll = dd.chiTietRows;
+          if (DATA12?.chiTieu) DATA12.chiTieu.chiTietRows = dd.chiTietRows;
+          const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+          if (pg === 'chitieu12') filterCtTable();
+        }
+      }).catch(()=>{});
   }
   // CT 6 tháng (delay 400ms)
   setTimeout(() => {
     if (!DATA6?.chiTieu) {
       if (isVercel) {
         gasAPI('getChiTieu', { nam: nam6, kyBaoCao:'6thang' })
-          .then(d => { if (d?.chiTieu) DATA6 = d; }).catch(()=>{});
+          .then(d => {
+            if (d?.chiTieu) {
+              DATA6 = d;
+              // Fetch detail ngay sau
+              gasAPI('getChiTieuDetail', { nam: nam6, kyBaoCao:'6thang' })
+                .then(dd => {
+                  if (dd?.chiTietRows?.length) {
+                    DATA6._ctDetailAll = dd.chiTietRows;
+                    if (DATA6.chiTieu) DATA6.chiTieu.chiTietRows = dd.chiTietRows;
+                    const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+                    if (pg === 'chitieu6') filterCt6Table();
+                    console.log('[Prefetch] CT6 detail:', dd.chiTietRows.length, 'rows');
+                  }
+                }).catch(()=>{});
+            }
+          }).catch(()=>{});
       } else if (GAS) {
         google.script.run
           .withSuccessHandler(d => { if (d?.chiTieu) DATA6 = d; })
           .withFailureHandler(()=>{})
           .getChiTieu({ nam: nam6, kyBaoCao:'6thang' });
       }
+    } else if (!DATA6?._ctDetailAll?.length && isVercel) {
+      // Có summary nhưng chưa có detail
+      gasAPI('getChiTieuDetail', { nam: nam6, kyBaoCao:'6thang' })
+        .then(dd => {
+          if (dd?.chiTietRows?.length) {
+            DATA6._ctDetailAll = dd.chiTietRows;
+            if (DATA6?.chiTieu) DATA6.chiTieu.chiTietRows = dd.chiTietRows;
+            const pg = document.querySelector('.nav-item.active')?.dataset?.page;
+            if (pg === 'chitieu6') filterCt6Table();
+          }
+        }).catch(()=>{});
     }
   }, 400);
   // CĐS (delay 800ms)
