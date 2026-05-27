@@ -1271,7 +1271,7 @@ body::after{
       <!-- Biểu đồ các chỉ tiêu điển hình -->
       <div class="cc fi fi1">
         <div class="cc-hd">
-          <div class="cc-title">SỐ LƯỢNG CÁC CUỘC TRỰC TIẾP KIỂM SÁT THEO ĐƠN VỊ</div>
+          <div class="cc-title" style="text-transform:none;font-size:10px;line-height:1.4">Số lượng các cuộc trực tiếp kiểm sát đối với Cơ quan điều tra, Cơ quan được giao tiến hành một số hoạt động điều tra trong việc tiếp nhận, giải quyết, lập hồ sơ nguồn tin về tội phạm</div>
           <div class="cc-pill">Chỉ tiêu điển hình</div>
         </div>
         <div class="cw" style="height:300px"><canvas id="cCt6KS"></canvas></div>
@@ -1279,7 +1279,7 @@ body::after{
 
       <div class="g2 fi fi2">
         <div class="cc">
-          <div class="cc-hd"><div class="cc-title">TRỰC TIẾP KIỂM SÁT CƠ QUAN THADS</div></div>
+          <div class="cc-hd"><div class="cc-title">Số cuộc trực tiếp kiểm sát Cơ quan THADS</div></div>
           <div class="cw cw-lg"><canvas id="cCt6THADS"></canvas></div>
         </div>
         <div class="cc">
@@ -1860,9 +1860,15 @@ function _doReload() {
 function showWelcomeAgain() {
   try {
     try { sessionStorage.removeItem('vksnd_welcomed'); } catch(_) {}
+    window._vksndWelcomed = false; // reset flag
     const ws = $('welcomeScreen');
     if (!ws) { console.error('welcomeScreen not found'); return; }
-    ws.style.cssText = ''; // xóa inline style (display:none!important từ wsConfirm)
+    // Xóa inline style và set display:flex trực tiếp (override display:none!important)
+    ws.style.cssText = '';
+    ws.style.setProperty('display', 'flex', 'important');
+    ws.style.setProperty('visibility', 'visible', 'important');
+    ws.style.setProperty('opacity', '1', 'important');
+    ws.style.setProperty('pointer-events', 'auto', 'important');
     ws.classList.remove('hide');
     // Reset trạng thái welcome
     _wsPreset = null;
@@ -2694,76 +2700,75 @@ function renderChiTieu6() {
     return;
   }
 
-  // Tự động phát hiện top chỉ tiêu có số liệu — không dùng keyword cứng
-  // Gộp soLuong theo tên chỉ tiêu (toàn tỉnh)
-  const tenTotals = {};
-  allDetail.forEach(r => {
-    const ten = (r.tenChiTieu || '').trim();
-    if (!ten) return;
-    const raw = String(r.soLuong || '').replace(/[^\d.]/g, '');
-    const val = parseFloat(raw) || 0;
-    if (val > 0) tenTotals[ten] = (tenTotals[ten] || 0) + val;
-  });
+  // ── Biểu đồ 1: 3 chỉ tiêu cố định theo yêu cầu ──────────────
+  // Đọc thẳng từ chiTietRows theo tên chỉ tiêu khớp chính xác
+  const KS_TARGETS = [
+    {
+      key: 'tinbao',
+      label: 'Trực tiếp kiểm sát việc tiếp nhận, giải quyết, lập hồ sơ nguồn tin',
+      match: t => t.trim().toLowerCase().includes('tiếp nhận, giải quyết, lập hồ sơ nguồn tin')
+                || t.trim().toLowerCase().includes('trực tiếp kiểm sát việc tiếp nhận')
+    },
+    {
+      key: 'kiennghi',
+      label: 'Ban hành văn bản kiến nghị khắc phục vi phạm (giai đoạn tin báo)',
+      match: t => t.trim().toLowerCase().includes('kiến nghị khắc phục vi phạm') &&
+                 (t.trim().toLowerCase().includes('tin báo') || t.trim().toLowerCase().includes('giai đoạn tin'))
+    },
+    {
+      key: 'tylekiennghi',
+      label: 'Tỷ lệ kiến nghị (tin báo) được chấp nhận, tiếp thu',
+      match: t => t.trim().toLowerCase().includes('kiến nghị') &&
+                 (t.trim().toLowerCase().includes('chấp nhận') || t.trim().toLowerCase().includes('tiếp thu')) &&
+                 (t.trim().toLowerCase().includes('tin báo') || t.trim().toLowerCase().includes('tin bao'))
+    }
+  ];
 
-  // Lấy tối đa 5 chỉ tiêu có tổng số lượng lớn nhất
-  const topTens = Object.entries(tenTotals)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([ten]) => ten);
+  // ── Biểu đồ THADS: chỉ tiêu cố định ──────────────────────────
+  const THADS_MATCH = t => t.trim().toLowerCase().includes('trực tiếp kiểm sát hoạt động thi hành án')
+                        || t.trim().toLowerCase().includes('cơ quan thads');
 
-  console.log('[CT6] Top chỉ tiêu có SL:', topTens.map((t,i)=>`[${i}] ${t.slice(0,50)} (${tenTotals[t]})`));
-
-  // Nếu không có top, fallback keyword cũ
-  const KS_TARGETS = topTens.length >= 3
-    ? [
-        { key:'tinbao', label: topTens[0].length > 40 ? topTens[0].slice(0,40)+'…' : topTens[0],
-          match: t => t.trim() === topTens[0] },
-        { key:'thads',  label: topTens[1].length > 40 ? topTens[1].slice(0,40)+'…' : topTens[1],
-          match: t => t.trim() === topTens[1] },
-        { key:'caxom',  label: topTens[2].length > 40 ? topTens[2].slice(0,40)+'…' : topTens[2],
-          match: t => t.trim() === topTens[2] }
-      ]
-    : [
-        { key:'tinbao', label:'Trực tiếp KS CQĐT giai đoạn tin báo',
-          match: t => ['tiếp nhận, giải quyết','kiểm sát việc tiếp nhận','tin báo, tố giác','cqđt giai đoạn','trực tiếp kiểm sát việc giải quyết'].some(kw => t.toLowerCase().includes(kw)) },
-        { key:'thads',  label:'Trực tiếp KS Cơ quan THADS',
-          match: t => ['thi hành án dân sự','cơ quan thads','kiểm sát hoạt động thi hành án'].some(kw => t.toLowerCase().includes(kw)) },
-        { key:'caxom',  label:'Trực tiếp KS Công an xã có bị án',
-          match: t => ['công an cấp xã','công an xã','thi hành án tại cộng đồng','án hình sự tại cộng đồng'].some(kw => t.toLowerCase().includes(kw)) }
-      ];
-
-  // Cập nhật label cho chart
-  const matchCounts = { tinbao:0, thads:0, caxom:0 };
+  const matchCounts = { tinbao:0, kiennghi:0, tylekiennghi:0 };
 
   // Lấy danh sách KV (unique, sắp xếp tự nhiên: KV1,KV2,...KV14)
   const dvList = [...new Set(allDetail.map(r=>r.donVi).filter(Boolean))]
     .sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
 
-  // Tổng hợp Số lượng theo KV cho mỗi nhóm chỉ tiêu
+  // Tổng hợp Số lượng theo KV cho biểu đồ 1 (3 chỉ tiêu cố định)
   const grouped = {};
   KS_TARGETS.forEach(tg => { grouped[tg.key] = {}; dvList.forEach(dv => { grouped[tg.key][dv] = 0; }); });
+  // Tổng hợp riêng cho THADS
+  const groupedThads = {}; dvList.forEach(dv => { groupedThads[dv] = 0; });
 
   allDetail.forEach(r => {
+    const ten = r.tenChiTieu || '';
+    const raw = String(r.soLuong || '').replace(/[^0-9.]/g, '');
+    const val = parseFloat(raw) || 0;
+    const dv  = r.donVi || '';
+    // Biểu đồ 1
     KS_TARGETS.forEach(tg => {
-      if (tg.match(r.tenChiTieu || '')) {
-        // soLuong có thể là string "1", "2,5", "10" — parse về số
-        const raw = String(r.soLuong || '').replace(/[.,\s]/g,'');
-        const val = parseFloat(raw) || 0;
-        if (grouped[tg.key][r.donVi] !== undefined) {
-          grouped[tg.key][r.donVi] += val;
-        }
+      if (tg.match(ten) && grouped[tg.key][dv] !== undefined) {
+        grouped[tg.key][dv] += val;
       }
     });
+    // Biểu đồ THADS riêng
+    if (THADS_MATCH(ten) && groupedThads[dv] !== undefined) {
+      groupedThads[dv] += val;
+    }
   });
+
+  // Log để kiểm tra
+  console.log('[CT6] KS grouped:', Object.keys(grouped).map(k=>k+':'+Object.values(grouped[k]).reduce((a,b)=>a+b,0)));
+  console.log('[CT6] THADS:', Object.entries(groupedThads).map(([k,v])=>k+'='+v).join(', '));
 
   // Chart tổng hợp grouped bar — 3 nhóm chỉ tiêu điển hình
   if (CHS['cCt6KS']) { CHS['cCt6KS'].destroy(); delete CHS['cCt6KS']; }
   CHS['cCt6KS'] = mkChart('cCt6KS','bar',{
     labels: dvList,
     datasets:[
-      { label: KS_TARGETS[0]?.label || 'Chỉ tiêu 1', data:dvList.map(dv=>grouped.tinbao[dv]||0), backgroundColor:'rgba(0,212,255,.8)',  borderRadius:4 },
-      { label: KS_TARGETS[1]?.label || 'Chỉ tiêu 2', data:dvList.map(dv=>grouped.thads[dv]||0),  backgroundColor:'rgba(255,184,0,.8)',  borderRadius:4 },
-      { label: KS_TARGETS[2]?.label || 'Chỉ tiêu 3', data:dvList.map(dv=>grouped.caxom[dv]||0),  backgroundColor:'rgba(0,229,160,.8)',  borderRadius:4 }
+      { label: KS_TARGETS[0]?.label || 'Kiến nghị được chấp nhận thực hiện', data:dvList.map(dv=>grouped.tinbao[dv]||0),       backgroundColor:'rgba(0,212,255,.8)',  borderRadius:4 },
+      { label: KS_TARGETS[1]?.label || 'Tỷ lệ giải quyết đơn khiếu nại…',      data:dvList.map(dv=>grouped.kiennghi[dv]||0),    backgroundColor:'rgba(255,184,0,.8)',  borderRadius:4 },
+      { label: KS_TARGETS[2]?.label || 'Tỷ lệ giải quyết đơn khiếu nại…',      data:dvList.map(dv=>grouped.tylekiennghi[dv]||0), backgroundColor:'rgba(0,229,160,.8)',  borderRadius:4 }
     ]
   },{
     scales:{
@@ -2776,7 +2781,7 @@ function renderChiTieu6() {
   if (CHS['cCt6THADS']) { CHS['cCt6THADS'].destroy(); delete CHS['cCt6THADS']; }
   CHS['cCt6THADS'] = mkChart('cCt6THADS','bar',{
     labels: dvList,
-    datasets:[{ label:'Số cuộc KS Cơ quan THADS', data:dvList.map(dv=>grouped.thads[dv]||0),
+    datasets:[{ label:'Số cuộc trực tiếp kiểm sát Cơ quan THADS', data:dvList.map(dv=>groupedThads[dv]||0),
       backgroundColor:'rgba(255,184,0,.8)', borderRadius:4 }]
   },{ indexAxis:'y', plugins:{legend:{display:false}},
       scales:{ x:{...dkScale(),min:0, ticks:{...dkScale().ticks, stepSize:1, precision:0}},
