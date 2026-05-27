@@ -3088,15 +3088,8 @@ function onTopbarKVChange() {
   const pg = document.querySelector('.nav-item.active')?.dataset?.page;
   const kv = v('fKV') || '';
 
-  // Cập nhật multi-select theo topbar
-  if (pg === 'chitieu12') {
-    const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
-    if (checks.length > 0) {
-      checks.forEach(cb => { cb.checked = !kv || cb.value === kv; });
-      _updateCtDVLabel();
-    }
-    if (DATA12?._ctDetailAll?.length) filterCtTable();
-  }
+  // Topbar fKV không ảnh hưởng multi-select — chỉ trigger re-render
+  if (pg === 'chitieu12' && DATA12?._ctDetailAll?.length) filterCtTable();
 
   const el6 = $('fCt6DVDet');
   if (el6) el6.value = kv;
@@ -3106,24 +3099,11 @@ function onTopbarKVChange() {
 function filterCtTable() {
   if (!DATA12?._ctDetailAll?.length) return;
 
-  const ten    = v('fCtTen') || '';
-  const allRows = DATA12._ctDetailAll;
+  const ten     = v('fCtTen') || '';
+  const allRows  = DATA12._ctDetailAll;
 
-  // Multi-select: _ctDVSelected rỗng = tất cả, có phần tử = chỉ những KV được chọn
-  const hasDVFilter = _ctDVSelected.size > 0;
-
-  // Đồng bộ topbar fKV → chọn đơn vị tương ứng trong multi-select
-  const topKV = v('fKV') || '';
-  if (topKV && !hasDVFilter) {
-    // Nếu topbar chọn 1 KV mà multi-select đang "tất cả" → tick chỉ KV đó
-    const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
-    if (checks.length > 0) {
-      checks.forEach(cb => { cb.checked = (cb.value === topKV); });
-      _updateCtDVLabel();
-    }
-  }
-
-  const activeDVs = _ctDVSelected.size > 0 ? _ctDVSelected : null; // null = tất cả
+  // activeDVs: null = tất cả, Set = chỉ các KV được tick
+  const activeDVs = _ctDVSelected.size > 0 ? _ctDVSelected : null;
 
   // Filter bảng chi tiết
   let detailRows = allRows;
