@@ -1283,7 +1283,7 @@ body::after{
           <div class="cw cw-lg"><canvas id="cCt6THADS"></canvas></div>
         </div>
         <div class="cc">
-          <div class="cc-hd"><div class="cc-title">TRỰC TIẾP KIỂM SÁT CÔNG AN XÃ (THI HÀNH ÁN TẠI CỘNG ĐỒNG)</div></div>
+          <div class="cc-hd"><div class="cc-title">Số cuộc trực tiếp kiểm sát Công an xã (thi hành án tại cộng đồng)</div></div>
           <div class="cw cw-lg"><canvas id="cCt6CongAn"></canvas></div>
         </div>
       </div>
@@ -2377,17 +2377,24 @@ function reloadChiTieu6() {
   if (!GAS) {
     if (typeof GAS_API_URL !== 'undefined') {
       // Vercel mode: gọi qua proxy
-      gasAPI('getChiTieu', { nam, kyBaoCao:'6thang' })
+      gasAPI('getChiTieu', { nam, kyBaoCao:'6thang', forceRefresh:'1' })
         .then(d => {
           if (d?.error) {
             console.warn('[CT6] gasAPI error:', d.error);
-            hideLoader();
-            return;
+            hideLoader(); return;
           }
-          DATA6 = d;
+          // Reset hoàn toàn như CT12 để tránh dùng data cũ
+          DATA6 = { chiTieu: d?.chiTieu || null };
+          if (!DATA6.chiTieu?.dvSummary?.length) {
+            DATA6.chiTieu         = _makeDemoChiTieu6();
+            DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows;
+            DATA6._ctDetailIsReal = false;
+          } else {
+            DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows || [];
+            DATA6._ctDetailIsReal = DATA6._ctDetailAll.length > 0;
+          }
           hideLoader();
           renderChiTieu6();
-          _fetchDetail('6thang', nam);
         })
         .catch(err => { console.error('[CT6] error:', err); hideLoader(); });
     } else {
@@ -2789,10 +2796,24 @@ function renderChiTieu6() {
   });
 
   // Chart Công an xã có bị án — bar ngang theo KV
+  // groupedCongAn: chỉ tiêu "Trực tiếp kiểm sát tại Công an cấp xã có người đang thi hành án hình sự tại cộng đồng"
+  const CONGAN_MATCH = t => t.trim().toLowerCase().includes('công an cấp xã')
+                          || t.trim().toLowerCase().includes('thi hành án tại cộng đồng')
+                          || t.trim().toLowerCase().includes('công an xã');
+  const groupedCongAn = {}; dvList.forEach(dv => { groupedCongAn[dv] = 0; });
+  allDetail.forEach(r => {
+    if (CONGAN_MATCH(r.tenChiTieu || '') && groupedCongAn[r.donVi] !== undefined) {
+      const raw = String(r.soLuong || '').replace(/[^0-9.]/g, '');
+      groupedCongAn[r.donVi] += parseFloat(raw) || 0;
+    }
+  });
+  console.log('[CT6] CongAn:', Object.entries(groupedCongAn).map(([k,v])=>k+'='+v).join(', '));
+
   if (CHS['cCt6CongAn']) { CHS['cCt6CongAn'].destroy(); delete CHS['cCt6CongAn']; }
   CHS['cCt6CongAn'] = mkChart('cCt6CongAn','bar',{
     labels: dvList,
-    datasets:[{ label:'Số cuộc KS Công an xã có bị án', data:dvList.map(dv=>grouped.caxom[dv]||0),
+    datasets:[{ label:'Số cuộc trực tiếp kiểm sát Công an xã (thi hành án tại cộng đồng)',
+      data: dvList.map(dv=>groupedCongAn[dv]||0),
       backgroundColor:'rgba(0,229,160,.8)', borderRadius:4 }]
   },{ indexAxis:'y', plugins:{legend:{display:false}},
       scales:{ x:{...dkScale(),min:0, ticks:{...dkScale().ticks, stepSize:1, precision:0}},
