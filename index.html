@@ -1858,15 +1858,26 @@ function _doReload() {
 
 // Hàm gọi khi người dùng bấm nút "Cập nhật" trên topbar — cho phép chọn lại kỳ
 function showWelcomeAgain() {
-  try { sessionStorage.removeItem('vksnd_welcomed'); } catch(_) {}
-  $('welcomeScreen').classList.remove('hide');
-  // Reset trạng thái welcome
-  _wsPreset = null;
-  document.querySelectorAll('.ws-ky-btn').forEach(b => b.classList.remove('selected'));
-  $('wsCustomPanel').classList.remove('show');
-  $('wsConfirmBtn').disabled = true;
-  $('wsConfirmLabel').textContent = 'Chọn kỳ báo cáo để tiếp tục';
-  $('wsNote').textContent = 'Bấm vào một kỳ báo cáo phía trên để bắt đầu';
+  try {
+    try { sessionStorage.removeItem('vksnd_welcomed'); } catch(_) {}
+    const ws = $('welcomeScreen');
+    if (!ws) { console.error('welcomeScreen not found'); return; }
+    ws.style.cssText = ''; // xóa inline style (display:none!important từ wsConfirm)
+    ws.classList.remove('hide');
+    // Reset trạng thái welcome
+    _wsPreset = null;
+    document.querySelectorAll('.ws-ky-btn').forEach(b => b.classList.remove('selected'));
+    const cp = $('wsCustomPanel');
+    if (cp) cp.classList.remove('show');
+    const cb = $('wsConfirmBtn');
+    if (cb) cb.disabled = true;
+    const cl = $('wsConfirmLabel');
+    if (cl) cl.textContent = 'Chọn kỳ báo cáo để tiếp tục';
+    const cn = $('wsNote');
+    if (cn) cn.textContent = 'Bấm vào một kỳ báo cáo phía trên để bắt đầu';
+  } catch(err) {
+    console.error('showWelcomeAgain error:', err);
+  }
 }
 
 function onData(d) {
@@ -3027,7 +3038,11 @@ function ctDVToggle(e) {
 }
 document.addEventListener('click', e => {
   const w = $('ctDVDropWrap');
-  if (w && !w.contains(e.target)) { const d=$('ctDVDrop'); if(d) d.style.display='none'; }
+  if (w && !w.contains(e.target)) {
+    const d = $('ctDVDrop');
+    if (d && d.style.display !== 'none') d.style.display = 'none';
+  }
+  // Không dùng stopPropagation/preventDefault ở đây để không chặn các nút khác
 });
 
 function ctDVAll(sel) {
