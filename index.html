@@ -1203,10 +1203,23 @@ body::after{
         <div class="tw-hd">
           <div class="tw-title">Chi tiết từng chỉ tiêu</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <!-- YC3: Filter KV cho scorecard + bảng chi tiết -->
-            <select id="fCtDVDet" onchange="filterCtTable()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer">
-              <option value="">Tất cả đơn vị</option>
-            </select>
+            <!-- Filter đơn vị multi-select -->
+            <div id="ctDVDropWrap" style="position:relative;display:inline-block">
+              <button id="ctDVBtn" onclick="toggleCtDVDrop(event)"
+                style="height:28px;min-width:130px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 28px 0 10px;cursor:pointer;text-align:left;position:relative;white-space:nowrap">
+                <span id="ctDVBtnLabel">Tất cả đơn vị</span>
+                <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;font-size:10px">▼</span>
+              </button>
+              <div id="ctDVDrop" style="display:none;position:absolute;top:32px;left:0;z-index:999;background:var(--n800);border:1px solid var(--bdm);border-radius:8px;min-width:180px;max-height:320px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px 0">
+                <div style="padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;gap:6px">
+                  <button onclick="ctDVSelectAll(true)"  style="flex:1;height:22px;border-radius:4px;border:1px solid var(--bdm);background:var(--n700);color:var(--ts);font-size:10px;cursor:pointer">Chọn tất cả</button>
+                  <button onclick="ctDVSelectAll(false)" style="flex:1;height:22px;border-radius:4px;border:1px solid var(--bdm);background:var(--n700);color:var(--ts);font-size:10px;cursor:pointer">Bỏ chọn</button>
+                </div>
+                <div id="ctDVList" style="padding:4px 0"></div>
+              </div>
+            </div>
+            <!-- hidden select giữ tương thích code cũ -->
+            <select id="fCtDVDet" style="display:none"><option value="">Tất cả đơn vị</option></select>
             <select id="fCtTen" onchange="filterCtTable()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer;max-width:300px">
               <option value="">Tất cả chỉ tiêu</option>
             </select>
@@ -2864,10 +2877,14 @@ function _renderChiTieuCommon({ allRows, allDetail,
   }
   const fDVDet = $(idDVDet);
   if (fDVDet) {
-    const prevVal = fDVDet.value; // giữ lại giá trị đang chọn (nếu có)
     fDVDet.innerHTML = '<option value="">Tất cả đơn vị</option>';
     rows.forEach(r => { const o=document.createElement('option'); o.value=r.donVi; o.textContent=r.donVi; fDVDet.appendChild(o); });
-    if (prevVal) fDVDet.value = prevVal; // khôi phục nếu option còn tồn tại
+  }
+  // Populate multi-select dropdown (chỉ cho tab 12 tháng)
+  if (storeKey12 && typeof _buildCtDVList === 'function') {
+    const dvList = rows.map(r=>r.donVi).filter(Boolean);
+    _buildCtDVList(dvList);
+    _ctDVSelected = new Set(); // reset về tất cả
   }
   const fTen = $(idTen);
   if (fTen) {
@@ -3001,69 +3018,141 @@ function syncCtKV() {
   _countAndSetKPI(filtered, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
 }
 
+// ── Multi-select đơn vị (Chỉ tiêu 12T) ──────────────────────────
+let _ctDVSelected = new Set(); // Set rỗng = tất cả
+
+function toggleCtDVDrop(e) {
+  e.stopPropagation();
+  const drop = $('ctDVDrop');
+  if (!drop) return;
+  const open = drop.style.display !== 'none';
+  drop.style.display = open ? 'none' : 'block';
+}
+
+// Đóng dropdown khi click ra ngoài
+document.addEventListener('click', function(e) {
+  const wrap = $('ctDVDropWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const drop = $('ctDVDrop');
+    if (drop) drop.style.display = 'none';
+  }
+});
+
+function ctDVSelectAll(selectAll) {
+  const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
+  checks.forEach(cb => { cb.checked = selectAll; });
+  _ctDVSelected = selectAll ? new Set() : new Set(Array.from(checks).map(c => c.value));
+  _updateCtDVLabel();
+  filterCtTable();
+}
+
+function _updateCtDVLabel() {
+  const btn = $('ctDVBtnLabel');
+  if (!btn) return;
+  const total = document.querySelectorAll('#ctDVList input[type=checkbox]').length;
+  const checked = document.querySelectorAll('#ctDVList input[type=checkbox]:checked').length;
+  if (checked === 0 || checked === total) {
+    btn.textContent = 'Tất cả đơn vị';
+    _ctDVSelected = new Set();
+  } else {
+    const names = Array.from(document.querySelectorAll('#ctDVList input[type=checkbox]:checked')).map(c => c.value);
+    btn.textContent = names.length <= 2 ? names.join(', ') : names[0] + ' +' + (names.length-1);
+    _ctDVSelected = new Set(names);
+  }
+}
+
+function _buildCtDVList(dvList) {
+  const container = $('ctDVList');
+  if (!container) return;
+  container.innerHTML = '';
+  dvList.forEach(dv => {
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--tp)';
+    row.onmouseover = () => row.style.background = 'var(--n700)';
+    row.onmouseout  = () => row.style.background = '';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.value = dv; cb.checked = true;
+    cb.style.cssText = 'accent-color:var(--cyan);width:14px;height:14px;cursor:pointer';
+    cb.onchange = () => { _updateCtDVLabel(); filterCtTable(); };
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(dv));
+    container.appendChild(row);
+  });
+  _ctDVSelected = new Set(); // mặc định tất cả
+  _updateCtDVLabel();
+}
+
+
 /** Khi topbar fKV thay đổi → cập nhật ngay tab Chỉ tiêu nếu đang xem */
 function onTopbarKVChange() {
   const pg = document.querySelector('.nav-item.active')?.dataset?.page;
   const kv = v('fKV') || '';
 
-  // Reset fCtDVDet theo topbar mới
-  const el12 = $('fCtDVDet');
-  if (el12) el12.value = '';   // reset về "" để filterCtTable dùng topKV
+  // Cập nhật multi-select theo topbar
+  if (pg === 'chitieu12') {
+    const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
+    if (checks.length > 0) {
+      checks.forEach(cb => { cb.checked = !kv || cb.value === kv; });
+      _updateCtDVLabel();
+    }
+    if (DATA12?._ctDetailAll?.length) filterCtTable();
+  }
 
   const el6 = $('fCt6DVDet');
-  if (el6) el6.value = '';
-
-  if (pg === 'chitieu12' && DATA12?._ctDetailAll?.length) filterCtTable();
-  if (pg === 'chitieu6'  && DATA6?._ctDetailAll?.length)  filterCt6Table();
+  if (el6) el6.value = kv;
+  if (pg === 'chitieu6' && DATA6?._ctDetailAll?.length) filterCt6Table();
 }
 
 function filterCtTable() {
   if (!DATA12?._ctDetailAll?.length) return;
 
-  // Nguồn filter đơn vị: topbar fKV là nguồn chính
-  // fCtDVDet trong tab có thể ghi đè nếu user chọn khác
-  const topKV = v('fKV') || '';
-  const tabDV = v('fCtDVDet') || '';
-  // Dùng tabDV nếu có (user chọn trong tab), ngược lại dùng topKV
-  const dvd = tabDV || topKV;
-  const ten = v('fCtTen') || '';
+  const ten    = v('fCtTen') || '';
+  const allRows = DATA12._ctDetailAll;
 
-  // Đồng bộ fCtDVDet theo topKV nếu chưa chọn gì trong tab
-  if (!tabDV && topKV) {
-    const el = $('fCtDVDet');
-    if (el) {
-      const opts = Array.from(el.options).map(o => o.value);
-      if (opts.includes(topKV)) el.value = topKV;
+  // Multi-select: _ctDVSelected rỗng = tất cả, có phần tử = chỉ những KV được chọn
+  const hasDVFilter = _ctDVSelected.size > 0;
+
+  // Đồng bộ topbar fKV → chọn đơn vị tương ứng trong multi-select
+  const topKV = v('fKV') || '';
+  if (topKV && !hasDVFilter) {
+    // Nếu topbar chọn 1 KV mà multi-select đang "tất cả" → tick chỉ KV đó
+    const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
+    if (checks.length > 0) {
+      checks.forEach(cb => { cb.checked = (cb.value === topKV); });
+      _updateCtDVLabel();
     }
   }
 
-  const allRows = DATA12._ctDetailAll;
+  const activeDVs = _ctDVSelected.size > 0 ? _ctDVSelected : null; // null = tất cả
 
   // Filter bảng chi tiết
   let detailRows = allRows;
-  if (dvd) detailRows = detailRows.filter(r => r.donVi === dvd);
-  if (ten) detailRows = detailRows.filter(r => r.tenChiTieu === ten);
+  if (activeDVs) detailRows = detailRows.filter(r => activeDVs.has(r.donVi));
+  if (ten)       detailRows = detailRows.filter(r => r.tenChiTieu === ten);
   _ctDetailRows = detailRows;
   _ctDetailPage = 0;
   _renderCtDetailPage();
 
-  // KPI theo KV đang chọn
-  const kpiRows = dvd ? allRows.filter(r => r.donVi === dvd) : allRows;
+  // KPI: đếm từ KV đang chọn (không ảnh hưởng filter tên)
+  const kpiRows = activeDVs ? allRows.filter(r => activeDVs.has(r.donVi)) : allRows;
   _countAndSetKPI(kpiRows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
 
-  // Biểu đồ theo KV
-  _buildCtCharts(dvd);
+  // Biểu đồ theo KV đang chọn
+  _buildCtCharts(activeDVs ? [...activeDVs] : null);
 }
 
 /** Build/update biểu đồ CT12T theo đơn vị đang chọn */
-function _buildCtCharts(filterDV) {
+function _buildCtCharts(filterDVs) {
   const allRows = DATA12?._ctDetailAll || [];
+  // filterDVs: null = tất cả, string = 1 KV (backward compat), array = nhiều KV
+  const dvSet = !filterDVs ? null
+    : Array.isArray(filterDVs) ? new Set(filterDVs)
+    : new Set([filterDVs]);
 
-  // Build dvSummary từ chiTietRows theo filter
   const dvMap = {};
   allRows.forEach(r => {
     const dv = r.donVi || ''; if (!dv) return;
-    if (filterDV && dv !== filterDV) return;
+    if (dvSet && !dvSet.has(dv)) return;
     if (!dvMap[dv]) dvMap[dv] = { donVi:dv, dat:0, vuot:0, khongDat:0, khongPS:0 };
     const ts = (r.trangThai || '').trim();
     if      (ts === 'Đạt')             dvMap[dv].dat++;
