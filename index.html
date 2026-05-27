@@ -1204,21 +1204,20 @@ body::after{
           <div class="tw-title">Chi tiết từng chỉ tiêu</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <!-- Filter đơn vị multi-select -->
-            <div id="ctDVDropWrap" style="position:relative;display:inline-block">
-              <button id="ctDVBtn" onclick="toggleCtDVDrop(event)"
-                style="height:28px;min-width:130px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 28px 0 10px;cursor:pointer;text-align:left;position:relative;white-space:nowrap">
+            <div id="ctDVDropWrap" style="position:relative;display:inline-block;user-select:none">
+              <button id="ctDVBtn" onclick="ctDVToggle(event)"
+                style="height:28px;min-width:140px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 28px 0 10px;cursor:pointer;text-align:left;position:relative;white-space:nowrap;outline:none">
                 <span id="ctDVBtnLabel">Tất cả đơn vị</span>
-                <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.6;font-size:10px">▼</span>
+                <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.5;font-size:9px;pointer-events:none">▼</span>
               </button>
-              <div id="ctDVDrop" style="display:none;position:absolute;top:32px;left:0;z-index:999;background:var(--n800);border:1px solid var(--bdm);border-radius:8px;min-width:180px;max-height:320px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px 0">
-                <div style="padding:6px 10px;border-bottom:1px solid var(--bd);display:flex;gap:6px">
-                  <button onclick="ctDVSelectAll(true)"  style="flex:1;height:22px;border-radius:4px;border:1px solid var(--bdm);background:var(--n700);color:var(--ts);font-size:10px;cursor:pointer">Chọn tất cả</button>
-                  <button onclick="ctDVSelectAll(false)" style="flex:1;height:22px;border-radius:4px;border:1px solid var(--bdm);background:var(--n700);color:var(--ts);font-size:10px;cursor:pointer">Bỏ chọn</button>
+              <div id="ctDVDrop" style="display:none;position:absolute;top:32px;left:0;z-index:9999;background:#1a2744;border:1px solid #2d4080;border-radius:8px;min-width:180px;max-height:340px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6);padding:0">
+                <div style="padding:8px 10px 6px;border-bottom:1px solid #2d4080;display:flex;gap:6px;position:sticky;top:0;background:#1a2744;z-index:1">
+                  <button onclick="ctDVAll(true)"  style="flex:1;height:24px;border-radius:4px;border:1px solid #2d4080;background:#243060;color:#a0b0d0;font-size:10px;cursor:pointer">✓ Tất cả</button>
+                  <button onclick="ctDVAll(false)" style="flex:1;height:24px;border-radius:4px;border:1px solid #2d4080;background:#243060;color:#a0b0d0;font-size:10px;cursor:pointer">✗ Bỏ hết</button>
                 </div>
                 <div id="ctDVList" style="padding:4px 0"></div>
               </div>
             </div>
-            <!-- hidden select giữ tương thích code cũ -->
             <select id="fCtDVDet" style="display:none"><option value="">Tất cả đơn vị</option></select>
             <select id="fCtTen" onchange="filterCtTable()" style="height:28px;border-radius:6px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;padding:0 8px;cursor:pointer;max-width:300px">
               <option value="">Tất cả chỉ tiêu</option>
@@ -2881,10 +2880,9 @@ function _renderChiTieuCommon({ allRows, allDetail,
     rows.forEach(r => { const o=document.createElement('option'); o.value=r.donVi; o.textContent=r.donVi; fDVDet.appendChild(o); });
   }
   // Populate multi-select dropdown (chỉ cho tab 12 tháng)
-  if (storeKey12 && typeof _buildCtDVList === 'function') {
+  if (storeKey12 && typeof ctDVInit === 'function') {
     const dvList = rows.map(r=>r.donVi).filter(Boolean);
-    _buildCtDVList(dvList);
-    _ctDVSelected = new Set(); // reset về tất cả
+    ctDVInit(dvList); // chỉ rebuild nếu danh sách thay đổi, không reset selection
   }
   const fTen = $(idTen);
   if (fTen) {
@@ -3018,78 +3016,67 @@ function syncCtKV() {
   _countAndSetKPI(filtered, 'ct-dat','ct-vuot','ct-kdat','ct-kps');
 }
 
-// ── Multi-select đơn vị (Chỉ tiêu 12T) ──────────────────────────
-let _ctDVSelected = new Set(); // Set rỗng = tất cả
+// ══ MULTI-SELECT ĐƠN VỊ — Chỉ tiêu 12 tháng ══════════════════
+// _ctDV: Set các KV đang được CHỌN. Rỗng = tất cả.
+const _ctDV = new Set();
 
-function toggleCtDVDrop(e) {
+function ctDVToggle(e) {
   e.stopPropagation();
-  const drop = $('ctDVDrop');
-  if (!drop) return;
-  const open = drop.style.display !== 'none';
-  drop.style.display = open ? 'none' : 'block';
+  const d = $('ctDVDrop');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
 }
-
-// Đóng dropdown khi click ra ngoài
-document.addEventListener('click', function(e) {
-  const wrap = $('ctDVDropWrap');
-  if (wrap && !wrap.contains(e.target)) {
-    const drop = $('ctDVDrop');
-    if (drop) drop.style.display = 'none';
-  }
+document.addEventListener('click', e => {
+  const w = $('ctDVDropWrap');
+  if (w && !w.contains(e.target)) { const d=$('ctDVDrop'); if(d) d.style.display='none'; }
 });
 
-function ctDVSelectAll(selectAll) {
-  const checks = document.querySelectorAll('#ctDVList input[type=checkbox]');
-  checks.forEach(cb => { cb.checked = selectAll; });
-  _ctDVSelected = selectAll ? new Set() : new Set(Array.from(checks).map(c => c.value));
-  _updateCtDVLabel();
-  filterCtTable();
+function ctDVAll(sel) {
+  document.querySelectorAll('#ctDVList input').forEach(cb => cb.checked = sel);
+  _ctDV.clear();
+  if (!sel) {
+    document.querySelectorAll('#ctDVList input').forEach(cb => _ctDV.add(cb.value));
+  }
+  ctDVLabel(); filterCtTable();
 }
 
-function _updateCtDVLabel() {
-  const btn = $('ctDVBtnLabel');
-  if (!btn) return;
-  const total = document.querySelectorAll('#ctDVList input[type=checkbox]').length;
-  const checked = document.querySelectorAll('#ctDVList input[type=checkbox]:checked').length;
-  if (checked === 0 || checked === total) {
-    btn.textContent = 'Tất cả đơn vị';
-    _ctDVSelected = new Set();
+function ctDVLabel() {
+  const lbl  = $('ctDVBtnLabel'); if (!lbl) return;
+  const all  = document.querySelectorAll('#ctDVList input');
+  const chk  = document.querySelectorAll('#ctDVList input:checked');
+  _ctDV.clear();
+  chk.forEach(cb => _ctDV.add(cb.value));
+  if (chk.length === 0 || chk.length === all.length) {
+    lbl.textContent = 'Tất cả đơn vị'; _ctDV.clear();
   } else {
-    const names = Array.from(document.querySelectorAll('#ctDVList input[type=checkbox]:checked')).map(c => c.value);
-    btn.textContent = names.length <= 2 ? names.join(', ') : names[0] + ' +' + (names.length-1);
-    _ctDVSelected = new Set(names);
+    const names = Array.from(chk).map(c => c.value);
+    lbl.textContent = names.length <= 2 ? names.join(', ') : names[0]+' +'+(names.length-1);
   }
 }
 
-function _buildCtDVList(dvList) {
-  const container = $('ctDVList');
-  if (!container) return;
-
-  // Kiểm tra xem list đã có đủ items chưa — nếu rồi thì không rebuild
-  // (tránh reset checkbox khi filterCtTable gọi lại _renderChiTieuCommon)
-  const existing = container.querySelectorAll('input[type=checkbox]');
-  const existingVals = Array.from(existing).map(c => c.value);
-  const same = dvList.length === existingVals.length &&
-    dvList.every((d,i) => d === existingVals[i]);
-  if (same) return; // giữ nguyên trạng thái checkbox hiện tại
-
-  // Rebuild từ đầu (chỉ khi data mới)
-  container.innerHTML = '';
+function ctDVInit(dvList) {
+  const c = $('ctDVList'); if (!c) return;
+  // Chỉ rebuild khi danh sách KV thay đổi
+  const cur = Array.from(c.querySelectorAll('input')).map(x=>x.value);
+  if (dvList.length === cur.length && dvList.every((v,i)=>v===cur[i])) return;
+  // Rebuild
+  c.innerHTML = '';
+  _ctDV.clear();
   dvList.forEach(dv => {
-    const row = document.createElement('label');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--tp)';
-    row.onmouseover = () => row.style.background = 'var(--n700)';
-    row.onmouseout  = () => row.style.background = '';
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 14px;cursor:pointer;font-size:12px;color:#c8d8f0;transition:background .15s';
+    lbl.addEventListener('mouseenter', ()=>lbl.style.background='#243060');
+    lbl.addEventListener('mouseleave', ()=>lbl.style.background='');
     const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.value = dv; cb.checked = true;
-    cb.style.cssText = 'accent-color:var(--cyan);width:14px;height:14px;cursor:pointer';
-    cb.onchange = () => { _updateCtDVLabel(); filterCtTable(); };
-    row.appendChild(cb);
-    row.appendChild(document.createTextNode(dv));
-    container.appendChild(row);
+    cb.type='checkbox'; cb.value=dv; cb.checked=true;
+    cb.style.cssText='width:15px;height:15px;cursor:pointer;accent-color:#00d4ff;flex-shrink:0';
+    // QUAN TRỌNG: stopPropagation để dropdown không đóng khi tick
+    cb.addEventListener('click', e => e.stopPropagation());
+    cb.addEventListener('change', () => { ctDVLabel(); filterCtTable(); });
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(dv));
+    c.appendChild(lbl);
   });
-  _ctDVSelected = new Set(); // mặc định tất cả
-  _updateCtDVLabel();
+  ctDVLabel();
 }
 
 
@@ -3112,8 +3099,8 @@ function filterCtTable() {
   const ten     = v('fCtTen') || '';
   const allRows  = DATA12._ctDetailAll;
 
-  // activeDVs: null = tất cả, Set = chỉ các KV được tick
-  const activeDVs = _ctDVSelected.size > 0 ? _ctDVSelected : null;
+  // activeDVs: null = tất cả, Set = các KV đang tick
+  const activeDVs = _ctDV.size > 0 ? new Set(_ctDV) : null;
 
   // Filter bảng chi tiết
   let detailRows = allRows;
