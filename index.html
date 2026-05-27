@@ -3064,6 +3064,16 @@ function _updateCtDVLabel() {
 function _buildCtDVList(dvList) {
   const container = $('ctDVList');
   if (!container) return;
+
+  // Kiểm tra xem list đã có đủ items chưa — nếu rồi thì không rebuild
+  // (tránh reset checkbox khi filterCtTable gọi lại _renderChiTieuCommon)
+  const existing = container.querySelectorAll('input[type=checkbox]');
+  const existingVals = Array.from(existing).map(c => c.value);
+  const same = dvList.length === existingVals.length &&
+    dvList.every((d,i) => d === existingVals[i]);
+  if (same) return; // giữ nguyên trạng thái checkbox hiện tại
+
+  // Rebuild từ đầu (chỉ khi data mới)
   container.innerHTML = '';
   dvList.forEach(dv => {
     const row = document.createElement('label');
