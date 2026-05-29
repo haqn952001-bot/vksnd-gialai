@@ -1701,8 +1701,8 @@ function gasAskAI(params) {
 
     const timer = setTimeout(() => {
       cleanup();
-      resolve('Trợ lý AI không phản hồi (timeout). Vui lòng thử lại.');
-    }, 45000);
+      resolve('⏱️ Trợ lý AI đang xử lý lâu hơn dự kiến. Hệ thống đang tối ưu — vui lòng thử lại câu hỏi.');
+    }, 90000); // 90s - GAS cần thời gian build context lần đầu
 
     window[cbName] = (data) => {
       cleanup();
@@ -1722,7 +1722,7 @@ function gasAskAI(params) {
       resolve('Lỗi kết nối AI. Vui lòng kiểm tra cấu hình GAS.');
     };
     document.head.appendChild(script);
-    console.log('[JSONP askAI] sending...');
+    console.log('[JSONP askAI] sending... (có thể mất 10-30s lần đầu do build context)');
   });
 }
 
