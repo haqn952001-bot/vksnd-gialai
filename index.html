@@ -1690,19 +1690,39 @@ function gasAPI(action, params={}) {
 /** Gọi askAI qua POST (dùng khi chạy từ Vercel) */
 /** Gọi askAI qua JSONP GET (bypass 403, không dùng POST) */
 function gasAskAI(params) {
-  return new Promise((resolve, reject) => {
-    // Encode messages và contextParams vào GET param
+  return new Promise((resolve) => {
     const cbName = '_gcb_ai_' + Date.now();
+
+    // Tối ưu payload — chỉ gửi turn cuối cùng + tóm tắt lịch sử ngắn
+    const msgs = params.messages || [];
+    // Chỉ gửi 4 turns gần nhất (2 user + 2 bot) để tránh URL quá dài
+    const shortMsgs = msgs.slice(-4);
+    const cp = params.contextParams || {};
+
+    // Build URL với params riêng (không JSON.stringify toàn bộ)
     const url = new URL(GAS_API_URL);
-    url.searchParams.set('action', 'askAI');
+    url.searchParams.set('action',   'askAI');
     url.searchParams.set('callback', cbName);
-    // Encode params thành JSON string trong query
-    url.searchParams.set('payload', JSON.stringify(params));
+    // Gửi payload nhỏ gọn
+    const payload = {
+      messages      : shortMsgs,
+      contextParams : cp
+    };
+    const payloadStr = JSON.stringify(payload);
+    // Kiểm tra URL length — nếu > 7000 ký tự thì cắt bớt messages hơn nữa
+    const testUrl = new URL(GAS_API_URL);
+    testUrl.searchParams.set('payload', payloadStr);
+    const finalPayload = testUrl.toString().length > 7000
+      ? JSON.stringify({ messages: msgs.slice(-2), contextParams: cp })
+      : payloadStr;
+
+    url.searchParams.set('payload', finalPayload);
+    console.log('[JSONP askAI] URL length:', url.toString().length, 'sources:', cp.dataSources);
 
     const timer = setTimeout(() => {
       cleanup();
-      resolve('⏱️ Trợ lý AI đang xử lý lâu hơn dự kiến. Hệ thống đang tối ưu — vui lòng thử lại câu hỏi.');
-    }, 90000); // 90s - GAS cần thời gian build context lần đầu
+      resolve('⏱️ Trợ lý AI đang xử lý lâu hơn dự kiến — vui lòng thử lại câu hỏi.');
+    }, 90000);
 
     window[cbName] = (data) => {
       cleanup();
@@ -1712,17 +1732,17 @@ function gasAskAI(params) {
     function cleanup() {
       clearTimeout(timer);
       delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+      if (script?.parentNode) script.parentNode.removeChild(script);
     }
 
     const script = document.createElement('script');
     script.src = url.toString();
-    script.onerror = () => {
+    script.onerror = (e) => {
       cleanup();
-      resolve('Lỗi kết nối AI. Vui lòng kiểm tra cấu hình GAS.');
+      console.error('[JSONP askAI] script.onerror — URL length:', url.toString().length);
+      resolve('Lỗi kết nối AI (script load failed). Kiểm tra GAS deployment.');
     };
     document.head.appendChild(script);
-    console.log('[JSONP askAI] sending... (có thể mất 10-30s lần đầu do build context)');
   });
 }
 
@@ -4606,8 +4626,22 @@ window.addEventListener('load', () => {
       </div>
     </div>
 
+    <!-- Chọn nguồn dữ liệu -->
+    <div style="padding:8px 12px 0;border-top:1px solid rgba(0,212,255,.1)">
+      <div style="font-size:10px;color:var(--ts);margin-bottom:5px;letter-spacing:.5px">📂 NGUỒN DỮ LIỆU AI SẼ TÌM KIẾM:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px" id="aiSourceBtns">
+        <button class="ai-src-btn ai-src-active" data-src="khuVuc"    onclick="aiToggleSrc(this)">📊 Số liệu khu vực</button>
+        <button class="ai-src-btn ai-src-active" data-src="chiTieu12" onclick="aiToggleSrc(this)">✅ Chỉ tiêu 12T</button>
+        <button class="ai-src-btn ai-src-active" data-src="chiTieu6"  onclick="aiToggleSrc(this)">✅ Chỉ tiêu 6T</button>
+        <button class="ai-src-btn ai-src-active" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy/ĐTBS</button>
+        <button class="ai-src-btn ai-src-active" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 Chuyển đổi số</button>
+        <button class="ai-src-btn ai-src-active" data-src="nq205"     onclick="aiToggleSrc(this)">📋 NQ 205</button>
+        <button class="ai-src-btn"               data-src="drive"     onclick="aiToggleSrc(this)">🗂️ Google Drive</button>
+      </div>
+    </div>
+
     <!-- Input -->
-    <div style="padding:10px 12px;border-top:1px solid rgba(0,212,255,.1);display:flex;gap:8px">
+    <div style="padding:8px 12px 10px;display:flex;gap:8px">
       <input id="aiInput" type="text" placeholder="Nhập câu hỏi..." style="
         flex:1; height:36px; border-radius:8px; border:1px solid var(--bdm);
         background:var(--n800); color:var(--tp); font-size:12px;
@@ -4627,6 +4661,16 @@ window.addEventListener('load', () => {
 .ai-msg { max-width:90%; padding:9px 12px; border-radius:12px; font-size:12px; line-height:1.55; }
 .ai-msg-bot { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.15); color:var(--tp); align-self:flex-start; border-bottom-left-radius:3px; }
 .ai-msg-user{ background:rgba(0,102,204,.3); border:1px solid rgba(0,102,204,.4); color:var(--tp); align-self:flex-end; border-bottom-right-radius:3px; }
+.ai-src-btn {
+  font-size:10px; padding:3px 8px; border-radius:12px; cursor:pointer;
+  border:1px solid rgba(0,212,255,.25); background:transparent;
+  color:var(--ts); font-family:var(--fb); transition:all .15s;
+}
+.ai-src-btn:hover { border-color:rgba(0,212,255,.6); color:var(--tp); }
+.ai-src-active {
+  background:rgba(0,212,255,.15); border-color:rgba(0,212,255,.5);
+  color:var(--cyan) !important;
+}
 .ai-typing { display:flex; gap:4px; padding:10px 14px; }
 .ai-typing span { width:6px; height:6px; border-radius:50%; background:var(--cyan); animation:aiDot 1.2s ease-in-out infinite; }
 .ai-typing span:nth-child(2){ animation-delay:.2s }
@@ -4691,6 +4735,17 @@ function _aiTyping() {
   return div;
 }
 
+/** Toggle nguồn dữ liệu AI */
+function aiToggleSrc(btn) {
+  btn.classList.toggle('ai-src-active');
+}
+
+/** Lấy danh sách nguồn đang được chọn */
+function aiGetSources() {
+  const active = document.querySelectorAll('#aiSourceBtns .ai-src-active');
+  return Array.from(active).map(b => b.dataset.src);
+}
+
 /** Tổng hợp context từ DATA hiện có trong dashboard */
 async function sendAiMsg() {
   const input = document.getElementById('aiInput');
@@ -4714,15 +4769,17 @@ async function sendAiMsg() {
     return;
   }
 
-  // Lấy contextParams từ filter hiện tại của dashboard (để AI dùng đúng bộ lọc)
+  // Lấy contextParams từ filter hiện tại + nguồn dữ liệu được chọn
   const f = getFilterParams();
+  const selectedSources = aiGetSources();
   const contextParams = {
-    namTu    : f.namTu    || '2026',
-    namDen   : f.namDen   || '2026',
-    thangTu  : f.thangTu  || '1',
-    thangDen : f.thangDen || '12',
-    kv       : f.kv       || '',
-    kyBaoCao : f.kyBaoCao || '12thang'
+    namTu      : f.namTu    || '2026',
+    namDen     : f.namDen   || '2026',
+    thangTu    : f.thangTu  || '1',
+    thangDen   : f.thangDen || '12',
+    kv         : f.kv       || '',
+    kyBaoCao   : f.kyBaoCao || '12thang',
+    dataSources: selectedSources  // Nguồn dữ liệu AI sẽ đọc
   };
 
   // Gọi proxy GAS — API key không bao giờ ra browser
