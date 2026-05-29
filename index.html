@@ -1739,8 +1739,21 @@ function gasAskAI(params) {
     script.src = url.toString();
     script.onerror = (e) => {
       cleanup();
-      console.error('[JSONP askAI] script.onerror — URL length:', url.toString().length);
-      resolve('Lỗi kết nối AI (script load failed). Kiểm tra GAS deployment.');
+      const urlLen = url.toString().length;
+      console.error('[JSONP askAI] script.onerror — URL length:', urlLen);
+      // Thử ping GAS để xác định lỗi
+      fetch(GAS_API_URL + '?action=ping&callback=_pingTest')
+        .then(r => r.text())
+        .then(t => {
+          if (t.includes('ok')) {
+            resolve('⚠️ GAS kết nối được nhưng askAI thất bại. URL length: ' + urlLen + '. Thử hỏi câu ngắn hơn.');
+          } else {
+            resolve('⚠️ Không kết nối được GAS. Vui lòng kiểm tra deployment và thử lại.');
+          }
+        })
+        .catch(() => resolve('⚠️ Không kết nối được GAS Web App. Vui lòng:
+1. Kiểm tra GAS đã Deploy chưa
+2. Deploy mode: Anyone'));
     };
     document.head.appendChild(script);
   });
