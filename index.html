@@ -3537,8 +3537,8 @@ function rbars(elId, rows, col, color, subCol) {
     const vu  = r[col]    || 0;
     const sub = subCol ? (r[subCol] || 0) : null;
     const label = sub !== null
-      ? `${F(vu)} <span style="color:var(--ts);font-size:10px">/ ${F(sub)} ${subCol.includes('Cao')||subCol.includes('cao') ? 'bị cáo' : 'bị can'}</span>`
-      : F(vu);
+      ? `${F(vu)} vụ <span style="color:var(--ts);font-size:10px">/ ${F(sub)} ${subCol.includes('Cao')||subCol.includes('cao') ? 'bị cáo' : 'bị can'}</span>`
+      : `${F(vu)} vụ`;
     return `<div class="rb-row">
       <div class="rb-lbl">${r.donVi}</div>
       <div class="rb-track"><div class="rb-fill" style="width:${Math.round((vu/max)*100)}%;background:${color}"></div></div>
@@ -4207,10 +4207,12 @@ function renderShHsva() {
   const cols    = d.numCols  || [];
   if (!cols.length) return; // sheet chưa có dữ liệu
 
-  // KPI — tổng từng cột
+  // KPI — tổng từng cột, filter theo topbar fKV nếu đang chọn 1 KV
   const COLORS = ['var(--cyan)','var(--amber)','var(--emerald)','var(--coral)','var(--violet)'];
+  const _fkvCDS = (v('fKV') || '').trim();
+  const kvForKPI = _fkvCDS ? kv.filter(r => (r.donVi||'').trim() === _fkvCDS) : kv;
   $('shKpiGrid').innerHTML = cols.slice(0,5).map((c,i) => {
-    const total = kv.reduce((s,r)=>s+(r[c]||0),0);
+    const total = kvForKPI.reduce((s,r)=>s+(r[c]||0),0);
     return `<div class="kc" data-ac="${['cyan','amber','emerald','coral','violet'][i]}">
       <div class="kc-lbl">${c}</div>
       <div class="kc-val">${F(total)}</div>
