@@ -1312,6 +1312,15 @@ body::after{
             <th style="width:120px">Trạng thái</th>
           </tr></thead><tbody id="ct6Detail"></tbody></table>
         </div>
+        <!-- Pagination CT6 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--bd);flex-wrap:wrap;gap:8px">
+          <span id="ct6DetailInfo" style="font-size:11px;color:var(--ts)">—</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="ct6DetailPageNum" style="font-size:11px;color:var(--ts)">—</span>
+            <button onclick="ct6PagePrev()" style="height:26px;padding:0 12px;border-radius:5px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;cursor:pointer">← Trước</button>
+            <button onclick="ct6PageNext()" style="height:26px;padding:0 12px;border-radius:5px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:11px;cursor:pointer">Tiếp →</button>
+          </div>
+        </div>
       </div>
     </div><!-- /chitieu6 -->
 
@@ -2396,7 +2405,18 @@ function reloadChiTieu6() {
           hideLoader();
           renderChiTieu6();
         })
-        .catch(err => { console.error('[CT6] error:', err); hideLoader(); });
+        .catch(err => {
+          console.error('[CT6] error:', err);
+          hideLoader();
+          // Fallback sang demo khi không kết nối được GAS
+          DATA6 = DATA6 || {};
+          if (!DATA6.chiTieu) {
+            DATA6.chiTieu         = _makeDemoChiTieu6();
+            DATA6._ctDetailAll    = DATA6.chiTieu.chiTietRows;
+            DATA6._ctDetailIsReal = false;
+            renderChiTieu6();
+          }
+        });
     } else {
       setTimeout(()=>{ DATA6=DATA6||{}; if(!DATA6.chiTieu) DATA6.chiTieu=_makeDemoChiTieu6(); hideLoader(); renderChiTieu6(); },300);
     }
@@ -3291,6 +3311,34 @@ function _renderAhLoiTable() {
     : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tm)">Chưa có dữ liệu</td></tr>';
 }
 
+// ── Pagination cho CT6 ─────────────────────────────────────────
+const CT6_PAGE_SIZE = 20;
+let _ct6DetailRows = [];
+let _ct6Page = 0;
+
+function _renderCt6Page() {
+  const total = _ct6DetailRows.length;
+  const maxPage = Math.max(1, Math.ceil(total / CT6_PAGE_SIZE));
+  _ct6Page = Math.max(0, Math.min(_ct6Page, maxPage - 1));
+  const start = _ct6Page * CT6_PAGE_SIZE;
+  const pageRows = _ct6DetailRows.slice(start, start + CT6_PAGE_SIZE);
+
+  $('ct6DetailInfo') && ($('ct6DetailInfo').textContent = total > 0
+    ? `Hiển thị ${start+1}–${Math.min(start+CT6_PAGE_SIZE, total)} / ${total} bản ghi`
+    : 'Không có dữ liệu');
+  $('ct6DetailPageNum') && ($('ct6DetailPageNum').textContent = total > 0
+    ? `Trang ${_ct6Page+1} / ${maxPage}` : '—');
+
+  _renderDetailRows('ct6Detail', pageRows);
+}
+
+function ct6PagePrev() { _ct6Page = Math.max(0, _ct6Page - 1); _renderCt6Page(); }
+function ct6PageNext() {
+  const max = Math.max(1, Math.ceil(_ct6DetailRows.length / CT6_PAGE_SIZE));
+  _ct6Page = Math.min(max - 1, _ct6Page + 1);
+  _renderCt6Page();
+}
+
 // Filter cho trang 6 tháng
 function renderCt6Detail() {
   const dvDet = v('fCt6DVDet');
@@ -3298,7 +3346,9 @@ function renderCt6Detail() {
   let rows = DATA6?._ctDetailAll || [];
   if (dvDet) rows = rows.filter(r => r.donVi === dvDet);
   if (ten)   rows = rows.filter(r => r.tenChiTieu === ten);
-  _renderDetailRows('ct6Detail', rows);
+  _ct6DetailRows = rows;
+  _ct6Page = 0;
+  _renderCt6Page();
 }
 
 function filterCt6Table() {
@@ -3384,28 +3434,44 @@ function renderKhuVuc() {
   const kv = d.kvList || [];
 
   rbars('rbTinBao', kv, 'Tin báo mới', '#00d4ff');
-  rbars('rbKhoiTo', kv, 'khoiToVu',    '#ffb800');
+  rbars('rbKhoiTo', kv, 'khoiToVu', '#ffb800', 'khoiToCan');
 
-  // Bar chart Truy tố
+  // Bar chart Truy tố — sắp xếp theo số vụ giảm dần
+  const truyToSorted = [...kv].sort((a,b)=>(b.truyToVu||0)-(a.truyToVu||0));
+  if (CHS['cKVTruyTo']) { CHS['cKVTruyTo'].destroy(); delete CHS['cKVTruyTo']; }
   CHS['cKVTruyTo'] = mkChart('cKVTruyTo','bar',{
-    labels: kv.map(r=>r.donVi),
-    datasets:[{ label:'Truy tố (vụ)', data:kv.map(r=>r.truyToVu||0),
+    labels: truyToSorted.map(r=>r.donVi),
+    datasets:[{ label:'Truy tố (vụ)', data:truyToSorted.map(r=>r.truyToVu||0),
       backgroundColor:'rgba(168,85,247,.8)', borderRadius:5 }]
-  },{ plugins:{legend:{display:false}},
-      scales:{ x:{...dkScale(), ticks:{...dkScale().ticks, maxRotation:45, minRotation:0}},
-               y:{...dkScale(),min:0,
-                  ticks:{...dkScale().ticks, precision:0}} }
+  },{
+    plugins:{
+      legend:{display:false},
+      tooltip:{ callbacks:{ label: ctx => {
+        const r = truyToSorted[ctx.dataIndex];
+        return `${r.truyToVu||0} vụ / ${r.truyToCan||0} bị can`;
+      }}}
+    },
+    scales:{ x:{...dkScale(), ticks:{...dkScale().ticks, maxRotation:45, minRotation:0}},
+             y:{...dkScale(),min:0, ticks:{...dkScale().ticks, precision:0}} }
   });
 
-  // Bar chart Xét xử
+  // Bar chart Xét xử — sắp xếp theo số vụ giảm dần
+  const xetXuSorted = [...kv].sort((a,b)=>(b.xetXuVu||0)-(a.xetXuVu||0));
+  if (CHS['cKVXetXu']) { CHS['cKVXetXu'].destroy(); delete CHS['cKVXetXu']; }
   CHS['cKVXetXu'] = mkChart('cKVXetXu','bar',{
-    labels: kv.map(r=>r.donVi),
-    datasets:[{ label:'Xét xử (vụ)', data:kv.map(r=>r.xetXuVu||0),
+    labels: xetXuSorted.map(r=>r.donVi),
+    datasets:[{ label:'Xét xử (vụ)', data:xetXuSorted.map(r=>r.xetXuVu||0),
       backgroundColor:'rgba(0,229,160,.8)', borderRadius:5 }]
-  },{ plugins:{legend:{display:false}},
-      scales:{ x:{...dkScale(), ticks:{...dkScale().ticks, maxRotation:45, minRotation:0}},
-               y:{...dkScale(),min:0,
-                  ticks:{...dkScale().ticks, precision:0}} }
+  },{
+    plugins:{
+      legend:{display:false},
+      tooltip:{ callbacks:{ label: ctx => {
+        const r = xetXuSorted[ctx.dataIndex];
+        return `${r.xetXuVu||0} vụ / ${r.xetXuCao||0} bị cáo`;
+      }}}
+    },
+    scales:{ x:{...dkScale(), ticks:{...dkScale().ticks, maxRotation:45, minRotation:0}},
+             y:{...dkScale(),min:0, ticks:{...dkScale().ticks, precision:0}} }
   });
 
   // 4 Donut charts
@@ -3463,15 +3529,22 @@ function renderKhuVuc() {
   });
 }
 
-function rbars(elId, rows, col, color) {
+function rbars(elId, rows, col, color, subCol) {
+  // Sắp xếp theo col (số vụ) giảm dần
   const sorted = [...rows].sort((a,b)=>(b[col]||0)-(a[col]||0));
   const max = sorted[0]?.[col]||1;
-  $(elId).innerHTML = sorted.map(r=>`
-    <div class="rb-row">
+  $(elId).innerHTML = sorted.map(r => {
+    const vu  = r[col]    || 0;
+    const sub = subCol ? (r[subCol] || 0) : null;
+    const label = sub !== null
+      ? `${F(vu)} <span style="color:var(--ts);font-size:10px">/ ${F(sub)} ${subCol.includes('Cao')||subCol.includes('cao') ? 'bị cáo' : 'bị can'}</span>`
+      : F(vu);
+    return `<div class="rb-row">
       <div class="rb-lbl">${r.donVi}</div>
-      <div class="rb-track"><div class="rb-fill" style="width:${Math.round(((r[col]||0)/max)*100)}%;background:${color}"></div></div>
-      <div class="rb-val">${F(r[col])}</div>
-    </div>`).join('');
+      <div class="rb-track"><div class="rb-fill" style="width:${Math.round((vu/max)*100)}%;background:${color}"></div></div>
+      <div class="rb-val" style="min-width:90px;text-align:right">${label}</div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3930,7 +4003,7 @@ function loadDemo() {
       kvList: KV.map((dv,i)=>({
         donVi:dv, ctd:i<6?'Cụm 1':'Cụm 2',
         'Tin báo mới':R(5,45), 'Yêu cầu xác minh':R(2,30),
-        khoiToVu:R(0,10), truyToVu:R(0,8), xetXuVu:R(0,6),
+        khoiToVu:R(0,10), khoiToCan:R(0,25), truyToVu:R(0,8), truyToCan:R(0,20), xetXuVu:R(0,6), xetXuCao:R(0,15),
         'Tạm giữ ':R(0,8), 'Tạm giam':R(0,15),
         'Bắt khẩn cấp':R(1,6), 'Truy nã':R(1,5),
         'Đầu thú':R(1,4), 'Quả tang':R(1,7),
