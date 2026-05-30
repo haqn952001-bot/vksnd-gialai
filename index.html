@@ -1699,29 +1699,42 @@ function gasAskAI(params) {
     const shortMsgs = msgs.slice(-4);
     const cp = params.contextParams || {};
 
-    // Build URL với params riêng (không JSON.stringify toàn bộ)
     const url = new URL(GAS_API_URL);
     url.searchParams.set('action',   'askAI');
     url.searchParams.set('callback', cbName);
-    // Gửi payload nhỏ gọn
-    const payload = {
-      messages      : shortMsgs,
-      contextParams : cp
+
+    // Tối giản contextParams — chỉ giữ fields thực sự cần
+    const cpMin = {
+      namTu      : cp.namTu,
+      namDen     : cp.namDen,
+      thangTu    : cp.thangTu,
+      thangDen   : cp.thangDen,
+      kv         : cp.kv,
+      kyBaoCao   : cp.kyBaoCao,
+      dataSources: cp.dataSources
     };
-    const payloadStr = JSON.stringify(payload);
-    // Kiểm tra URL length — nếu > 7000 ký tự thì cắt bớt messages hơn nữa
-    const testUrl = new URL(GAS_API_URL);
-    testUrl.searchParams.set('payload', payloadStr);
-    const finalPayload = testUrl.toString().length > 7000
-      ? JSON.stringify({ messages: msgs.slice(-2), contextParams: cp })
-      : payloadStr;
+
+    // Gửi tối đa 1 turn gần nhất — đủ để AI hiểu ngữ cảnh
+    // Câu hỏi đã nằm trong messages cuối, không cần history dài
+    const lastMsg = msgs.length > 0 ? [msgs[msgs.length - 1]] : [];
+
+    // Build payload và kiểm tra length
+    let finalPayload = JSON.stringify({ messages: lastMsg, contextParams: cpMin });
+    const testUrl    = new URL(GAS_API_URL);
+    testUrl.searchParams.set('payload', finalPayload);
+
+    // Nếu vẫn > 6000 → chỉ gửi câu hỏi, bỏ contextParams không cần thiết
+    if (testUrl.toString().length > 6000) {
+      const cpMicro = { dataSources: cp.dataSources, kv: cp.kv, kyBaoCao: cp.kyBaoCao };
+      finalPayload = JSON.stringify({ messages: lastMsg, contextParams: cpMicro });
+    }
 
     url.searchParams.set('payload', finalPayload);
-    console.log('[JSONP askAI] URL length:', url.toString().length, 'sources:', cp.dataSources);
+    console.log('[JSONP askAI] URL length:', url.toString().length, '| sources:', cp.dataSources);
 
     const timer = setTimeout(() => {
       cleanup();
-      resolve('⏱️ Trợ lý AI đang xử lý lâu hơn dự kiến — vui lòng thử lại câu hỏi.');
+      resolve('Báo cáo Viện trưởng, hiện nay với kiến thức em được học chưa thể trả lời câu hỏi này. Em cần thời gian đào tạo thêm, mong Viện trưởng thông cảm ạ!');
     }, 90000);
 
     window[cbName] = (data) => {
@@ -1746,12 +1759,12 @@ function gasAskAI(params) {
         .then(r => r.text())
         .then(t => {
           if (t.includes('ok')) {
-            resolve('⚠️ GAS kết nối được nhưng askAI thất bại. URL length: ' + urlLen + '. Thử hỏi câu ngắn hơn.');
+            resolve('Báo cáo Viện trưởng, hiện nay với kiến thức em được học chưa thể trả lời câu hỏi này. Em cần thời gian đào tạo thêm, mong Viện trưởng thông cảm ạ!');
           } else {
             resolve('⚠️ Không kết nối được GAS. Vui lòng kiểm tra deployment và thử lại.');
           }
         })
-        .catch(() => resolve('⚠️ Không kết nối được GAS Web App. Vui lòng: 1) Kiểm tra GAS đã Deploy chưa. 2) Deploy mode: Anyone'));
+        .catch(() => resolve('Báo cáo Viện trưởng, hiện nay với kiến thức em được học chưa thể trả lời câu hỏi này. Em cần thời gian đào tạo thêm, mong Viện trưởng thông cảm ạ!'));
     };
     document.head.appendChild(script);
   });
