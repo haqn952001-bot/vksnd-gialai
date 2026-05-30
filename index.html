@@ -4795,7 +4795,11 @@ async function sendAiMsg() {
 
   // Gọi proxy GAS — API key không bao giờ ra browser
   // Chỉ gửi 6 turns gần nhất — tránh AI dùng data cũ từ context lâu
-  const recentHistory = _aiHistory.slice(-12);
+  // Lọc bỏ các turn lỗi khỏi history trước khi gửi lên GAS
+  const recentHistory = _aiHistory.slice(-12).filter(m =>
+    m.role !== 'assistant' ||
+    (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️') && !m.content.startsWith('[Error'))
+  );
 
   // Vercel mode: gọi GAS qua POST fetch
   if (MODE === 'VERCEL') {
@@ -4803,8 +4807,12 @@ async function sendAiMsg() {
       .then(reply => {
         typing.remove();
         _aiAddMsg(reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'), 'bot');
-        _aiHistory.push({ role:'assistant', content: reply });
-        if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
+        // Không lưu reply lỗi vào history để tránh vòng lặp lỗi
+        const isErr = reply.startsWith('[Lỗi') || reply.startsWith('⚠️') || reply.startsWith('[Error');
+        if (!isErr) {
+          _aiHistory.push({ role:'assistant', content: reply });
+          if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
+        }
         _aiSending = false;
       })
       .catch(err => {
@@ -4818,8 +4826,11 @@ async function sendAiMsg() {
     .withSuccessHandler(reply => {
       typing.remove();
       _aiAddMsg(reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'), 'bot');
-      _aiHistory.push({ role:'assistant', content: reply });
-      if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
+      const isErr = reply.startsWith('[Lỗi') || reply.startsWith('⚠️') || reply.startsWith('[Error');
+      if (!isErr) {
+        _aiHistory.push({ role:'assistant', content: reply });
+        if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
+      }
       _aiSending = false;
     })
     .withFailureHandler(err => {
