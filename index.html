@@ -1703,34 +1703,29 @@ function gasAskAI(params) {
     url.searchParams.set('action',   'askAI');
     url.searchParams.set('callback', cbName);
 
-    // Tối giản contextParams — chỉ giữ fields thực sự cần
-    const cpMin = {
-      namTu      : cp.namTu,
-      namDen     : cp.namDen,
-      thangTu    : cp.thangTu,
-      thangDen   : cp.thangDen,
-      kv         : cp.kv,
-      kyBaoCao   : cp.kyBaoCao,
-      dataSources: cp.dataSources
+    // Luôn gửi đủ contextParams — GAS cần đủ thông tin để build context
+    const cpFull = {
+      namTu      : cp.namTu      || '2026',
+      namDen     : cp.namDen     || '2026',
+      thangTu    : cp.thangTu    || '1',
+      thangDen   : cp.thangDen   || '12',
+      kv         : cp.kv         || '',
+      kyBaoCao   : cp.kyBaoCao   || '12thang',
+      dataSources: cp.dataSources || []
     };
 
-    // Gửi tối đa 1 turn gần nhất — đủ để AI hiểu ngữ cảnh
-    // Câu hỏi đã nằm trong messages cuối, không cần history dài
+    // Chỉ gửi câu hỏi cuối (không gửi history để giảm URL length)
     const lastMsg = msgs.length > 0 ? [msgs[msgs.length - 1]] : [];
-
-    // Build payload và kiểm tra length
-    let finalPayload = JSON.stringify({ messages: lastMsg, contextParams: cpMin });
-    const testUrl    = new URL(GAS_API_URL);
-    testUrl.searchParams.set('payload', finalPayload);
-
-    // Nếu vẫn > 6000 → chỉ gửi câu hỏi, bỏ contextParams không cần thiết
-    if (testUrl.toString().length > 6000) {
-      const cpMicro = { dataSources: cp.dataSources, kv: cp.kv, kyBaoCao: cp.kyBaoCao };
-      finalPayload = JSON.stringify({ messages: lastMsg, contextParams: cpMicro });
-    }
+    const finalPayload = JSON.stringify({ messages: lastMsg, contextParams: cpFull });
 
     url.searchParams.set('payload', finalPayload);
-    console.log('[JSONP askAI] URL length:', url.toString().length, '| sources:', cp.dataSources);
+    const urlLen = url.toString().length;
+    console.log('[JSONP askAI] URL length:', urlLen, '| sources:', cp.dataSources);
+
+    // Cảnh báo nếu URL quá dài (>8000)
+    if (urlLen > 8000) {
+      console.warn('[JSONP askAI] URL quá dài:', urlLen, '— có thể bị lỗi');
+    }
 
     const timer = setTimeout(() => {
       cleanup();
@@ -4670,7 +4665,7 @@ window.addEventListener('load', () => {
         flex:1; height:36px; border-radius:8px; border:1px solid var(--bdm);
         background:var(--n800); color:var(--tp); font-size:12px;
         padding:0 12px; font-family:var(--fb); outline:none;
-      " onkeydown="if(event.key==='Enter')sendAiMsg()"
+      "
       />
       <button onclick="sendAiMsg()" style="
         width:36px; height:36px; border-radius:8px; border:none; cursor:pointer;
@@ -4707,23 +4702,24 @@ window.addEventListener('load', () => {
 </style>
 
 <script>
-// ══ AI CHAT ═══════════════════════════════════════════════════
+// ══ AI CHAT — V6 Gemini Only + Context Enrichment ══════════════
 let _aiOpen    = false;
-let _aiHistory = [];
-let _aiSending = false; // tránh gửi 2 lần cùng lúc
-// Context số liệu được build phía GAS (_buildGasAiContext trong Code.gs)
-// Đảm bảo 100% đồng nhất với dashboard — không build lại ở frontend
+let _aiHistory = []; // lịch sử đầy đủ — GAS sẽ tự filter 12 turns gần nhất
+let _aiSending = false;
+
+// ── Patterns phát hiện câu hỏi nối tiếp (đồng bộ với GAS) ────
+const _CONT_RE = /số liệu (trên|đó|vừa|này|kia)|so (sánh|với).*(trên|đó|vừa|này|kia)|^so sánh\b|các (kv|đơn vị|khu vực) khác|^còn (kv|đơn vị|tháng|khu vực)\b|^thế còn\b|^vậy còn\b|^còn lại\b|toàn ngành|tổng (cộng|số|cả ngành)|^(chi tiết|phân tích|đánh giá) (hơn|thêm)?\b|^(xếp hạng|rank|top)\b/i;
 
 function toggleAiChat() {
   _aiOpen = !_aiOpen;
   const panel  = document.getElementById('aiPanel');
   const bubble = document.getElementById('aiBubble');
-  panel.style.display  = _aiOpen ? 'flex' : 'none';
+  panel.style.display    = _aiOpen ? 'flex' : 'none';
   bubble.style.transform = _aiOpen ? 'scale(.9)' : 'scale(1)';
   if (_aiOpen) document.getElementById('aiInput')?.focus();
 }
 
-/** Xóa lịch sử hội thoại để AI đọc data mới nhất */
+/** Xóa lịch sử — AI đọc data mới */
 function refreshAiData() {
   _aiHistory = [];
   const box = document.getElementById('aiMessages');
@@ -4733,17 +4729,16 @@ function refreshAiData() {
     '<span style="font-size:10px;color:var(--ts)">⏱ ' + new Date().toLocaleTimeString('vi-VN') + '</span>',
     'bot'
   );
-  // Cập nhật subtitle
   const dt = document.getElementById('aiDataTime');
   if (dt) dt.textContent = 'Đã làm mới lúc ' + new Date().toLocaleTimeString('vi-VN');
 }
 
-function _aiAddMsg(text, role) {
+function _aiAddMsg(html, role) {
   const box = document.getElementById('aiMessages');
   if (!box) return;
   const div = document.createElement('div');
   div.className = 'ai-msg ' + (role === 'user' ? 'ai-msg-user' : 'ai-msg-bot');
-  div.innerHTML = text;
+  div.innerHTML = html;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   return div;
@@ -4759,33 +4754,57 @@ function _aiTyping() {
   return div;
 }
 
-/** Toggle nguồn dữ liệu AI */
-function aiToggleSrc(btn) {
-  btn.classList.toggle('ai-src-active');
+/** Hiện badge nhỏ "Đang dùng ngữ cảnh..." khi phát hiện câu nối tiếp */
+function _aiContextHint() {
+  const box = document.getElementById('aiMessages');
+  if (!box) return;
+  const div = document.createElement('div');
+  div.style.cssText = 'font-size:10px;color:#ffb800;opacity:.75;padding:2px 4px 6px 4px;align-self:flex-start';
+  div.innerHTML = '🔗 Đang kế thừa ngữ cảnh câu hỏi trước...';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  // Tự xóa sau 4 giây
+  setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 4000);
 }
 
-/** Lấy danh sách nguồn đang được chọn */
+function aiToggleSrc(btn) { btn.classList.toggle('ai-src-active'); }
+
 function aiGetSources() {
-  const active = document.querySelectorAll('#aiSourceBtns .ai-src-active');
-  return Array.from(active).map(b => b.dataset.src);
+  return Array.from(document.querySelectorAll('#aiSourceBtns .ai-src-active'))
+    .map(function(b){ return b.dataset.src; });
 }
 
-/** Tổng hợp context từ DATA hiện có trong dashboard */
-async function sendAiMsg() {
+/** Format markdown đơn giản → HTML */
+function _aiFormatReply(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,212,255,.1);padding:1px 4px;border-radius:3px;font-family:var(--fm);font-size:11px">$1</code>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+/** Gửi câu hỏi đến AI */
+function sendAiMsg() {
   const input = document.getElementById('aiInput');
-  const q = input?.value?.trim();
+  const q     = (input && input.value || '').trim();
   if (!q || _aiSending) return;
   input.value = '';
-  _aiSending = true;
+  _aiSending  = true;
 
   _aiAddMsg(q, 'user');
-  _aiHistory.push({ role:'user', content: q });
+  _aiHistory.push({ role: 'user', content: q });
+
+  // Hiển thị hint ngữ cảnh nếu là câu hỏi nối tiếp
+  if (_CONT_RE.test(q) && _aiHistory.length > 2) {
+    _aiContextHint();
+  }
 
   const typing = _aiTyping();
 
+  // Demo mode (chạy file HTML trực tiếp, không phải GAS hay Vercel)
   if (!GAS && MODE !== 'VERCEL') {
-    // Demo mode — chỉ khi không phải GAS và không phải Vercel
-    setTimeout(() => {
+    setTimeout(function() {
       typing.remove();
       _aiAddMsg('Trợ lý AI chỉ hoạt động khi chạy qua Google Apps Script. Hiện đang ở chế độ demo.', 'bot');
       _aiSending = false;
@@ -4793,9 +4812,8 @@ async function sendAiMsg() {
     return;
   }
 
-  // Lấy contextParams từ filter hiện tại + nguồn dữ liệu được chọn
-  const f = getFilterParams();
-  const selectedSources = aiGetSources();
+  // Build contextParams
+  const f = getFilterParams ? getFilterParams() : {};
   const contextParams = {
     namTu      : f.namTu    || '2026',
     namDen     : f.namDen   || '2026',
@@ -4803,57 +4821,53 @@ async function sendAiMsg() {
     thangDen   : f.thangDen || '12',
     kv         : f.kv       || '',
     kyBaoCao   : f.kyBaoCao || '12thang',
-    dataSources: selectedSources  // Nguồn dữ liệu AI sẽ đọc
+    dataSources: aiGetSources()
   };
 
-  // Gọi proxy GAS — API key không bao giờ ra browser
-  // Chỉ gửi 6 turns gần nhất — tránh AI dùng data cũ từ context lâu
-  // Lọc bỏ các turn lỗi khỏi history trước khi gửi lên GAS
-  const recentHistory = _aiHistory.slice(-12).filter(m =>
-    m.role !== 'assistant' ||
-    (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️') && !m.content.startsWith('[Error'))
-  );
+  // Gửi tối đa 16 turns gần nhất, lọc bỏ reply lỗi
+  // GAS sẽ tự enrich câu cuối với ngữ cảnh từ history
+  const recentHistory = _aiHistory.slice(-16).filter(function(m) {
+    return m.role !== 'assistant' ||
+      (!m.content.startsWith('[Lỗi') &&
+       !m.content.startsWith('⚠️') &&
+       !m.content.startsWith('[Error') &&
+       !m.content.startsWith('Lỗi kết nối') &&
+       !m.content.startsWith('Lỗi Gemini'));
+  });
 
-  // Vercel mode: gọi GAS qua POST fetch
+  function _onReply(reply) {
+    typing.remove();
+    _aiAddMsg(_aiFormatReply(reply), 'bot');
+    const isErr = /^\[Lỗi|^⚠️|^\[Error|^Lỗi kết nối|^Lỗi Gemini|^Server Gemini|^Hệ thống AI đang bận/.test(reply);
+    if (!isErr) {
+      _aiHistory.push({ role: 'assistant', content: reply });
+      if (_aiHistory.length > 30) _aiHistory = _aiHistory.slice(-30);
+    }
+    _aiSending = false;
+  }
+
+  function _onErr(err) {
+    typing.remove();
+    _aiAddMsg('Lỗi kết nối: ' + (err && err.message ? err.message : String(err)), 'bot');
+    _aiSending = false;
+  }
+
+  const payload = { messages: recentHistory, contextParams: contextParams };
+
   if (MODE === 'VERCEL') {
-    gasAskAI({ messages: recentHistory, contextParams: contextParams })
-      .then(reply => {
-        typing.remove();
-        _aiAddMsg(reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'), 'bot');
-        // Không lưu reply lỗi vào history để tránh vòng lặp lỗi
-        const isErr = reply.startsWith('[Lỗi') || reply.startsWith('⚠️') || reply.startsWith('[Error');
-        if (!isErr) {
-          _aiHistory.push({ role:'assistant', content: reply });
-          if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
-        }
-        _aiSending = false;
-      })
-      .catch(err => {
-        typing.remove();
-        _aiAddMsg('Lỗi kết nối: ' + err.message, 'bot');
-        _aiSending = false;
-      });
+    gasAskAI(payload).then(_onReply).catch(_onErr);
     return;
   }
+
   google.script.run
-    .withSuccessHandler(reply => {
-      typing.remove();
-      _aiAddMsg(reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'), 'bot');
-      const isErr = reply.startsWith('[Lỗi') || reply.startsWith('⚠️') || reply.startsWith('[Error');
-      if (!isErr) {
-        _aiHistory.push({ role:'assistant', content: reply });
-        if (_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
-      }
-      _aiSending = false;
-    })
-    .withFailureHandler(err => {
-      typing.remove();
-      _aiAddMsg('Lỗi: ' + (err?.message || err), 'bot');
-      _aiSending = false;
-    })
-    .askAI({
-      messages       : recentHistory,
-      contextParams  : contextParams
-    });
+    .withSuccessHandler(_onReply)
+    .withFailureHandler(_onErr)
+    .askAI(payload);
 }
+
+// Enter gửi tin
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('aiInput');
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sendAiMsg(); });
+});
 </script>
