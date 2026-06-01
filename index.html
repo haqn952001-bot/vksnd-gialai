@@ -5039,12 +5039,12 @@ window.addEventListener('load', () => {
     <div style="padding:8px 12px 0;border-top:1px solid rgba(0,212,255,.1)">
       <div style="font-size:10px;color:var(--ts);margin-bottom:5px;letter-spacing:.5px">📂 NGUỒN DỮ LIỆU AI SẼ TÌM KIẾM:</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px" id="aiSourceBtns">
-        <button class="ai-src-btn ai-src-active" data-src="khuVuc"    onclick="aiToggleSrc(this)">📊 Số liệu khu vực</button>
-        <button class="ai-src-btn ai-src-active" data-src="chiTieu12" onclick="aiToggleSrc(this)">✅ Chỉ tiêu 12T</button>
-        <button class="ai-src-btn ai-src-active" data-src="chiTieu6"  onclick="aiToggleSrc(this)">✅ Chỉ tiêu 6T</button>
-        <button class="ai-src-btn ai-src-active" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy/ĐTBS</button>
-        <button class="ai-src-btn ai-src-active" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 Chuyển đổi số</button>
-        <button class="ai-src-btn ai-src-active" data-src="nq205"     onclick="aiToggleSrc(this)">📋 NQ 205</button>
+        <button class="ai-src-btn" data-src="khuVuc"    onclick="aiToggleSrc(this)">📊 Số liệu khu vực</button>
+        <button class="ai-src-btn" data-src="chiTieu12" onclick="aiToggleSrc(this)">📋 Chỉ tiêu 12T</button>
+        <button class="ai-src-btn" data-src="chiTieu6"  onclick="aiToggleSrc(this)">📋 Chỉ tiêu 6T</button>
+        <button class="ai-src-btn" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy/ĐTBS</button>
+        <button class="ai-src-btn" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 Chuyển đổi số</button>
+        <button class="ai-src-btn" data-src="nq205"     onclick="aiToggleSrc(this)">📑 NQ 205</button>
         <button class="ai-src-btn" data-src="drive" onclick="aiToggleSrc(this)" id="aiDriveBtn" title="Bật để tra cứu văn bản, tài liệu trong Google Drive">🗂️ Google Drive</button>
       </div>
       <div id="aiDriveHint" style="display:none;font-size:10px;color:#ffb800;margin-top:4px">⚠️ Để tra cứu tài liệu Drive, hãy bật nút 🗂️ Google Drive phía trên trước khi hỏi</div>
@@ -5191,7 +5191,17 @@ function sendAiMsg() {
   _aiAddMsg(q, 'user');
   _aiHistory.push({ role: 'user', content: q });
 
-  // Hiển thị hint ngữ cảnh nếu là câu hỏi nối tiếp
+  // Kiểm tra chưa chọn nguồn nào → nhắc nhở
+  const srcs = aiGetSources();
+  if (srcs.length === 0) {
+    _aiAddMsg(
+      '⚠️ Viện trưởng chưa chọn nguồn dữ liệu nào. ' +
+      'Vui lòng tick chọn ít nhất một nguồn ở phía trên trước khi hỏi ạ.',
+      'bot'
+    );
+    _aiSending = false;
+    return;
+  }
   if (_CONT_RE.test(q) && _aiHistory.length > 2) {
     _aiContextHint();
   }
