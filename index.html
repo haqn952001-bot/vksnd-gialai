@@ -1171,6 +1171,22 @@ body::after{
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
       </svg>Triển khai NQ 205
     </div>
+    <div class="nav-label">Phòng nghiệp vụ</div>
+    <div class="nav-item" data-page="phong7" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>Hoạt động Phòng 7
+    </div>
+    <div class="nav-item" data-page="phong8" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>Hoạt động Phòng 8
+    </div>
+    <div class="nav-item" data-page="phong9" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>Hoạt động Phòng 9
+    </div>
   </nav>
 
   <!-- ══ MAIN ════════════════════════════════════════════════ -->
@@ -1717,6 +1733,33 @@ body::after{
       </div>
     </div><!-- /thnq205 -->
 
+    <!-- PAGE: PHÒNG 7 -->
+    <div class="page" id="page-phong7">
+      <div class="ph fi"><div>
+        <div class="ph-sub">HOẠT ĐỘNG CỦA PHÒNG 7 — VKSND TỈNH GIA LAI</div>
+        <h1>Hoạt động Phòng 7</h1>
+      </div></div>
+      <div id="phong7-body"><div style="padding:40px;text-align:center;color:var(--ts)">Đang tải dữ liệu Phòng 7…</div></div>
+    </div>
+
+    <!-- PAGE: PHÒNG 8 -->
+    <div class="page" id="page-phong8">
+      <div class="ph fi"><div>
+        <div class="ph-sub">HOẠT ĐỘNG CỦA PHÒNG 8 — VKSND TỈNH GIA LAI</div>
+        <h1>Hoạt động Phòng 8</h1>
+      </div></div>
+      <div id="phong8-body"><div style="padding:40px;text-align:center;color:var(--ts)">Đang tải dữ liệu Phòng 8…</div></div>
+    </div>
+
+    <!-- PAGE: PHÒNG 9 -->
+    <div class="page" id="page-phong9">
+      <div class="ph fi"><div>
+        <div class="ph-sub">HOẠT ĐỘNG CỦA PHÒNG 9 — VKSND TỈNH GIA LAI</div>
+        <h1>Hoạt động Phòng 9</h1>
+      </div></div>
+      <div id="phong9-body"><div style="padding:40px;text-align:center;color:var(--ts)">Đang tải dữ liệu Phòng 9…</div></div>
+    </div>
+
   </main>
 </div><!-- /app -->
 
@@ -2161,7 +2204,10 @@ const PAGE_CHARTS = {
   khuvuc    : ['cKVTruyTo','cKVXetXu','cKVBatKC','cKVTruyNa','cKVDauThu','cKVQuaTang'],
   anhuy     : ['cErrTL','cVKSLoi','cTAHuy'],
   shhsva    : ['cShHS1','cShDS1','cShHS2','cShDS2','cShPHS','cShPDS','cShCum','cShTimeline'],
-  thnq205   : ['cNqKV','cNqCaNhan','cNqLoiIch']
+  thnq205   : ['cNqKV','cNqCaNhan','cNqLoiIch'],
+  phong7    : ['cphong7TL'],
+  phong8    : ['cphong8TL'],
+  phong9    : ['cphong9TL']
 };
 function destroyCharts(pg) {
   (PAGE_CHARTS[pg] || []).forEach(id => {
@@ -2179,6 +2225,10 @@ function renderPage(pg) {
   // Tab lazy load — tự fetch khi click
   if (pg === 'shhsva')  { _loadTabAndRender('shhsva',  renderShHsva);  return; }
   if (pg === 'thnq205') { _loadTabAndRender('thnq205', renderThNq205); return; }
+  // Tab Phòng 7/8/9 — generic
+  if (pg === 'phong7')  { _loadTabAndRender('phong7',  function(d){ renderPhong('phong7', d); });  return; }
+  if (pg === 'phong8')  { _loadTabAndRender('phong8',  function(d){ renderPhong('phong8', d); });  return; }
+  if (pg === 'phong9')  { _loadTabAndRender('phong9',  function(d){ renderPhong('phong9', d); });  return; }
   // Tab còn lại — cần DATA từ getData()
   if (!DATA) return;
   if (pg === 'overview') renderOverview();
@@ -4252,10 +4302,83 @@ function loadDemo() {
   document.getElementById('tsUp').textContent = 'DỮ LIỆU MẪU';
 }
 
-// ══════════════════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════════════════
-// ── Animate số đếm lên cho KPI cards ──────────────────────────
+// ── Demo data cho tab phòng (khi chạy không có GAS) ──────────
+function _demoPhong(tab) {
+  const R = (a,b) => Math.floor(Math.random()*(b-a+1)+a);
+  const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+  // Cấu trúc cột thực tế lấy từ ảnh chụp sheet
+  const COLS = {
+    phong7: [
+      'Thụ lý mới án HS phúc thẩm','Đã giải quyết','Trong đó: xét xử',
+      'Y án','Sửa án','Hủy án',
+      'Số vụ VKSKV kháng nghị (mới)','Số bị cáo VKSKV kháng nghị (mới)',
+      'Số vụ P7 kháng nghị (mới)','Số bị cáo P7 kháng nghị (mới)',
+      'Số vụ đang nghiên cứu hồ sơ GĐT (mới)','Số bị cáo đang nghiên cứu hồ sơ GĐT (mới)',
+      'Số đơn đang nghiên cứu hồ sơ đề nghị TT (mới)','Số đơn đang nghiên cứu hồ sơ đề nghị TT (mới) (2)'
+    ],
+    phong8: [
+      'Số người THAPT tại Trại giam Kim Sơn','Số người THAPT tại Trại giam Gia Trung',
+      'Số người THAPT tại Trại tạm giam số 1','Số người THAPT tại Trại tạm giam số 2',
+      'Trực tiếp kiểm sát','Kiểm sát đột xuất','Số phạm nhân chết',
+      'Phiên họp xét giảm tha tù trước thời hạn có điều kiện',
+      'Phiên họp xét giảm thời hạn CHA đối với phạm nhân',
+      'Kiến nghị','Kháng nghị'
+    ],
+    phong9: [
+      'Thụ lý mới sơ thẩm','Xét xử sơ thẩm','Đang thụ lý sơ thẩm',
+      'Thụ lý mới phúc thẩm','Xét xử phúc thẩm','Y án','Sửa án','Hủy án','Đang thụ lý phúc thẩm',
+      'Số kiến nghị yêu cầu TAND khác phục vi phạm','Trả lời thỉnh thị','Rút kháng nghị',
+      'Số vụ GĐT phát sinh mới','Số vụ GĐT đã giải quyết','Số vụ GĐT đang thụ lý',
+      'Số vụ TT phát sinh mới','Số vụ TT đã giải quyết','Số vụ TT đang thụ lý',
+      'Số đơn đề nghị GĐT, TT mới','Số đơn đề nghị GĐT, TT đang giải quyết'
+    ]
+  };
+  const TEXT = {
+    phong7: ['Khu vực','Tóm tắt nội dung kháng nghị PT'],
+    phong8: ['Tóm tắt nội dung kiến nghị/kháng nghị'],
+    phong9: []
+  };
+  const PHONG_NAME = { phong7: 'Phòng 7', phong8: 'Phòng 8', phong9: 'Phòng 9' };
+  const SN = { phong7: 'Chi tiết_P7', phong8: 'Chi tiết_P8', phong9: 'Chi tiết_P9' };
+
+  const numCols  = COLS[tab] || [];
+  const textCols = TEXT[tab] || [];
+  const headers  = ['Đơn vị','CTĐ','Tháng','Năm', ...numCols, ...textCols];
+
+  // Tạo rows mẫu (chỉ tháng 5/2026 có số)
+  const rows = MONTHS.map(m => {
+    const row = { 'Đơn vị': PHONG_NAME[tab], 'CTĐ': '', 'Tháng': m, 'Năm': 2026 };
+    numCols.forEach(c => { row[c] = (m === 5) ? R(1,10) + ' vụ' : ''; });
+    textCols.forEach(c => { row[c] = ''; });
+    return row;
+  });
+
+  const total = {};
+  numCols.forEach(c => {
+    total[c] = rows.reduce((s,r) => {
+      const v = String(r[c]||''); const m = v.match(/\d+/); return s + (m?parseInt(m[0]):0);
+    }, 0);
+  });
+
+  const timeline = MONTHS.map(m => {
+    const obj = { thang: m };
+    numCols.forEach(c => {
+      const v = String(rows.find(r=>r['Tháng']===m)?.[c]||'');
+      const mt = v.match(/\d+/); obj[c] = mt ? parseInt(mt[0]) : 0;
+    });
+    return obj;
+  });
+
+  return {
+    sheetName : SN[tab],
+    headers, numCols, textCols, rows, total, timeline,
+    rowCount: rows.filter(r => numCols.some(c => r[c])).length,
+    namTu: '2026', namDen: '2026'
+  };
+}
+
+
 function animateCount(elId, target, suffix) {
   const el = $(elId);
   if (!el) return;
@@ -4315,33 +4438,49 @@ function hideLoader() { $('ld').classList.add('hide'); }
 
 // Lazy load tab nặng — chỉ gọi GAS khi user thực sự vào tab
 function _loadTabAndRender(tab, renderFn) {
-  if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(); return; }
-  if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(); return; }
+  if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(DATA.shHsva); return; }
+  if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(DATA.thNq205); return; }
+  if ((tab === 'phong7' || tab === 'phong8' || tab === 'phong9') && DATA?._phongCache?.[tab]) {
+    renderFn(DATA._phongCache[tab]); return;
+  }
 
   showLoader('Đang tải dữ liệu…');
   const p = getFilterParams();
   const isVercel = !GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com');
 
+  const onOk = (d) => {
+    console.log('[TabData]', tab, 'keys:', Object.keys(d||{}).join(','));
+    if (tab === 'shhsva'  && d?.shHsva)  { DATA = { ...DATA, shHsva:  d.shHsva  }; hideLoader(); renderFn(); return; }
+    if (tab === 'thnq205' && d?.thNq205) { DATA = { ...DATA, thNq205: d.thNq205 }; hideLoader(); renderFn(); return; }
+    if ((tab === 'phong7' || tab === 'phong8' || tab === 'phong9') && d?.phong) {
+      DATA = DATA || {};
+      DATA._phongCache = DATA._phongCache || {};
+      DATA._phongCache[tab] = d.phong;
+      hideLoader(); renderFn(d.phong); return;
+    }
+    hideLoader(); renderFn();
+  };
+
   if (isVercel) {
     gasAPI('getTabData', { tab: tab, namTu: p.namTu, namDen: p.namDen, thangTu: p.thangTu, thangDen: p.thangDen })
-      .then(d => {
-        console.log('[TabData]', tab, 'keys:', Object.keys(d||{}).join(','));
-        if (tab === 'shhsva'  && d?.shHsva)  DATA = { ...DATA, shHsva:  d.shHsva  };
-        if (tab === 'thnq205' && d?.thNq205) DATA = { ...DATA, thNq205: d.thNq205 };
-        hideLoader(); renderFn();
-      })
+      .then(onOk)
       .catch(e => { hideLoader(); console.error('[TabData] error:', e); });
     return;
   }
 
-  if (!GAS) { hideLoader(); renderFn(); return; }
+  if (!GAS) {
+    // Demo mode: nếu có cache phong thì render, không thì tạo demo rỗng
+    if ((tab === 'phong7' || tab === 'phong8' || tab === 'phong9')) {
+      const cached = DATA?._phongCache?.[tab];
+      if (cached) { hideLoader(); renderFn(cached); }
+      else { hideLoader(); renderFn(_demoPhong(tab)); }
+      return;
+    }
+    hideLoader(); renderFn(); return;
+  }
 
   google.script.run
-    .withSuccessHandler(d => {
-      if (tab === 'shhsva'  && d?.shHsva)  DATA = { ...DATA, shHsva:  d.shHsva  };
-      if (tab === 'thnq205' && d?.thNq205) DATA = { ...DATA, thNq205: d.thNq205 };
-      hideLoader(); renderFn();
-    })
+    .withSuccessHandler(onOk)
     .withFailureHandler(()=> { hideLoader(); })
     .getTabData({ tab, ...p });
 }
@@ -4540,6 +4679,139 @@ function renderShHsva() {
 // ══════════════════════════════════════════════════════════════
 // PAGE: TRIỂN KHAI NQ 205
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// RENDER PHÒNG 7 / 8 / 9 — generic, tự đọc bất kỳ cấu trúc cột nào
+// Hiển thị đúng kể cả sheet còn rỗng (chỉ có structure)
+// ══════════════════════════════════════════════════════════════
+function renderPhong(tab, d) {
+  const container = document.getElementById(tab + '-body');
+  if (!container) return;
+  if (!d || !d.headers || d.headers.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--ts)">Không truy cập được sheet ' + (d?.sheetName || tab) + '.</div>';
+    return;
+  }
+
+  const headers  = d.headers || [];
+  const numCols  = d.numCols || [];
+  const textCols = d.textCols || [];
+  const rows     = d.rows || [];
+  const total    = d.total || {};
+  const timeline = d.timeline || [];
+  const phongNo  = tab.replace('phong','');
+  const hasData  = rows.length > 0 && numCols.some(c => (total[c]||0) > 0);
+
+  let html = '';
+
+  // ─ Banner trạng thái nếu sheet chưa nhập số liệu ─
+  if (!hasData) {
+    html += '<div style="background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.3);' +
+            'border-radius:10px;padding:14px 18px;margin-bottom:18px;color:var(--amber);font-size:13px">' +
+            '⚠️ Sheet <strong>' + esc(d.sheetName) + '</strong> đã có cấu trúc nhưng ' +
+            (rows.length === 0 ? 'chưa có dòng dữ liệu nào' : 'chưa nhập số liệu') +
+            '. Cấu trúc cột hiện có (' + numCols.length + ' cột số liệu, ' + textCols.length + ' cột ghi chú):' +
+            '</div>';
+  }
+
+  // ─ KPI cards: tổng từng cột số liệu (tối đa 12) ─
+  if (numCols.length) {
+    const kpiCols = numCols.slice(0, 12);
+    const ACCENTS = ['cyan','amber','emerald','violet','coral','cyan','amber','emerald','violet','coral','cyan','amber'];
+    html += '<div class="kpi-grid fi fi1" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">';
+    kpiCols.forEach((c, i) => {
+      const val    = Number(total[c]||0).toLocaleString('vi-VN');
+      const accent = ACCENTS[i % ACCENTS.length];
+      html += '<div class="kc" data-ac="'+accent+'">' +
+              '<div class="kc-lbl" title="'+esc(c)+'">'+esc(c)+'</div>' +
+              '<div class="kc-val" style="font-size:24px">'+val+'</div>' +
+              '<div class="kc-sub">' + (hasData ? ('Tổng — '+rows.length+' dòng') : 'Chưa có dữ liệu') + '</div>' +
+              '</div>';
+    });
+    html += '</div>';
+  }
+
+  // ─ Biểu đồ timeline (chỉ vẽ khi có dữ liệu thực) ─
+  if (hasData && timeline.length && numCols.length) {
+    html += '<div class="cc fi fi2" style="margin-top:20px">' +
+            '<div class="cc-hd"><div class="cc-title">Biểu đồ theo tháng — Phòng ' + phongNo + '</div></div>' +
+            '<div class="cw cw-lg"><canvas id="c'+tab+'TL"></canvas></div>' +
+            '</div>';
+  }
+
+  // ─ Bảng chi tiết toàn bộ cột — hiện cả khi rỗng để thấy structure ─
+  const tableTitle = hasData
+    ? 'Bảng chi tiết — ' + esc(d.sheetName) + ' (' + rows.length + ' dòng có dữ liệu)'
+    : 'Cấu trúc cột — ' + esc(d.sheetName) + (rows.length > 0 ? ' (' + rows.length + ' dòng rỗng)' : ' (chưa có dòng nào)');
+
+  html += '<div class="tw fi fi3" style="margin-top:20px">' +
+          '<div class="tw-hd"><div class="tw-title">' + tableTitle + '</div></div>' +
+          '<div style="overflow-x:auto"><table style="min-width:' + Math.max(headers.length*110, 800) + 'px"><thead><tr>';
+  headers.forEach(h => {
+    if (!h) return;
+    const isNum  = numCols.indexOf(h) >= 0;
+    const isText = textCols.indexOf(h) >= 0;
+    const color  = isNum ? 'var(--cyan)' : (isText ? 'var(--amber)' : 'var(--ts)');
+    html += '<th style="color:'+color+';white-space:nowrap" title="'+esc(h)+'">' +
+            esc(h) + (isNum ? ' Σ' : (isText ? ' ✎' : '')) +
+            '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  if (rows.length === 0) {
+    html += '<tr><td colspan="'+headers.filter(Boolean).length+'" style="text-align:center;padding:32px;color:var(--tm)">' +
+            'Chưa có dòng dữ liệu nào trong sheet này.</td></tr>';
+  } else {
+    rows.forEach(r => {
+      html += '<tr>';
+      headers.forEach(h => {
+        if (!h) return;
+        const v = r[h];
+        const isNum = numCols.indexOf(h) >= 0;
+        const cell  = (v === null || v === undefined || v === '') ? '—' : String(v);
+        html += '<td' + (isNum ? ' style="text-align:right;font-family:var(--fm);color:var(--tp)"' : '') + '>' +
+                esc(cell) + '</td>';
+      });
+      html += '</tr>';
+    });
+  }
+  html += '</tbody></table></div>' +
+          '<div style="padding:10px 16px;font-size:10px;color:var(--tm);border-top:1px solid var(--bd)">' +
+          'Chú thích: <span style="color:var(--cyan)">Σ</span> = cột số liệu (tính tổng) | ' +
+          '<span style="color:var(--amber)">✎</span> = cột ghi chú / nội dung text</div>' +
+          '</div>';
+
+  container.innerHTML = html;
+
+  // ─ Render chart sau khi DOM cập nhật (chỉ khi có dữ liệu) ─
+  if (hasData && timeline.length && numCols.length) {
+    // Chỉ vẽ những cột có tổng > 0 để chart không loãng
+    const chartCols = numCols.filter(c => (total[c]||0) > 0).slice(0, 6);
+    const COLORS = ['#00d4ff','#ffb800','#00e5a0','#a855f7','#ff5a5a','#3b82f6'];
+    const datasets = chartCols.map((c, i) => ({
+      label: c.length > 30 ? c.slice(0,30)+'…' : c,
+      data : timeline.map(t => t[c] || 0),
+      borderColor    : COLORS[i],
+      backgroundColor: COLORS[i] + '33',
+      borderWidth: 2.2,
+      pointRadius: 3,
+      tension: 0.35,
+      fill: false
+    }));
+    setTimeout(() => {
+      const id = 'c' + tab + 'TL';
+      const old = CHS[id]; if (old) { try{old.destroy();}catch(_){} delete CHS[id]; }
+      CHS[id] = mkChart(id, 'line', {
+        labels: timeline.map(t => 'T' + t.thang),
+        datasets: datasets
+      }, {
+        scales: {
+          x: { ...dkScale() },
+          y: { ...dkScale(), min: 0, ticks: { ...dkScale().ticks, precision: 0 } }
+        }
+      });
+    }, 50);
+  }
+}
+
 function renderThNq205() {
   const d = DATA?.thNq205;
   if (!d) return;
