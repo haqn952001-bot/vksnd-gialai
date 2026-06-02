@@ -1806,6 +1806,21 @@ body::after{
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
     </svg>NQ 205
   </button>
+  <button class="mobile-nav-btn" data-page="phong7" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+    </svg>Phòng 7
+  </button>
+  <button class="mobile-nav-btn" data-page="phong8" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+    </svg>Phòng 8
+  </button>
+  <button class="mobile-nav-btn" data-page="phong9" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+    </svg>Phòng 9
+  </button>
 </nav>
 
 <script>
@@ -5206,13 +5221,26 @@ function sendAiMsg() {
     _aiContextHint();
   }
 
-  // Phát hiện hỏi về Drive nhưng chưa bật nút Drive → hiện hint
-  var _driveKw = /drive|tài liệu|văn bản|thông báo|quyết định|kế hoạch|hướng dẫn|nghị quyết/i;
-  var _driveActive = document.querySelector('#aiSourceBtns .ai-src-active[data-src="drive"]');
-  var _driveHint = document.getElementById('aiDriveHint');
-  if (_driveKw.test(q) && !_driveActive && _driveHint) {
-    _driveHint.style.display = 'block';
-    setTimeout(function(){ _driveHint.style.display = 'none'; }, 8000);
+  // ─ Tự động bật Google Drive khi phát hiện câu hỏi văn bản pháp lý ─
+  // Pattern bắt: nghị quyết, quyết định, thông tư, luật, điều, khoản,
+  //              quy chế, văn bản, tài liệu, định nghĩa, khái niệm, là gì,
+  //              + số văn bản dạng NNN/YYYY/XX
+  var _legalKw = /\b(nghị quyết|quyết định|thông tư|chỉ thị|công văn|kế hoạch|hướng dẫn|quy chế|văn bản|tài liệu|báo cáo|luật|bộ luật|điều \d+|khoản \d+|là gì\?|khái niệm|định nghĩa|tra cứu|theo (quy định|nghị|nội dung))\b|\d+\/\d+\/[a-zA-Z]+/i;
+  var _driveBtn = document.querySelector('#aiSourceBtns .ai-src-btn[data-src="drive"]');
+  var _driveActive = _driveBtn && _driveBtn.classList.contains('ai-src-active');
+
+  if (_legalKw.test(q) && !_driveActive && _driveBtn) {
+    _driveBtn.classList.add('ai-src-active');
+    // Badge thông báo nhỏ
+    var box = document.getElementById('aiMessages');
+    if (box) {
+      var div = document.createElement('div');
+      div.style.cssText = 'font-size:10px;color:#00d4ff;opacity:.85;padding:4px 8px;align-self:flex-start;background:rgba(0,212,255,.08);border-radius:6px;margin-bottom:4px';
+      div.innerHTML = '🗂️ Đã tự động bật <strong>Google Drive</strong> để tra cứu văn bản';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 6000);
+    }
   }
 
   const typing = _aiTyping();
