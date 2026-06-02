@@ -4780,10 +4780,40 @@ function renderPhong(tab, d) {
       headers.forEach(h => {
         if (!h) return;
         const v = r[h];
-        const isNum = numCols.indexOf(h) >= 0;
-        const cell  = (v === null || v === undefined || v === '') ? '—' : String(v);
-        html += '<td' + (isNum ? ' style="text-align:right;font-family:var(--fm);color:var(--tp)"' : '') + '>' +
-                esc(cell) + '</td>';
+        const isNum  = numCols.indexOf(h) >= 0;
+        const isText = textCols.indexOf(h) >= 0;
+        const cell   = (v === null || v === undefined || v === '') ? '—' : String(v);
+
+        if (isNum) {
+          // Cột số: căn phải, font mono
+          html += '<td style="text-align:right;font-family:var(--fm);color:var(--tp);vertical-align:top;padding-top:9px">' +
+                  esc(cell) + '</td>';
+        } else if (isText || cell.indexOf('- ') >= 0 || cell.indexOf('\n') >= 0) {
+          // Cột text hoặc bất kỳ cột nào có gạch đầu dòng "- " hoặc xuống dòng
+          // Tách theo: dấu xuống dòng, "- " đứng đầu dòng, hoặc " - " giữa câu
+          var lines = cell
+            .replace(/\r\n/g, '\n')
+            // Tách "- " đứng đầu hoặc sau khoảng trắng thành dòng mới
+            .replace(/\s*\n\s*-\s*/g, '\n- ')
+            .replace(/(^|\n)\s*–\s*/g, '\n- ')
+            // Chuỗi "- xxx - yyy" cùng dòng → tách thành dòng riêng
+            .replace(/\s+-\s+(?=[^\s])/g, '\n- ')
+            .split('\n');
+
+          var rendered = lines
+            .map(function(line) { return line.trim(); })
+            .filter(function(line) { return line.length > 0; })
+            .map(function(line) {
+              return '<div style="padding:1px 0;line-height:1.55">' + esc(line) + '</div>';
+            })
+            .join('');
+
+          html += '<td style="white-space:normal;vertical-align:top;padding-top:6px;min-width:160px;max-width:280px">' +
+                  rendered + '</td>';
+        } else {
+          html += '<td style="white-space:normal;vertical-align:top;color:var(--ts)">' +
+                  esc(cell) + '</td>';
+        }
       });
       html += '</tr>';
     });
