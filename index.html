@@ -5222,14 +5222,31 @@ function sendAiMsg() {
   }
 
   // ─ Tự động bật Google Drive khi phát hiện câu hỏi văn bản pháp lý ─
-  // Pattern bắt: nghị quyết, quyết định, thông tư, luật, điều, khoản,
-  //              quy chế, văn bản, tài liệu, định nghĩa, khái niệm, là gì,
-  //              + số văn bản dạng NNN/YYYY/XX
-  var _legalKw = /\b(nghị quyết|quyết định|thông tư|chỉ thị|công văn|kế hoạch|hướng dẫn|quy chế|văn bản|tài liệu|báo cáo|luật|bộ luật|điều \d+|khoản \d+|là gì\?|khái niệm|định nghĩa|tra cứu|theo (quy định|nghị|nội dung))\b|\d+\/\d+\/[a-zA-Z]+/i;
+  // KHÔNG dùng \b vì JavaScript regex không xử lý đúng word boundary với ký tự tiếng Việt có dấu
+  // Dùng (^|\s|[,.;?!]) thay cho \b — bao trùm mọi vị trí từ
+  var _legalPatterns = [
+    // Loại văn bản pháp lý
+    /(nghị quyết|quyết định|thông tư|chỉ thị|công văn|kế hoạch|hướng dẫn|quy chế|quy định|văn bản|tài liệu|báo cáo)/i,
+    /(luật|bộ luật|hiến pháp|pháp lệnh|nghị định)/i,
+    // Điều/khoản/mục
+    /(điều|khoản|mục|chương)\s*\d+/i,
+    // Câu hỏi định nghĩa / khái niệm (KHÔNG dùng \b)
+    /(là\s+gì|là\s+ai|nghĩa\s+là|khái niệm|định nghĩa|giải thích)/i,
+    // Hành động tra cứu văn bản
+    /(tra cứu|theo quy định|theo nghị|theo nội dung|được quy định|được hiểu)/i,
+    // Số văn bản dạng NNN/YYYY/XX
+    /\d+\/\d+\/[a-zA-Z]+/i,
+    /\d+\/[a-zA-Z]+-[a-zA-Z]+/i,
+    // Từ khóa nghiệp vụ thường có trong văn bản pháp lý
+    /(mật mã|chữ ký số|nền tảng|chuyển đổi số|hồ sơ điện tử|số hóa|an toàn thông tin|bảo mật)/i,
+    // Tên cơ quan/đơn vị thường xuất hiện trong văn bản
+    /(VKSND|VKSNDTC|Quốc hội|Chính phủ|Bộ Công an|Tòa án nhân dân)/i
+  ];
+  var _isLegal = _legalPatterns.some(function(p){ return p.test(q); });
   var _driveBtn = document.querySelector('#aiSourceBtns .ai-src-btn[data-src="drive"]');
   var _driveActive = _driveBtn && _driveBtn.classList.contains('ai-src-active');
 
-  if (_legalKw.test(q) && !_driveActive && _driveBtn) {
+  if (_isLegal && !_driveActive && _driveBtn) {
     _driveBtn.classList.add('ai-src-active');
     // Badge thông báo nhỏ
     var box = document.getElementById('aiMessages');
