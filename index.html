@@ -5274,6 +5274,7 @@ function sendAiMsg() {
 
   // Build contextParams
   const f = getFilterParams ? getFilterParams() : {};
+  const _finalSources = aiGetSources();
   const contextParams = {
     namTu      : f.namTu    || '2026',
     namDen     : f.namDen   || '2026',
@@ -5281,8 +5282,9 @@ function sendAiMsg() {
     thangDen   : f.thangDen || '12',
     kv         : f.kv       || '',
     kyBaoCao   : f.kyBaoCao || '12thang',
-    dataSources: aiGetSources()
+    dataSources: _finalSources
   };
+  console.log('[AI] Gửi câu hỏi với dataSources:', _finalSources, '| Drive?', _finalSources.indexOf('drive') >= 0);
 
   // Gửi tối đa 16 turns gần nhất, lọc bỏ reply lỗi
   // GAS sẽ tự enrich câu cuối với ngữ cảnh từ history
