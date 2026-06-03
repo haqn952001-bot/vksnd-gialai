@@ -4400,7 +4400,7 @@ function _demoPhong(tab) {
       'Số người THAPT tại Trại tạm giam số 1','Số người THAPT tại Trại tạm giam số 2',
       'Trực tiếp kiểm sát','Kiểm sát đột xuất','Số phạm nhân chết',
       'Phiên họp xét giảm tha tù trước thời hạn có điều kiện',
-      'Phiên họp xét giảm thời hạn CHA đối với phạm nhân',
+      'Phiên họp xét giảm thời hạn chấp hành án đối với phạm nhân',
       'Kiến nghị','Kháng nghị'
     ],
     phong9: [
@@ -4798,8 +4798,15 @@ function renderShHsva() {
 // ══════════════════════════════════════════════════════════════
 // PAGE: TRIỂN KHAI NQ 205
 // ══════════════════════════════════════════════════════════════
+// Bảng alias tên cột: tên thực trong sheet → tên hiển thị thân thiện hơn
+const COL_LABEL_ALIASES = {
+  'Phiên họp xét giảm thời hạn CHA đối với phạm nhân':
+    'Phiên họp xét giảm thời hạn chấp hành án đối với phạm nhân'
+};
+function _colLabel(c) { return COL_LABEL_ALIASES[c] || c; }
+
 // ══════════════════════════════════════════════════════════════
-// RENDER PHÒNG 7 / 8 / 9 — generic, tự đọc bất kỳ cấu trúc cột nào
+// RENDER PHÒNG 7/8/9/10/11 + Thanh tra — generic
 // Hiển thị đúng kể cả sheet còn rỗng (chỉ có structure)
 // ══════════════════════════════════════════════════════════════
 function renderPhong(tab, d) {
@@ -4838,9 +4845,10 @@ function renderPhong(tab, d) {
     html += '<div class="kpi-grid fi fi1" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">';
     kpiCols.forEach((c, i) => {
       const val    = Number(total[c]||0).toLocaleString('vi-VN');
+      const label  = _colLabel(c);
       const accent = ACCENTS[i % ACCENTS.length];
       html += '<div class="kc" data-ac="'+accent+'">' +
-              '<div class="kc-lbl" title="'+esc(c)+'">'+esc(c)+'</div>' +
+              '<div class="kc-lbl" title="'+esc(label)+'">'+esc(label)+'</div>' +
               '<div class="kc-val" style="font-size:24px">'+val+'</div>' +
               '<div class="kc-sub">' + (hasData ? ('Tổng — '+rows.length+' dòng') : 'Chưa có dữ liệu') + '</div>' +
               '</div>';
@@ -4850,16 +4858,22 @@ function renderPhong(tab, d) {
 
   // ─ Biểu đồ timeline (chỉ vẽ khi có dữ liệu thực) ─
   if (hasData && timeline.length && numCols.length) {
+    const chartLabel = tab === 'ttra' ? 'Biểu đồ theo tháng — Thanh tra - Khiếu tố'
+                     : 'Biểu đồ theo tháng — Phòng ' + phongNo;
     html += '<div class="cc fi fi2" style="margin-top:20px">' +
-            '<div class="cc-hd"><div class="cc-title">Biểu đồ theo tháng — Phòng ' + phongNo + '</div></div>' +
-            '<div class="cw cw-lg"><canvas id="c'+tab+'TL"></canvas></div>' +
+            '<div class="cc-hd"><div class="cc-title">' + chartLabel + '</div></div>' +
+            '<div class="cw cw-lg" style="height:300px"><canvas id="c'+tab+'TL"></canvas></div>' +
             '</div>';
   }
 
-  // ─ Bảng chi tiết toàn bộ cột — hiện cả khi rỗng để thấy structure ─
-  const tableTitle = hasData
-    ? 'Bảng chi tiết — ' + esc(d.sheetName) + ' (' + rows.length + ' dòng có dữ liệu)'
-    : 'Cấu trúc cột — ' + esc(d.sheetName) + (rows.length > 0 ? ' (' + rows.length + ' dòng rỗng)' : ' (chưa có dòng nào)');
+  // ─ Tiêu đề bảng — custom cho Thanh tra ─
+  const TAB_TABLE_TITLES = {
+    'ttra': 'BẢNG CHI TIẾT HOẠT ĐỘNG CỦA THANH TRA – KHIẾU TỐ'
+  };
+  const tableTitle = TAB_TABLE_TITLES[tab]
+    || (hasData
+      ? 'Bảng chi tiết — ' + esc(d.sheetName) + ' (' + rows.length + ' dòng có dữ liệu)'
+      : 'Cấu trúc cột — ' + esc(d.sheetName) + (rows.length > 0 ? ' (' + rows.length + ' dòng rỗng)' : ' (chưa có dòng nào)'));
 
   html += '<div class="tw fi fi3" style="margin-top:20px">' +
           '<div class="tw-hd"><div class="tw-title">' + tableTitle + '</div></div>' +
@@ -4936,7 +4950,7 @@ function renderPhong(tab, d) {
     const chartCols = numCols.filter(c => (total[c]||0) > 0).slice(0, 6);
     const COLORS = ['#00d4ff','#ffb800','#00e5a0','#a855f7','#ff5a5a','#3b82f6'];
     const datasets = chartCols.map((c, i) => ({
-      label: c.length > 30 ? c.slice(0,30)+'…' : c,
+      label: _colLabel(c),   // dùng alias nếu có
       data : timeline.map(t => t[c] || 0),
       borderColor    : COLORS[i],
       backgroundColor: COLORS[i] + '33',
@@ -4955,7 +4969,25 @@ function renderPhong(tab, d) {
         scales: {
           x: { ...dkScale() },
           y: { ...dkScale(), min: 0, ticks: { ...dkScale().ticks, precision: 0 } }
-        }
+        },
+        plugins: {
+          legend: {
+            // Đặt legend ở DƯỚI để không chèn vào chart, tự wrap khi nhiều cột
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              padding: 10,
+              font: { family: 'Be Vietnam Pro', size: 10 },
+              color: '#7a8ab5',
+              // Hiển thị ĐẦY ĐỦ tên cột, wrap tự động theo chiều rộng container
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          }
+        },
+        layout: { padding: { bottom: 8 } }
       });
     }, 50);
   }
@@ -5193,7 +5225,8 @@ window.addEventListener('load', () => {
         <button class="ai-src-btn" data-src="chiTieu6"  onclick="aiToggleSrc(this)">📋 Chỉ tiêu 6T</button>
         <button class="ai-src-btn" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy/ĐTBS</button>
         <button class="ai-src-btn" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 Chuyển đổi số</button>
-        <button class="ai-src-btn" data-src="nq205"     onclick="aiToggleSrc(this)">📑 NQ 205</button>
+        <button class="ai-src-btn" data-src="nq205"   onclick="aiToggleSrc(this)">📑 NQ 205</button>
+        <button class="ai-src-btn" data-src="phongNV" onclick="aiToggleSrc(this)">🏛️ Phòng NV</button>
         <button class="ai-src-btn" data-src="drive" onclick="aiToggleSrc(this)" id="aiDriveBtn" title="Bật để tra cứu văn bản, tài liệu trong Google Drive">🗂️ Google Drive</button>
       </div>
       <div id="aiDriveHint" style="display:none;font-size:10px;color:#ffb800;margin-top:4px">⚠️ Để tra cứu tài liệu Drive, hãy bật nút 🗂️ Google Drive phía trên trước khi hỏi</div>
