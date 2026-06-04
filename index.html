@@ -4957,17 +4957,18 @@ function renderPhong(tab, d) {
     const align  = isNum ? 'right' : 'left';
     // Cột cố định: width nhỏ. Cột số: width vừa. Cột text: để tự giãn (max-width)
     let wStyle = '';
-    if (['Tháng','Năm'].indexOf(h) >= 0)       wStyle = 'width:46px;min-width:46px;';
-    else if (h === 'CTĐ')                       wStyle = 'width:44px;min-width:44px;';
-    else if (h === 'Đơn vị')                    wStyle = 'width:80px;min-width:80px;';
-    else if (h === 'Khu vực')                   wStyle = 'width:100px;min-width:100px;';
+    if (['Tháng','Năm'].indexOf(h) >= 0)       wStyle = 'min-width:58px;max-width:64px;';
+    else if (h === 'CTĐ')                       wStyle = 'min-width:44px;max-width:55px;';
+    else if (h === 'Đơn vị')                    wStyle = 'min-width:80px;max-width:120px;';
+    else if (h === 'Khu vực')                   wStyle = 'min-width:100px;max-width:140px;';
     else if (isNum)                             wStyle = 'min-width:80px;';
     else if (isText && _numTextCols === 1)      wStyle = 'min-width:220px;';
     else if (isText)                            wStyle = 'min-width:160px;';
     else                                        wStyle = 'min-width:72px;';
 
     html += '<th style="color:' + color + ';text-align:' + align + ';' +
-            'white-space:normal;word-break:break-word;hyphens:auto;' +
+            // Cột cố định ngắn: không xuống hàng. Cột khác: wrap tự nhiên
+            (isFix ? 'white-space:nowrap;' : 'white-space:normal;word-break:break-word;hyphens:auto;') +
             'font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;' +
             'line-height:1.3;vertical-align:bottom;' +
             'padding:6px 7px 7px;' + wStyle +
@@ -4999,11 +5000,25 @@ function renderPhong(tab, d) {
                   'padding:6px 7px;white-space:nowrap;vertical-align:middle;' + bdStyle + '">' +
                   esc(cell) + '</td>';
         } else if (isText) {
-          var tLines = cell
-            .replace(/\r\n/g, '\n')
-            .replace(/\s*\n\s*[-–]\s*/g, '\n• ')
-            .replace(/\s+[-–]\s+(?=[^\s])/g, '\n• ')
-            .split('\n');
+          var tLines = (function(raw) {
+            var s = raw.replace(/\r\n/g, '\n');
+            // Pass 1: nối dòng wrap trong Sheets (không bắt đầu bằng bullet/gạch ngang)
+            var ls = s.split('\n'), mg = [];
+            for (var i = 0; i < ls.length; i++) {
+              if (i === 0 || /^\s*[-–•]/.test(ls[i])) { mg.push(ls[i]); }
+              else { mg[mg.length-1] += ' ' + ls[i].trim(); }
+            }
+            s = mg.join('\n');
+            // Pass 2: nối bullet ngắn (địa danh ≤ 40 ký tự) vào câu trước
+            s = s.replace(/\n[-–]\s+([^\n]{1,40})(?=\n|$)/g, function(m, r) {
+              return ' ' + r.trim();
+            });
+            // Pass 3: tách bullet thực sự còn lại
+            s = s
+              .replace(/\n[ \t]*[-–][ \t]+/g, '\n• ')
+              .replace(/^[ \t]*[-–][ \t]+/, '• ');
+            return s.split('\n');
+          })(cell);
           var tRendered = tLines
             .map(function(ln){ return ln.trim(); })
             .filter(function(ln){ return ln.length > 0; })
