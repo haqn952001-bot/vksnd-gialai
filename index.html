@@ -4392,8 +4392,8 @@ function _demoPhong(tab) {
       'Y án','Sửa án','Hủy án',
       'Số vụ VKSKV kháng nghị (mới)','Số bị cáo VKSKV kháng nghị (mới)',
       'Số vụ P7 kháng nghị (mới)','Số bị cáo P7 kháng nghị (mới)',
-      'Số vụ đang nghiên cứu hồ sơ GĐT (mới)','Số bị cáo đang nghiên cứu hồ sơ GĐT (mới)',
-      'Số đơn đang nghiên cứu hồ sơ đề nghị TT (mới)','Số đơn đang nghiên cứu hồ sơ đề nghị TT (mới) (2)'
+      'Số vụ đang nghiên cứu hồ sơ GĐT (mới)','Số bị án đang nghiên cứu hồ sơ GĐT (mới)',
+      'Số đơn đề nghị TT (mới)','Số đơn đang nghiên cứu hồ sơ đề nghị TT'
     ],
     phong8: [
       'Số người THAPT tại Trại giam Kim Sơn','Số người THAPT tại Trại giam Gia Trung',
@@ -4877,14 +4877,21 @@ function renderPhong(tab, d) {
 
   html += '<div class="tw fi fi3" style="margin-top:20px">' +
           '<div class="tw-hd"><div class="tw-title">' + tableTitle + '</div></div>' +
-          '<div style="overflow-x:auto"><table style="min-width:' + Math.max(headers.length*110, 800) + 'px"><thead><tr>';
+          '<div style="overflow-x:auto;max-height:480px;overflow-y:auto">' +
+          '<table style="min-width:' + Math.max(headers.length*80, 700) + 'px;border-collapse:collapse">' +
+          '<thead style="position:sticky;top:0;z-index:2;background:rgba(19,32,64,.97)"><tr>';
   headers.forEach(h => {
     if (!h) return;
     const isNum  = numCols.indexOf(h) >= 0;
     const isText = textCols.indexOf(h) >= 0;
     const color  = isNum ? 'var(--cyan)' : (isText ? 'var(--amber)' : 'var(--ts)');
-    html += '<th style="color:'+color+';white-space:nowrap" title="'+esc(h)+'">' +
-            esc(h) + (isNum ? ' Σ' : (isText ? ' ✎' : '')) +
+    // Cột số: max-width 90px + wrap; cột text: max-width 200px; cột cố định: auto
+    const maxW   = isNum ? '90px' : (isText ? '200px' : 'auto');
+    const minW   = isNum ? '72px' : (isText ? '140px' : '55px');
+    html += '<th style="color:'+color+';white-space:normal;word-break:break-word;' +
+            'max-width:'+maxW+';min-width:'+minW+';text-align:'+(isNum?'right':'left')+';' +
+            'line-height:1.35;vertical-align:bottom;padding-bottom:8px" title="'+esc(h)+'">' +
+            esc(h) + (isNum ? ' <span style=\'opacity:.6\'>Σ</span>' : (isText ? ' <span style=\'opacity:.6\'>✎</span>' : '')) +
             '</th>';
   });
   html += '</tr></thead><tbody>';
@@ -4903,8 +4910,9 @@ function renderPhong(tab, d) {
         const cell   = (v === null || v === undefined || v === '') ? '—' : String(v);
 
         if (isNum) {
-          // Cột số: căn phải, font mono
-          html += '<td style="text-align:right;font-family:var(--fm);color:var(--tp);vertical-align:top;padding-top:9px">' +
+          // Cột số: căn phải, font mono, max-width khớp header
+          html += '<td style="text-align:right;font-family:var(--fm);font-size:12px;color:var(--tp);' +
+                  'vertical-align:top;padding-top:6px;white-space:nowrap;max-width:90px">' +
                   esc(cell) + '</td>';
         } else if (isText || cell.indexOf('- ') >= 0 || cell.indexOf('\n') >= 0) {
           // Cột text hoặc bất kỳ cột nào có gạch đầu dòng "- " hoặc xuống dòng
@@ -4926,10 +4934,11 @@ function renderPhong(tab, d) {
             })
             .join('');
 
-          html += '<td style="white-space:normal;vertical-align:top;padding-top:6px;min-width:160px;max-width:280px">' +
+          html += '<td style="white-space:normal;vertical-align:top;padding-top:6px;' +
+                  'min-width:140px;max-width:260px;font-size:12px;line-height:1.5">' +
                   rendered + '</td>';
         } else {
-          html += '<td style="white-space:normal;vertical-align:top;color:var(--ts)">' +
+          html += '<td style="white-space:nowrap;vertical-align:top;color:var(--ts);font-size:12px">' +
                   esc(cell) + '</td>';
         }
       });
