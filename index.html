@@ -4920,19 +4920,33 @@ function renderPhong(tab, d) {
           '<table style="min-width:' + Math.max(visHeaders.length * 90, 700) + 'px;border-collapse:collapse">' +
           '<thead style="position:sticky;top:0;z-index:2;background:rgba(11,20,40,.98)"><tr>';
 
+  // Tính số cột text để phân bổ chiều rộng hợp lý
+  const _numFixCols  = visHeaders.filter(h => ['Đơn vị','CTĐ','Tháng','Năm','STT','TT','Khu vực'].indexOf(h) >= 0).length;
+  const _numNumCols  = visHeaders.filter(h => numCols.indexOf(h) >= 0).length;
+  const _numTextCols = visHeaders.filter(h => textCols.indexOf(h) >= 0).length;
+
   visHeaders.forEach(h => {
     const isNum  = numCols.indexOf(h) >= 0;
     const isText = textCols.indexOf(h) >= 0;
     const isFix  = ['Đơn vị','CTĐ','Tháng','Năm','STT','TT','Khu vực'].indexOf(h) >= 0;
     const color  = isNum ? 'var(--cyan)' : (isText ? 'var(--amber)' : 'var(--ts)');
     const align  = isNum ? 'right' : 'left';
-    // min-width: cố định nhỏ, số trung bình, text rộng hơn
-    const minW   = isFix ? '44px' : (isText ? '130px' : '72px');
+    // Cột cố định: width nhỏ. Cột số: width vừa. Cột text: để tự giãn (max-width)
+    let wStyle = '';
+    if (['Tháng','Năm'].indexOf(h) >= 0)       wStyle = 'width:46px;min-width:46px;';
+    else if (h === 'CTĐ')                       wStyle = 'width:44px;min-width:44px;';
+    else if (h === 'Đơn vị')                    wStyle = 'width:80px;min-width:80px;';
+    else if (h === 'Khu vực')                   wStyle = 'width:100px;min-width:100px;';
+    else if (isNum)                             wStyle = 'min-width:80px;';
+    else if (isText && _numTextCols === 1)      wStyle = 'min-width:220px;';
+    else if (isText)                            wStyle = 'min-width:160px;';
+    else                                        wStyle = 'min-width:72px;';
+
     html += '<th style="color:' + color + ';text-align:' + align + ';' +
             'white-space:normal;word-break:break-word;hyphens:auto;' +
             'font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;' +
             'line-height:1.3;vertical-align:bottom;' +
-            'padding:6px 7px 7px;min-width:' + minW + ';' +
+            'padding:6px 7px 7px;' + wStyle +
             'border-bottom:2px solid rgba(0,212,255,.2)">' +
             esc(h) +
             '</th>';
@@ -4970,14 +4984,18 @@ function renderPhong(tab, d) {
             .map(function(ln){ return ln.trim(); })
             .filter(function(ln){ return ln.length > 0; })
             .map(function(ln){
-              return '<div style="line-height:1.5;padding:1px 0;text-align:justify">' + esc(ln) + '</div>';
+              return '<div style="line-height:1.6;padding:2px 0;text-align:justify">' + esc(ln) + '</div>';
             }).join('');
           html += '<td style="white-space:normal;vertical-align:top;font-size:11px;' +
-                  'padding:5px 7px;color:var(--ts);' + bdStyle + '">' +
+                  'padding:8px 10px;color:var(--ts);' + bdStyle + '">' +
                   tRendered + '</td>';
         } else {
-          html += '<td style="font-size:11.5px;padding:6px 7px;white-space:nowrap;vertical-align:middle;' +
-                  'color:' + (isMeta ? 'var(--tm)' : 'var(--ts)') + ';' + bdStyle + '">' +
+          // Cột Tháng/Năm: canh giữa, nhỏ hơn, align với row
+          const isTN = ['Tháng','Năm'].indexOf(h) >= 0;
+          html += '<td style="font-size:11.5px;padding:6px 7px;' +
+                  'white-space:nowrap;vertical-align:' + (isTN ? 'top' : 'middle') + ';' +
+                  (isTN ? 'text-align:center;font-weight:600;color:var(--cyan);padding-top:10px;' : '') +
+                  'color:' + (isMeta ? 'var(--tm)' : (isTN ? 'var(--cyan)' : 'var(--ts)')) + ';' + bdStyle + '">' +
                   esc(cell) + '</td>';
         }
       });
@@ -5440,9 +5458,49 @@ function toggleAiChat() {
   _aiOpen = !_aiOpen;
   const panel  = document.getElementById('aiPanel');
   const bubble = document.getElementById('aiBubble');
-  panel.style.display    = _aiOpen ? 'flex' : 'none';
-  bubble.style.transform = _aiOpen ? 'scale(.9)' : 'scale(1)';
-  if (_aiOpen) document.getElementById('aiInput')?.focus();
+  const wrap   = document.getElementById('aiChat');
+
+  if (_aiOpen) {
+    panel.style.display = 'flex';
+    bubble.style.transform = 'scale(.9)';
+
+    // Tính vị trí bubble để quyết định panel mở về hướng nào
+    const bRect = bubble.getBoundingClientRect();
+    const pW = 340, pH = 480;
+    const vW = window.innerWidth,  vH = window.innerHeight;
+    const MARGIN = 12; // khoảng cách tối thiểu với cạnh màn hình
+
+    // Hướng ngang: ưu tiên bên trái bubble (mặc định). Nếu không đủ chỗ thì sang phải
+    let panelLeft;
+    if (bRect.right - pW >= MARGIN) {
+      panelLeft = bRect.right - pW; // căn phải panel = phải bubble
+    } else {
+      panelLeft = Math.max(MARGIN, bRect.left); // đẩy sang phải nếu cần
+    }
+    // Giới hạn không ra ngoài màn hình
+    panelLeft = Math.min(panelLeft, vW - pW - MARGIN);
+
+    // Hướng dọc: ưu tiên mở lên trên bubble. Nếu không đủ chỗ thì mở xuống dưới
+    let panelTop;
+    if (bRect.top - pH - MARGIN >= 0) {
+      panelTop = bRect.top - pH - 8; // mở lên trên
+    } else {
+      panelTop = bRect.bottom + 8;   // mở xuống dưới
+    }
+    // Giới hạn không ra ngoài màn hình
+    panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
+
+    // Áp dụng vị trí tuyệt đối cho panel (tách khỏi aiChat wrapper để tự do định vị)
+    panel.style.position = 'fixed';
+    panel.style.left = panelLeft + 'px';
+    panel.style.top  = panelTop  + 'px';
+    panel.style.zIndex = '9999';
+
+    document.getElementById('aiInput')?.focus();
+  } else {
+    panel.style.display = 'none';
+    bubble.style.transform = 'scale(1)';
+  }
 }
 
 /** Xóa lịch sử — AI đọc data mới */
