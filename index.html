@@ -4875,126 +4875,30 @@ function renderPhong(tab, d) {
       ? 'Bảng chi tiết — ' + esc(d.sheetName) + ' (' + rows.length + ' dòng có dữ liệu)'
       : 'Cấu trúc cột — ' + esc(d.sheetName) + (rows.length > 0 ? ' (' + rows.length + ' dòng rỗng)' : ' (chưa có dòng nào)'));
 
-  // ── Hàm viết tắt tên cột dài → header gọn, tooltip đầy đủ ──────
-  function _abbr(h) {
-    return h
-      .replace(/^Số người THAPT tại /i,        'PN ')
-      .replace(/^Số người THAPT /i,             'PN ')
-      .replace(/Trại giam Kim Sơn$/i,           'Kim Sơn')
-      .replace(/Trại giam Gia Trung$/i,         'Gia Trung')
-      .replace(/Trại tạm giam số (\d+)$/i,      'TTG$1')
-      .replace(/^Phiên họp xét giảm tha tù trước thời hạn có điều kiện$/i, 'Phiên XG TÙ')
-      .replace(/^Phiên họp xét giảm thời hạn chấp hành án đối với phạm nhân$/i, 'Phiên XG ĐK')
-      .replace(/^Số cuộc kiểm tra\/TTKS THADS khu vực đã có kết luận$/i,    'KT KV (KL)')
-      .replace(/^Số cuộc kiểm tra\/TTKS THADS khu vực$/i,                   'KT KV')
-      .replace(/^Số cuộc TTKS tại THADS tỉnh Gia Lai$/i,                    'TTKS tỉnh')
-      .replace(/^Số cuộc TTKS THADS tỉnh đã ban hành kết luận$/i,           'TTKS tỉnh (KL)')
-      .replace(/^Số kiến nghị \(kể cả kiến nghị trong kết luận\)$/i,        'Kiến nghị')
-      .replace(/^Số kiến nghị yêu cầu TAND khác phục vi phạm$/i,            'KN/TAND')
-      .replace(/^Số vụ đang nghiên cứu hồ sơ GĐT \(mới\)$/i,               'GĐT mới')
-      .replace(/^Số bị án đang nghiên cứu hồ sơ GĐT \(mới\)$/i,            'GĐT (bị án)')
-      .replace(/^Số đơn đề nghị TT \(mới\)$/i,                              'Đề nghị TT')
-      .replace(/^Số đơn đang nghiên cứu hồ sơ đề nghị TT$/i,               'NC hồ sơ TT')
-      .replace(/^Số vụ đang nghiên cứu hồ sơ đề nghị TT \(mới\)$/i,        'NC HS TT')
-      .replace(/^Số đơn đang nghiên cứu hồ sơ đề nghị TT \(mới\).*$/i,     'NC HS TT đơn')
-      .replace(/^Thụ lý mới án HS phúc thẩm$/i,                             'PT mới')
-      .replace(/^Trong đó: xét xử$/i,                                        'Xét xử')
-      .replace(/^Số vụ VKSKV kháng nghị \(mới\)$/i,                         'KN-KV vụ')
-      .replace(/^Số bị cáo VKSKV kháng nghị \(mới\)$/i,                     'KN-KV BC')
-      .replace(/^Số vụ P7 kháng nghị \(mới\)$/i,                            'KN-P7 vụ')
-      .replace(/^Số bị cáo P7 kháng nghị \(mới\)$/i,                        'KN-P7 BC')
-      .replace(/^Thụ lý mới sơ thẩm KDTM, LĐ$/i,                           'ST KDTM,LĐ')
-      .replace(/^Thụ lý mới án hành chính$/i,                               'ST HC mới')
-      .replace(/^Xét xử sơ thẩm án hành chính$/i,                           'XX ST HC')
-      .replace(/^Án hành chính phúc thẩm$/i,                                 'PT HC')
-      .replace(/^Án hành chính đang thụ lý$/i,                               'HC đang TL')
-      .replace(/^Số vụ án hành chính chính GĐT phát sinh$/i,                 'HC GĐT PS')
-      .replace(/^Số vụ án hành chính chính GĐT đã giải quyết$/i,             'HC GĐT GQ')
-      .replace(/^Số vụ án hành chính chính GĐT đang thụ lý$/i,               'HC GĐT TL')
-      .replace(/^Số vụ án hành chính chính TT phát sinh$/i,                   'HC TT PS')
-      .replace(/^Số vụ án hành chính chính TT đã giải quyết$/i,               'HC TT GQ')
-      .replace(/^Số vụ án hành chính chính TT đang thụ lý$/i,                 'HC TT TL')
-      .replace(/^Số vụ KDTM, LĐ GĐT phát sinh mới$/i,                        'KD GĐT PS')
-      .replace(/^Số vụ KDTM, LĐ GĐT đã giải quyết$/i,                        'KD GĐT GQ')
-      .replace(/^Số vụ KDTM, LĐ GĐT đang thụ lý$/i,                          'KD GĐT TL')
-      .replace(/^Số vụ KDTM TT phát sinh mới$/i,                              'KD TT PS')
-      .replace(/^Số vụ KDTM TT đã giải quyết$/i,                              'KD TT GQ')
-      .replace(/^Số vụ KDTM TT đang thụ lý$/i,                                'KD TT TL')
-      .replace(/^Số vụ GĐT phát sinh mới$/i,                                   'GĐT PS')
-      .replace(/^Số vụ GĐT đã giải quyết$/i,                                   'GĐT GQ')
-      .replace(/^Số vụ GĐT đang thụ lý$/i,                                     'GĐT TL')
-      .replace(/^Số vụ TT phát sinh mới$/i,                                     'TT PS')
-      .replace(/^Số vụ TT đã giải quyết$/i,                                     'TT GQ')
-      .replace(/^Số vụ TT đang thụ lý$/i,                                       'TT TL')
-      .replace(/^Số đơn đề nghị GĐT, TT mới$/i,                                'Đơn GĐT,TT')
-      .replace(/^Số đơn đề nghị GĐT, TT đang giải quyết$/i,                    'Đơn đang GQ')
-      .replace(/^Đơn thuộc thẩm quyền giải quyết VKSND$/i,                     'ĐT VKSND')
-      .replace(/^Đơn thuộc thẩm quyền giải quyết VKSND đã giải quyết$/i,       'ĐT đã GQ')
-      .replace(/^Đơn thuộc thẩm quyền giải quyết VKSND đang giải quyết$/i,     'ĐT đang GQ')
-      .replace(/^Thụ lý mới đơn thuộc thẩm quyền giải quyết VKSND$/i,          'TL mới ĐT')
-      .replace(/^Số việc đã thi hành xong$/i,                                    'Việc THX')
-      .replace(/^Số tiền đã thi hành xong$/i,                                    'Tiền THX')
-      .replace(/^Số đang thi hành$/i,                                             'Đang TH')
-      .replace(/^Số tiền đang thi hành$/i,                                        'Tiền đang TH')
-      .replace(/^Số chưa có điều kiện thi hành$/i,                               'Chưa ĐKTH')
-      .replace(/^Số tiền chưa có điều kiện thi hành$/i,                          'Tiền CĐKTH')
-      .replace(/^Số phạm nhân chết$/i,                                            'PN chết')
-      .replace(/^Tóm tắt nội dung kháng nghị PT$/i,                              'Nội dung KN')
-      .replace(/^Chi tiết kết quả công tác thanh tra, kiểm tra$/i,               'Chi tiết TT')
-      .replace(/Trực tiếp kiểm sát$/i,                                            'Trực tiếp KS')
-      .replace(/Kiểm sát đột xuất$/i,                                             'Đột xuất KS')
-      .replace(/^Tóm tắt nội dung kiến nghị\/kháng nghị$/i,                      'ND kiến nghị')
-      .replace(/Trả lời thỉnh thị$/i,                                              'TL thỉnh thị')
-      .replace(/Rút kháng nghị$/i,                                                  'Rút KN')
-      .replace(/^Tiếp công dân$/i,                                                  'Tiếp CD')
-      .replace(/^Số đơn tiếp nhận mới$/i,                                          'Đơn mới')
-      // Cột cố định
-      .replace(/^Đơn vị$/i, 'Đơn vị')
-      .replace(/^Tháng$/i,  'Tháng')
-      .replace(/^Năm$/i,    'Năm');
-  }
-
-  // ── Định nghĩa độ rộng cột ────────────────────────────────────
-  // Cột cố định: px cố định. Cột số: 68px. Cột text: min 140px.
-  const COL_W = { 'Đơn vị':80, 'CTĐ':45, 'Tháng':52, 'Năm':50, 'STT':36, 'TT':36, 'Khu vực':90 };
-  function _colW(h, isNum, isText) {
-    if (COL_W[h]) return COL_W[h] + 'px';
-    if (isText)   return '160px';
-    return '68px';
-  }
-
+  // ── Bảng chi tiết: header wrap tự nhiên, font nhỏ, căn phải số ──
   const visHeaders = headers.filter(Boolean);
-  const totalW = visHeaders.reduce((s,h) => {
-    const isNum  = numCols.indexOf(h) >= 0;
-    const isText = textCols.indexOf(h) >= 0;
-    return s + parseInt(_colW(h, isNum, isText));
-  }, 0);
 
   html += '<div class="tw fi fi3" style="margin-top:20px">' +
           '<div class="tw-hd"><div class="tw-title">' + tableTitle + '</div></div>' +
           '<div style="overflow-x:auto">' +
-          '<table style="width:' + Math.max(totalW, 700) + 'px;table-layout:fixed;border-collapse:collapse">' +
-          '<colgroup>';
-  visHeaders.forEach(h => {
-    const isNum  = numCols.indexOf(h) >= 0;
-    const isText = textCols.indexOf(h) >= 0;
-    html += '<col style="width:' + _colW(h, isNum, isText) + '">';
-  });
-  html += '</colgroup>' +
+          '<table style="min-width:' + Math.max(visHeaders.length * 90, 700) + 'px;border-collapse:collapse">' +
           '<thead style="position:sticky;top:0;z-index:2;background:rgba(11,20,40,.98)"><tr>';
 
   visHeaders.forEach(h => {
     const isNum  = numCols.indexOf(h) >= 0;
     const isText = textCols.indexOf(h) >= 0;
+    const isFix  = ['Đơn vị','CTĐ','Tháng','Năm','STT','TT','Khu vực'].indexOf(h) >= 0;
     const color  = isNum ? 'var(--cyan)' : (isText ? 'var(--amber)' : 'var(--ts)');
     const align  = isNum ? 'right' : 'left';
-    const label  = _abbr(h);
+    // min-width: cố định nhỏ, số trung bình, text rộng hơn
+    const minW   = isFix ? '44px' : (isText ? '130px' : '72px');
     html += '<th style="color:' + color + ';text-align:' + align + ';' +
-            'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
-            'font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;' +
-            'padding:7px 8px;border-bottom:2px solid rgba(0,212,255,.25);' +
-            'vertical-align:bottom;line-height:1.2" title="' + esc(h) + '">' +
-            esc(label) +
+            'white-space:normal;word-break:break-word;hyphens:auto;' +
+            'font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;' +
+            'line-height:1.3;vertical-align:bottom;' +
+            'padding:6px 7px 7px;min-width:' + minW + ';' +
+            'border-bottom:2px solid rgba(0,212,255,.2)">' +
+            esc(h) +
             '</th>';
   });
   html += '</tr></thead><tbody>';
@@ -5004,45 +4908,40 @@ function renderPhong(tab, d) {
             'Chưa có dòng dữ liệu nào trong sheet này.</td></tr>';
   } else {
     rows.forEach((r, ri) => {
-      const rowBg = ri % 2 === 1 ? 'background:rgba(255,255,255,.022);' : '';
+      const rowBg = ri % 2 === 1 ? 'background:rgba(255,255,255,.02);' : '';
       html += '<tr style="' + rowBg + '">';
       visHeaders.forEach(h => {
-        const v      = r[h];
-        const isNum  = numCols.indexOf(h) >= 0;
-        const isText = textCols.indexOf(h) >= 0;
+        const v       = r[h];
+        const isNum   = numCols.indexOf(h) >= 0;
+        const isText  = textCols.indexOf(h) >= 0;
+        const isMeta  = ['CTĐ','STT','TT'].indexOf(h) >= 0;
         const isEmpty = (v === null || v === undefined || v === '');
-        const cell   = isEmpty ? '—' : String(v);
+        const cell    = isEmpty ? '—' : String(v);
+        const bdStyle = 'border-bottom:1px solid rgba(255,255,255,.035);';
 
         if (isNum) {
-          html += '<td style="text-align:right;font-family:var(--fm);font-size:12px;' +
+          html += '<td style="text-align:right;font-family:var(--fm);font-size:11.5px;' +
                   'color:' + (isEmpty ? 'var(--tm)' : 'var(--tp)') + ';' +
-                  'padding:7px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
-                  'border-bottom:1px solid rgba(255,255,255,.04)">' +
+                  'padding:6px 7px;white-space:nowrap;vertical-align:middle;' + bdStyle + '">' +
                   esc(cell) + '</td>';
         } else if (isText) {
-          // Cột text: wrap, tách dòng
-          var lines2 = cell
+          var tLines = cell
             .replace(/\r\n/g, '\n')
             .replace(/\s*\n\s*[-–]\s*/g, '\n• ')
             .replace(/\s+[-–]\s+(?=[^\s])/g, '\n• ')
             .split('\n');
-          var rendered2 = lines2
+          var tRendered = tLines
             .map(function(ln){ return ln.trim(); })
             .filter(function(ln){ return ln.length > 0; })
             .map(function(ln){
-              return '<div style="line-height:1.5;padding:1px 0">' + esc(ln) + '</div>';
+              return '<div style="line-height:1.5;padding:1px 0;text-align:justify">' + esc(ln) + '</div>';
             }).join('');
           html += '<td style="white-space:normal;vertical-align:top;font-size:11px;' +
-                  'padding:6px 8px;overflow:hidden;color:var(--ts);' +
-                  'border-bottom:1px solid rgba(255,255,255,.04)">' +
-                  rendered2 + '</td>';
+                  'padding:5px 7px;color:var(--ts);' + bdStyle + '">' +
+                  tRendered + '</td>';
         } else {
-          // Cột cố định (Đơn vị, Tháng, Năm...)
-          const isMeta = ['CTĐ','STT','TT'].indexOf(h) >= 0;
-          html += '<td style="font-size:12px;padding:7px 8px;white-space:nowrap;' +
-                  'overflow:hidden;text-overflow:ellipsis;' +
-                  'color:' + (isMeta ? 'var(--tm)' : 'var(--ts)') + ';' +
-                  'border-bottom:1px solid rgba(255,255,255,.04)">' +
+          html += '<td style="font-size:11.5px;padding:6px 7px;white-space:nowrap;vertical-align:middle;' +
+                  'color:' + (isMeta ? 'var(--tm)' : 'var(--ts)') + ';' + bdStyle + '">' +
                   esc(cell) + '</td>';
         }
       });
@@ -5050,11 +4949,9 @@ function renderPhong(tab, d) {
     });
   }
   html += '</tbody></table></div>' +
-          '<div style="padding:8px 14px;font-size:10px;color:var(--tm);border-top:1px solid var(--bd);' +
-          'display:flex;gap:16px;align-items:center">' +
-          '<span>Hover vào tên cột để xem tên đầy đủ</span>' +
-          '<span style="color:var(--cyan)">Cột số = căn phải</span>' +
-          '<span style="color:var(--amber)">Cột ghi chú = text wrap</span>' +
+          '<div style="padding:7px 14px;font-size:10px;color:var(--tm);border-top:1px solid var(--bd)">' +
+          '<span style="color:var(--cyan)">Cột số</span> = căn phải &nbsp;|&nbsp; ' +
+          '<span style="color:var(--amber)">Cột ghi chú</span> = nội dung text' +
           '</div>' +
           '</div>';
 
