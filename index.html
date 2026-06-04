@@ -4875,8 +4875,44 @@ function renderPhong(tab, d) {
       ? 'Bảng chi tiết — ' + esc(d.sheetName) + ' (' + rows.length + ' dòng có dữ liệu)'
       : 'Cấu trúc cột — ' + esc(d.sheetName) + (rows.length > 0 ? ' (' + rows.length + ' dòng rỗng)' : ' (chưa có dòng nào)'));
 
-  // ── Bảng chi tiết: header wrap tự nhiên, font nhỏ, căn phải số ──
-  const visHeaders = headers.filter(Boolean);
+  // ── Whitelist cột hiển thị theo từng tab (theo yêu cầu) ─────────
+  // null = ẩn toàn bộ bảng. [] / undefined = hiển thị tất cả. mảng = chỉ các cột trong whitelist
+  const VISIBLE_COLS = {
+    'phong7': [
+      'Đơn vị','CTĐ','Tháng','Năm',
+      'Số vụ VKSKV kháng nghị (mới)','Số bị cáo VKSKV kháng nghị (mới)',
+      'Khu vực',
+      'Số vụ P7 kháng nghị (mới)','Số bị cáo P7 kháng nghị (mới)',
+      'Tóm tắt nội dung kháng nghị PT'
+    ],
+    'phong8': [
+      'Tháng','Năm','Kiến nghị','Kháng nghị','Tóm tắt nội dung kiến nghị/kháng nghị'
+    ],
+    'phong9' : null, // ẩn bảng
+    'phong10': null, // ẩn bảng
+    'phong11': [
+      'Tháng','Năm',
+      'Số cuộc kiểm tra/TTKS THADS khu vực',
+      'Số cuộc kiểm tra/TTKS THADS khu vực đã có kết luận',
+      'Số cuộc TTKS tại THADS tỉnh Gia Lai',
+      'Số cuộc TTKS THADS tỉnh đã ban hành kết luận',
+      'Số kiến nghị (kể cả kiến nghị trong kết luận)',
+      'Kháng nghị','Tóm tắt kháng nghị'
+    ],
+    'ttra': [
+      'Tháng','Năm','Chi tiết kết quả công tác thanh tra, kiểm tra'
+    ]
+  };
+  const _hasVisCfg = Object.prototype.hasOwnProperty.call(VISIBLE_COLS, tab);
+  const _hideTable = _hasVisCfg && VISIBLE_COLS[tab] === null;
+
+  // ── Bảng chi tiết: chỉ build khi không bị ẩn ──────────────────
+  if (!_hideTable) {
+    // Áp dụng whitelist nếu có
+    const whitelist = _hasVisCfg ? VISIBLE_COLS[tab] : null;
+    const visHeaders = (whitelist && whitelist.length > 0)
+      ? whitelist.filter(h => headers.indexOf(h) >= 0)
+      : headers.filter(Boolean);
 
   html += '<div class="tw fi fi3" style="margin-top:20px">' +
           '<div class="tw-hd"><div class="tw-title">' + tableTitle + '</div></div>' +
@@ -4954,6 +4990,7 @@ function renderPhong(tab, d) {
           '<span style="color:var(--amber)">Cột ghi chú</span> = nội dung text' +
           '</div>' +
           '</div>';
+  } // end if (!_hideTable)
 
   container.innerHTML = html;
 
@@ -5174,15 +5211,17 @@ window.addEventListener('load', () => {
 <div id="aiChat" style="
   position:fixed; bottom:72px; right:16px; z-index:500;
   display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  user-select:none;
 ">
-  <!-- Chat bubble button -->
+  <!-- Chat bubble button — giữ để drag, click để mở -->
   <button id="aiBubble" onclick="toggleAiChat()" style="
-    width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
+    width:52px; height:52px; border-radius:50%; border:none; cursor:grab;
     background:linear-gradient(135deg,#0066cc,#00d4ff);
     box-shadow:0 4px 20px rgba(0,212,255,.4);
     display:flex; align-items:center; justify-content:center;
-    font-size:22px; transition:transform .2s;
-  " title="Trợ lý AI — Tra cứu số liệu">🤖</button>
+    font-size:22px; transition:transform .2s, box-shadow .2s;
+    touch-action:none;
+  " title="Trợ lý AI — Kéo để di chuyển, nhấn để mở">🤖</button>
 
   <!-- Chat panel -->
   <div id="aiPanel" style="
@@ -5286,6 +5325,107 @@ window.addEventListener('load', () => {
   #aiPanel{ width:calc(100vw - 20px); height:420px }
 }
 </style>
+
+<script>
+// ══ DRAG-TO-MOVE cho #aiChat ═══════════════════════════════════
+(function() {
+  const STORE_KEY = 'aiChat_pos';
+
+  function initDrag() {
+    const wrap   = document.getElementById('aiChat');
+    const bubble = document.getElementById('aiBubble');
+    if (!wrap || !bubble) return;
+
+    // Khôi phục vị trí đã lưu
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (saved) {
+        wrap.style.bottom = 'auto';
+        wrap.style.right  = 'auto';
+        wrap.style.top    = saved.top  + 'px';
+        wrap.style.left   = saved.left + 'px';
+      }
+    } catch(e) {}
+
+    let dragging = false;
+    let startX, startY, startLeft, startTop;
+
+    function getWrapRect() {
+      const r = wrap.getBoundingClientRect();
+      return { left: r.left, top: r.top, width: r.width, height: r.height };
+    }
+
+    function onPointerDown(e) {
+      // Chỉ drag khi click vào bubble (không phải panel)
+      if (e.target.closest('#aiPanel')) return;
+      dragging = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      const r = getWrapRect();
+      startLeft = r.left;
+      startTop  = r.top;
+      // Chuyển sang top/left tuyệt đối
+      wrap.style.bottom = 'auto';
+      wrap.style.right  = 'auto';
+      wrap.style.top    = startTop  + 'px';
+      wrap.style.left   = startLeft + 'px';
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup',   onPointerUp);
+      e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      // Ngưỡng 4px để phân biệt drag vs click
+      if (!dragging && Math.hypot(dx, dy) < 4) return;
+      dragging = true;
+      bubble.style.cursor = 'grabbing';
+
+      let newLeft = startLeft + dx;
+      let newTop  = startTop  + dy;
+      // Giới hạn trong viewport
+      const r = getWrapRect();
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth  - r.width));
+      newTop  = Math.max(0, Math.min(newTop,  window.innerHeight - r.height));
+      wrap.style.left = newLeft + 'px';
+      wrap.style.top  = newTop  + 'px';
+    }
+
+    function onPointerUp(e) {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup',   onPointerUp);
+      bubble.style.cursor = 'grab';
+
+      if (dragging) {
+        // Lưu vị trí
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify({
+            top:  parseFloat(wrap.style.top),
+            left: parseFloat(wrap.style.left)
+          }));
+        } catch(e) {}
+        // Chặn click sau khi drag
+        bubble.addEventListener('click', function noClick(ev) {
+          ev.stopImmediatePropagation();
+          bubble.removeEventListener('click', noClick, true);
+        }, { capture: true, once: true });
+      }
+      dragging = false;
+    }
+
+    bubble.addEventListener('pointerdown', onPointerDown);
+  }
+
+  // Chạy sau khi DOM sẵn sàng
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDrag);
+  } else {
+    setTimeout(initDrag, 100);
+  }
+})();
+</script>
 
 <script>
 // ══ AI CHAT — V6 Gemini Only + Context Enrichment ══════════════
