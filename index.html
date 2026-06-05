@@ -16,37 +16,56 @@
 <style>
 
 :root{
-  --n950:#050c1a;--n900:#080f20;--n850:#0b1428;--n800:#0f1c35;
-  --n750:#132040;--n700:#182650;--n600:#1e3060;
-  --cyan:#00d4ff;--amber:#ffb800;--emerald:#00e5a0;
-  --coral:#ff5a5a;--violet:#a855f7;
-  --tp:#e8eeff;--ts:#7a8ab5;--tm:#445078;
-  --bd:rgba(0,212,255,.10);--bdm:rgba(0,212,255,.18);
-  --card:rgba(11,20,40,.85);--cardh:rgba(15,28,53,.95);
-  --glass:rgba(19,32,64,.6);
+  /* ═══ DARK EXECUTIVE IOC PALETTE — VKSND Gia Lai ═══ */
+  /* Nền xanh đen gradient #020817 → #071B33 */
+  --n950:#020817;--n900:#040E25;--n850:#061530;--n800:#071B33;
+  --n750:#0A2342;--n700:#0E2D52;--n600:#143866;
+  /* Accent vàng kim làm màu nhấn chính (thay thế cyan) */
+  --cyan:#FACC15;          /* Vàng kim — màu nhấn chính */
+  --gold:#FACC15;          /* Alias cho vàng kim */
+  --gold-soft:#FBBF24;     /* Vàng kim nhẹ */
+  --gold-deep:#D97706;     /* Vàng kim đậm */
+  --amber:#F59E0B;         /* Vàng cam phụ */
+  --emerald:#10B981;       /* Xanh ngọc cho tăng */
+  --coral:#EF4444;         /* Đỏ cho giảm/cảnh báo */
+  --violet:#8B5CF6;        /* Tím phụ */
+  /* Text: trắng ngà → xám xanh nhẹ */
+  --tp:#F1F5F9;--ts:#94A3B8;--tm:#475569;
+  /* Viền vàng mờ nhẹ */
+  --bd:rgba(250,204,21,.12);--bdm:rgba(250,204,21,.22);
+  /* Card: xanh đen trong suốt + viền vàng */
+  --card:rgba(7,27,51,.85);--cardh:rgba(14,45,82,.95);
+  --glass:rgba(10,35,66,.6);
   --rsm:6px;--rmd:10px;--rlg:16px;
   --fb:'Be Vietnam Pro',sans-serif;--fm:'JetBrains Mono',monospace;
+  /* Glow shadows cho icon & KPI */
+  --glow-gold:0 0 24px rgba(250,204,21,.35),0 0 8px rgba(250,204,21,.5);
+  --glow-gold-soft:0 0 16px rgba(250,204,21,.2);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:14px;height:100%}
 body{
-  font-family:var(--fb);background:var(--n950);color:var(--tp);
+  font-family:var(--fb);
+  /* Gradient nền xanh đen Dark Executive */
+  background:
+    radial-gradient(ellipse at top, #071B33 0%, #020817 60%, #010512 100%);
+  color:var(--tp);
   height:100%;overflow:hidden;
 }
 
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 60% 40% at 15% 20%,rgba(0,100,200,.12) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 60% at 85% 80%,rgba(0,212,255,.07) 0%,transparent 70%),
-    radial-gradient(ellipse 50% 30% at 50% 50%,rgba(168,85,247,.05) 0%,transparent 70%);
+    radial-gradient(ellipse 50% 35% at 20% 25%, rgba(250,204,21,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 85% 80%, rgba(250,204,21,.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 50% 0%, rgba(20,56,102,.4) 0%, transparent 70%);
 }
 body::after{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:
-    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+    linear-gradient(rgba(250,204,21,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(250,204,21,.018) 1px, transparent 1px);
   background-size:48px 48px;
 }
 
@@ -62,9 +81,10 @@ body::after{
   grid-column:1/-1;
   display:flex;align-items:center;gap:16px;
   padding:0 24px;
-  background:rgba(8,15,32,.97);
-  border-bottom:1px solid var(--bd);
-  backdrop-filter:blur(16px);
+  background:linear-gradient(180deg, rgba(4,14,37,.98), rgba(2,8,23,.95));
+  border-bottom:1px solid var(--bdm);
+  backdrop-filter:blur(20px);
+  box-shadow:0 1px 0 rgba(250,204,21,.06), 0 4px 16px rgba(0,0,0,.4);
 }
 .tl-logo{display:flex;align-items:center;gap:10px}
 .tl-badge{
@@ -73,6 +93,7 @@ body::after{
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:800;color:#fff;letter-spacing:-.5px;
   flex-shrink:0;
+  filter:drop-shadow(0 0 8px rgba(250,204,21,.4));
 }
 .tl-title{font-size:12px;font-weight:700;line-height:1;color:var(--tp)}
 .tl-sub  {font-size:10px;color:var(--ts);line-height:1.5}
@@ -98,16 +119,24 @@ body::after{
   background:var(--n800);color:var(--ts);transition:all .18s;white-space:nowrap;
 }
 .fl-ky-btn:hover{background:var(--n700);color:var(--tp)}
-.fl-ky-btn.active{background:rgba(0,212,255,.18);color:var(--cyan);}
+.fl-ky-btn.active{
+  background:linear-gradient(135deg, rgba(250,204,21,.2), rgba(250,204,21,.08));
+  color:var(--gold);
+  box-shadow:inset 0 0 12px rgba(250,204,21,.12);
+}
 .fl-ky-btn + .fl-ky-btn{border-left:1px solid var(--bdm)}
 .btn-refresh{
-  background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(0,212,255,.05));
-  color:var(--cyan);border-color:rgba(0,212,255,.3);
+  background:linear-gradient(135deg, rgba(250,204,21,.2), rgba(250,204,21,.08));
+  color:var(--gold);border-color:rgba(250,204,21,.4);
   display:flex;align-items:center;gap:6px;
   font-weight:600;padding:0 14px;
+  box-shadow:0 0 12px rgba(250,204,21,.08);
 }
-.btn-refresh:hover{background:rgba(0,212,255,.22)}
-.btn-refresh svg{width:13px;height:13px}
+.btn-refresh:hover{
+  background:linear-gradient(135deg, rgba(250,204,21,.3), rgba(250,204,21,.15));
+  box-shadow:0 0 16px rgba(250,204,21,.2);
+}
+.btn-refresh svg{width:13px;height:13px;filter:drop-shadow(0 0 4px rgba(250,204,21,.5))}
 /* Nút Xác nhận filter */
 .btn-confirm{
   height:30px; border-radius:var(--rsm);
@@ -143,9 +172,12 @@ body::after{
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
 
 .sidebar{
-  background:rgba(8,15,32,.92);border-right:1px solid var(--bd);
+  background:linear-gradient(180deg, rgba(4,14,37,.95), rgba(2,8,23,.92));
+  border-right:1px solid var(--bdm);
   padding:20px 12px;display:flex;flex-direction:column;gap:4px;
-  backdrop-filter:blur(16px);overflow-y:auto;
+  backdrop-filter:blur(20px);overflow-y:auto;
+  box-shadow:1px 0 0 rgba(250,204,21,.06), 4px 0 16px rgba(0,0,0,.3);
+  position:relative;
 }
 .nav-label{
   font-size:9px;font-weight:700;letter-spacing:1.5px;
@@ -160,16 +192,71 @@ body::after{
   font-size:12.5px;font-weight:500;position:relative;
   user-select:none;
 }
-.nav-item:hover{background:var(--glass);color:var(--tp);border-color:var(--bd)}
+.nav-item:hover{
+  background:rgba(250,204,21,.06);
+  color:var(--tp);border-color:rgba(250,204,21,.12);
+}
 .nav-item.active{
-  background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(0,212,255,.04));
-  color:var(--cyan);border-color:rgba(0,212,255,.25);
+  background:linear-gradient(135deg, rgba(250,204,21,.18), rgba(250,204,21,.05));
+  color:var(--gold);border-color:rgba(250,204,21,.3);
+  box-shadow:0 0 16px rgba(250,204,21,.12), inset 0 1px 0 rgba(250,204,21,.15);
 }
 .nav-item.active::before{
   content:'';position:absolute;left:0;top:20%;height:60%;
-  width:3px;border-radius:0 3px 3px 0;background:var(--cyan);
+  width:3px;border-radius:0 3px 3px 0;
+  background:var(--gold);
+  box-shadow:0 0 8px var(--gold), 0 0 16px rgba(250,204,21,.5);
 }
 .nav-item svg{width:16px;height:16px;flex-shrink:0}
+
+/* ═══ USER PROFILE CARD (Sidebar footer) ═══ */
+.user-profile-card{
+  margin-top:auto;
+  padding:14px 12px;
+  border-top:1px solid var(--bdm);
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg, rgba(250,204,21,.05), rgba(7,27,51,.4));
+  border-radius:var(--rmd);
+  margin:14px 4px 4px;
+  cursor:pointer;
+  transition:all .25s;
+  position:relative;
+  overflow:hidden;
+}
+.user-profile-card:hover{
+  background:linear-gradient(135deg, rgba(250,204,21,.1), rgba(14,45,82,.6));
+  box-shadow:0 0 16px rgba(250,204,21,.1);
+}
+.upc-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg, #FACC15, #D97706);
+  display:flex;align-items:center;justify-content:center;
+  color:#020817;font-weight:800;font-size:13px;
+  flex-shrink:0;
+  box-shadow:0 0 12px rgba(250,204,21,.4), inset 0 1px 0 rgba(255,255,255,.3);
+  border:1.5px solid rgba(250,204,21,.6);
+}
+.upc-info{flex:1;min-width:0;overflow:hidden}
+.upc-name{
+  font-size:12px;font-weight:700;color:var(--tp);
+  line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.upc-role{
+  font-size:10px;color:var(--ts);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-top:2px;
+}
+.upc-menu{
+  color:var(--tm);
+  display:flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:6px;
+  transition:all .2s;
+}
+.user-profile-card:hover .upc-menu{
+  color:var(--gold);
+  background:rgba(250,204,21,.1);
+}
 
 .main{overflow-y:auto;overflow-x:hidden;padding:24px;display:flex;flex-direction:column;gap:20px}
 
@@ -194,49 +281,73 @@ body::after{
 }
 .ph h1{
   font-size:26px;font-weight:800;line-height:1.2;
-  background:linear-gradient(135deg,#fff 0%,var(--cyan) 100%);
+  background:linear-gradient(135deg,#FFF 0%, #FACC15 60%, #D97706 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(250,204,21,.25));
 }
 .ph-sub{
-  font-size:13px;font-weight:700;color:var(--cyan);
+  font-size:13px;font-weight:700;color:var(--gold);
   font-family:var(--fm);margin-bottom:5px;
   letter-spacing:.5px;
-  text-shadow:0 0 18px rgba(0,212,255,.4);
+  text-shadow:0 0 18px rgba(250,204,21,.5);
 }
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .kpi-grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 .kpi-grid1{display:grid;grid-template-columns:1fr;gap:12px}
 .kc{
-  background:var(--card);border:1px solid var(--bd);border-radius:var(--rlg);
+  background:
+    linear-gradient(135deg, rgba(7,27,51,.92), rgba(10,35,66,.85));
+  border:1px solid var(--bd);border-radius:var(--rlg);
   padding:18px 20px;position:relative;overflow:hidden;
-  transition:all .3s;backdrop-filter:blur(8px);
+  transition:all .3s;backdrop-filter:blur(10px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(250,204,21,.06);
 }
 .kc::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--ac,var(--cyan));opacity:.75;
+  background:linear-gradient(90deg, transparent, var(--ac,var(--gold)), transparent);
+  opacity:.85;box-shadow:0 0 12px var(--ac,var(--gold));
 }
-.kc:hover{border-color:var(--bdm);background:var(--cardh);transform:translateY(-1px)}
+.kc:hover{
+  border-color:var(--bdm);
+  background:linear-gradient(135deg, rgba(10,35,66,.95), rgba(14,45,82,.88));
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.4), 0 0 20px rgba(250,204,21,.08), inset 0 1px 0 rgba(250,204,21,.1);
+}
 .kc-lbl{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--ts);margin-bottom:10px}
-.kc-val{font-size:28px;font-weight:800;font-family:var(--fm);color:var(--ac,var(--cyan));line-height:1}
-.kc-val-sm{font-size:14px;font-weight:700;font-family:var(--fb);color:var(--ac,var(--cyan));line-height:1.3;word-break:break-word}
+.kc-val{
+  font-size:28px;font-weight:800;font-family:var(--fm);
+  color:var(--ac,var(--gold));line-height:1;
+  text-shadow:0 0 24px rgba(250,204,21,.4);
+}
+.kc-val-sm{
+  font-size:14px;font-weight:700;font-family:var(--fb);
+  color:var(--ac,var(--gold));line-height:1.3;word-break:break-word;
+  text-shadow:0 0 16px rgba(250,204,21,.3);
+}
 .kc-sub{font-size:10px;color:var(--tm);margin-top:6px;font-family:var(--fm)}
-.kc-ico{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:.07;font-size:46px}
-[data-ac=cyan]{--ac:var(--cyan)}[data-ac=amber]{--ac:var(--amber)}
-[data-ac=emerald]{--ac:var(--emerald)}[data-ac=coral]{--ac:var(--coral)}
+.kc-ico{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:.08;font-size:46px;filter:drop-shadow(0 0 8px var(--ac,var(--gold)))}
+[data-ac=cyan]{--ac:var(--gold)}
+[data-ac=amber]{--ac:var(--amber)}
+[data-ac=emerald]{--ac:var(--emerald)}
+[data-ac=coral]{--ac:var(--coral)}
 [data-ac=violet]{--ac:var(--violet)}
+[data-ac=gold]{--ac:var(--gold)}
 
 .cc{
-  background:var(--card);border:1px solid var(--bd);border-radius:var(--rlg);
-  padding:20px;backdrop-filter:blur(8px);transition:border-color .2s;
+  background:
+    linear-gradient(135deg, rgba(7,27,51,.85), rgba(10,35,66,.75));
+  border:1px solid var(--bd);border-radius:var(--rlg);
+  padding:20px;backdrop-filter:blur(10px);transition:all .2s;
+  box-shadow:0 4px 12px rgba(0,0,0,.25), inset 0 1px 0 rgba(250,204,21,.04);
 }
-.cc:hover{border-color:var(--bdm)}
+.cc:hover{border-color:var(--bdm);box-shadow:0 6px 20px rgba(0,0,0,.35), 0 0 16px rgba(250,204,21,.06)}
 .cc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .cc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ts)}
 .cc-pill{
-  font-size:10px;font-family:var(--fm);color:var(--cyan);
-  background:rgba(0,212,255,.1);padding:3px 10px;border-radius:99px;
-  border:1px solid rgba(0,212,255,.2);
+  font-size:10px;font-family:var(--fm);color:var(--gold);
+  background:rgba(250,204,21,.1);padding:3px 10px;border-radius:99px;
+  border:1px solid rgba(250,204,21,.25);
 }
 .cw{position:relative;height:220px}
 .cw-lg{height:280px}
@@ -459,8 +570,8 @@ body::after{
 
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(0,212,255,.18);border-radius:99px}
-::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,.38)}
+::-webkit-scrollbar-thumb{background:rgba(250,204,21,.22);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(250,204,21,.4)}
 
 @keyframes floatAvatar{
   0%,100%{transform:translateY(0)}
@@ -1209,6 +1320,20 @@ body::after{
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
       </svg>Thanh tra - Khiếu tố
+    </div>
+
+    <!-- ═══ USER PROFILE CARD — Footer sidebar ═══ -->
+    <div class="user-profile-card" onclick="_toggleUserMenu(this)" title="Tài khoản người dùng">
+      <div class="upc-avatar" id="upcAvatar">VT</div>
+      <div class="upc-info">
+        <div class="upc-name" id="upcName">Viện trưởng</div>
+        <div class="upc-role" id="upcRole">VKSND tỉnh Gia Lai</div>
+      </div>
+      <div class="upc-menu">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>
+        </svg>
+      </div>
     </div>
   </nav>
 
@@ -5891,5 +6016,107 @@ document.addEventListener('DOMContentLoaded', function(){
       if (e.key === 'Enter') doLogin();
     });
   });
+});
+
+// ═══ USER PROFILE CARD — cập nhật từ session & menu ═══
+const _USER_PROFILE = {
+  'vientruong': { name: 'Viện trưởng',     role: 'VKSND tỉnh Gia Lai', initials: 'VT' },
+  'admin':      { name: 'Quản trị viên',   role: 'Hệ thống Dashboard',  initials: 'AD' }
+};
+
+function _updateProfileCard() {
+  try {
+    const raw = sessionStorage.getItem(_SESSION_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    const u = s.user || '';
+    const p = _USER_PROFILE[u] || {
+      name: u.charAt(0).toUpperCase() + u.slice(1),
+      role: 'Người dùng',
+      initials: u.slice(0,2).toUpperCase()
+    };
+    const nameEl   = document.getElementById('upcName');
+    const roleEl   = document.getElementById('upcRole');
+    const avatarEl = document.getElementById('upcAvatar');
+    if (nameEl)   nameEl.textContent   = p.name;
+    if (roleEl)   roleEl.textContent   = p.role;
+    if (avatarEl) avatarEl.textContent = p.initials;
+  } catch(e) {}
+}
+
+function _toggleUserMenu(card) {
+  // Xóa menu cũ nếu có
+  const old = document.getElementById('userPopupMenu');
+  if (old) { old.remove(); return; }
+
+  const r = card.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'userPopupMenu';
+  menu.style.cssText = `
+    position:fixed;
+    left:${r.left + 4}px;
+    bottom:${window.innerHeight - r.top + 8}px;
+    min-width:200px;
+    background:linear-gradient(180deg, rgba(7,27,51,.98), rgba(2,8,23,.96));
+    border:1px solid rgba(250,204,21,.3);
+    border-radius:12px;
+    padding:6px;
+    box-shadow:0 8px 32px rgba(0,0,0,.5), 0 0 24px rgba(250,204,21,.1);
+    backdrop-filter:blur(20px);
+    z-index:9999;
+    animation:fadeUp .2s ease both;
+  `;
+  menu.innerHTML = `
+    <div class="upm-item" onclick="showWelcomeAgain();_toggleUserMenu(document.querySelector('.user-profile-card'))">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 3h18v18H3z"/><path d="M9 3v18M3 9h18"/>
+      </svg>
+      Đổi kỳ báo cáo
+    </div>
+    <div class="upm-item" onclick="_logout()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Đăng xuất
+    </div>
+  `;
+  document.body.appendChild(menu);
+
+  // Style cho item
+  const sty = document.createElement('style');
+  sty.id = 'userPopupMenuStyle';
+  sty.textContent = `
+    .upm-item{
+      display:flex;align-items:center;gap:10px;
+      padding:9px 12px;border-radius:8px;
+      color:var(--ts);font-size:12.5px;font-weight:500;
+      cursor:pointer;transition:all .15s;
+    }
+    .upm-item:hover{background:rgba(250,204,21,.1);color:var(--gold)}
+    .upm-item svg{flex-shrink:0;opacity:.8}
+  `;
+  document.head.appendChild(sty);
+
+  // Click ngoài để đóng
+  setTimeout(function(){
+    document.addEventListener('click', function close(e){
+      if (!menu.contains(e.target) && !e.target.closest('.user-profile-card')) {
+        menu.remove();
+        document.removeEventListener('click', close);
+      }
+    });
+  }, 50);
+}
+
+function _logout() {
+  if (!confirm('Đăng xuất khỏi Dashboard?')) return;
+  try { sessionStorage.removeItem(_SESSION_KEY); } catch(_) {}
+  try { sessionStorage.removeItem('vksnd_welcomed'); } catch(_) {}
+  location.reload();
+}
+
+// Cập nhật profile card sau khi DOM sẵn sàng
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(_updateProfileCard, 300);
 });
 </script>
