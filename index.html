@@ -2683,11 +2683,17 @@ function renderOverview() {
     ? `${F(dsVu)} vụ / ${F(dsViec)} việc`
     : `${F(dsVu)} vụ`;
 
-  // YC2: THADS — hiển thị "X việc / Y đồng"
+  // YC2: THADS — hiển thị "X việc / Y đồng" (số tiền lớn format thành tỷ/triệu)
   const thadsViec = d.kpi.daThuLyKS        || 0;
   const thadsDong = d.kpi.thuLyTHADS_dong  || 0;
+  function _fmtDong(n) {
+    if (!n) return '';
+    if (n >= 1e9) return (n / 1e9).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' tỷ';
+    if (n >= 1e6) return (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' tr';
+    return F(n);
+  }
   $('k-thads').textContent = thadsDong > 0
-    ? `${F(thadsViec)} việc / ${F(thadsDong)} đồng`
+    ? `${F(thadsViec)} việc / ${_fmtDong(thadsDong)} đồng`
     : `${F(thadsViec)} việc`;
 
   // ── Charts: Tin báo & Khởi tố theo đơn vị ──────────────────────
