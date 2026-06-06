@@ -360,8 +360,8 @@ body::after{
   text-shadow:0 0 24px rgba(250,204,21,.5), 0 0 8px rgba(250,204,21,.4);
 }
 .kc-val-sm{
-  font-size:13px;font-weight:700;font-family:var(--fb);
-  color:var(--ac,var(--gold));line-height:1.3;word-break:break-word;position:relative;z-index:2;
+  font-size:17px;font-weight:800;font-family:var(--fm);
+  color:var(--ac,var(--gold));line-height:1.2;word-break:break-word;position:relative;z-index:2;
   text-shadow:0 0 16px rgba(250,204,21,.4);
 }
 .kc-sub{display:none}
@@ -1003,7 +1003,7 @@ body::after{
     margin-bottom:5px; line-height:1.3;
   }
   .kc-val{ font-size:18px }
-  .kc-val-sm{ font-size:11px; line-height:1.4 }
+  .kc-val-sm{ font-size:14px; line-height:1.25; font-family:var(--fm); font-weight:800 }
   .kc-sub{ display:none }
   /* Huy hiệu kính mobile: thu nhỏ nhưng giữ đầy đủ hiệu ứng glow + 3D */
   .kc-ico{
@@ -5323,7 +5323,7 @@ function renderPhong(tab, d) {
         if (isNum) {
           html += '<td style="text-align:right;font-family:var(--fm);font-size:11.5px;' +
                   'color:' + (isEmpty ? 'var(--tm)' : 'var(--tp)') + ';' +
-                  'padding:6px 7px;white-space:nowrap;vertical-align:middle;' + bdStyle + '">' +
+                  'padding:8px 7px;white-space:nowrap;vertical-align:middle;' + bdStyle + '">' +
                   esc(cell) + '</td>';
         } else if (isText) {
           var tLines = (function(raw) {
@@ -5372,15 +5372,15 @@ function renderPhong(tab, d) {
             .map(function(ln){
               return '<div style="line-height:1.6;padding:2px 0;text-align:justify">' + esc(ln) + '</div>';
             }).join('');
-          html += '<td style="white-space:normal;vertical-align:top;font-size:11px;' +
+          html += '<td style="white-space:normal;vertical-align:middle;font-size:11px;' +
                   'padding:8px 10px;color:var(--ts);' + bdStyle + '">' +
                   tRendered + '</td>';
         } else {
-          // Cột Tháng/Năm: canh giữa, màu cyan, padding dọc thoáng
+          // Cột Tháng/Năm: canh giữa cả dọc lẫn ngang, màu cyan
           const isTN = ['Tháng','Năm'].indexOf(h) >= 0;
           html += '<td style="font-size:12px;' +
-                  'padding:' + (isTN ? '14px 7px' : '6px 7px') + ';' +
-                  'white-space:nowrap;vertical-align:top;' +
+                  'padding:8px 7px;' +
+                  'white-space:nowrap;vertical-align:middle;' +
                   (isTN ? 'text-align:center;font-weight:700;' : '') +
                   'color:' + (isMeta ? 'var(--tm)' : (isTN ? 'var(--cyan)' : 'var(--ts)')) + ';' +
                   bdStyle + '">' +
