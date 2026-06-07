@@ -2218,6 +2218,8 @@ body::after{
 // CẤU HÌNH GAS API URL — thay bằng URL deployment thực tế
 // ══════════════════════════════════════════════════════════════
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzTOsAa5RsywfVztA6riyb0GwCaQxSyG2swr3rgTUm3fPh2oUr5Jz9x3KoQ6huM32hgfA/exec'; // GAS Web App URL
+// Đọc SECRET_TOKEN từ meta tag (được inject bởi doGet khi chạy qua GAS)
+const GAS_TOKEN = (document.querySelector('meta[name="gas-token"]') || {}).content || '';
 
 /** Gọi GAS API qua fetch (dùng khi chạy từ Vercel) */
 /** Gọi GAS API qua JSONP — bypass 403/CORS hoàn toàn */
@@ -2226,6 +2228,7 @@ function gasAPI(action, params={}) {
     const cbName = '_gcb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const url = new URL(GAS_API_URL);
     url.searchParams.set('action', action);
+    if (GAS_TOKEN) url.searchParams.set('token', GAS_TOKEN);
     url.searchParams.set('callback', cbName);
     Object.entries(params).forEach(([k,v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
@@ -5693,7 +5696,7 @@ window.addEventListener('load', () => {
         <button class="ai-src-btn" data-src="phongNV" onclick="aiToggleSrc(this)">🏛️ Phòng NV</button>
         <button class="ai-src-btn" data-src="drive" onclick="aiToggleSrc(this)" id="aiDriveBtn" title="Bật để tra cứu văn bản, tài liệu trong Google Drive">🗂️ Google Drive</button>
       </div>
-      <div id="aiDriveHint" style="display:none;font-size:10px;color:#ffb800;margin-top:4px">⚠️ Để tra cứu tài liệu Drive, hãy bật nút 🗂️ Google Drive phía trên trước khi hỏi</div>
+
     </div>
 
     <!-- Input -->
@@ -5947,9 +5950,6 @@ function _aiContextHint() {
 
 function aiToggleSrc(btn) {
   btn.classList.toggle('ai-src-active');
-  // Ẩn hint khi Drive được bật
-  var hint = document.getElementById('aiDriveHint');
-  if (hint) hint.style.display = 'none';
 }
 
 function aiGetSources() {
@@ -5993,44 +5993,10 @@ function sendAiMsg() {
     _aiContextHint();
   }
 
-  // ─ Tự động bật Google Drive khi phát hiện câu hỏi văn bản pháp lý ─
-  // KHÔNG dùng \b vì JavaScript regex không xử lý đúng word boundary với ký tự tiếng Việt có dấu
-  // Dùng (^|\s|[,.;?!]) thay cho \b — bao trùm mọi vị trí từ
-  var _legalPatterns = [
-    // Loại văn bản pháp lý
-    /(nghị quyết|quyết định|thông tư|chỉ thị|công văn|kế hoạch|hướng dẫn|quy chế|quy định|văn bản|tài liệu|báo cáo)/i,
-    /(luật|bộ luật|hiến pháp|pháp lệnh|nghị định)/i,
-    // Điều/khoản/mục
-    /(điều|khoản|mục|chương)\s*\d+/i,
-    // Câu hỏi định nghĩa / khái niệm (KHÔNG dùng \b)
-    /(là\s+gì|là\s+ai|nghĩa\s+là|khái niệm|định nghĩa|giải thích)/i,
-    // Hành động tra cứu văn bản
-    /(tra cứu|theo quy định|theo nghị|theo nội dung|được quy định|được hiểu)/i,
-    // Số văn bản dạng NNN/YYYY/XX
-    /\d+\/\d+\/[a-zA-Z]+/i,
-    /\d+\/[a-zA-Z]+-[a-zA-Z]+/i,
-    // Từ khóa nghiệp vụ thường có trong văn bản pháp lý
-    /(mật mã|chữ ký số|nền tảng|chuyển đổi số|hồ sơ điện tử|số hóa|an toàn thông tin|bảo mật)/i,
-    // Tên cơ quan/đơn vị thường xuất hiện trong văn bản
-    /(VKSND|VKSNDTC|Quốc hội|Chính phủ|Bộ Công an|Tòa án nhân dân)/i
-  ];
-  var _isLegal = _legalPatterns.some(function(p){ return p.test(q); });
+
+  // Google Drive CHỈ bật khi user tự tick — không tự động bật
   var _driveBtn = document.querySelector('#aiSourceBtns .ai-src-btn[data-src="drive"]');
   var _driveActive = _driveBtn && _driveBtn.classList.contains('ai-src-active');
-
-  if (_isLegal && !_driveActive && _driveBtn) {
-    _driveBtn.classList.add('ai-src-active');
-    // Badge thông báo nhỏ
-    var box = document.getElementById('aiMessages');
-    if (box) {
-      var div = document.createElement('div');
-      div.style.cssText = 'font-size:10px;color:#00d4ff;opacity:.85;padding:4px 8px;align-self:flex-start;background:rgba(0,212,255,.08);border-radius:6px;margin-bottom:4px';
-      div.innerHTML = '🗂️ Đã tự động bật <strong>Google Drive</strong> để tra cứu văn bản';
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-      setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 6000);
-    }
-  }
 
   const typing = _aiTyping();
 
