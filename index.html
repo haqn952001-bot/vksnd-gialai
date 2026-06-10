@@ -5714,80 +5714,70 @@ window.addEventListener('load', () => {
 
   <!-- Chat panel -->
   <div id="aiPanel" style="
-    display:none; flex-direction:column;
-    width:340px; height:480px;
-    background:rgba(8,15,32,.98); border:1px solid rgba(0,212,255,.25);
-    border-radius:16px; overflow:hidden;
-    box-shadow:0 16px 48px rgba(0,0,0,.6);
+  display:none; flex-direction:column;
+  width:360px; height:520px;
+  background:rgba(8,15,32,.98); border:1px solid rgba(0,212,255,.25);
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 16px 48px rgba(0,0,0,.6);
+">
+  <!-- Header -->
+  <div style="
+    padding:10px 14px; background:rgba(0,212,255,.08);
+    border-bottom:1px solid rgba(0,212,255,.15);
+    display:flex; align-items:center; justify-content:space-between;
   ">
-    <!-- Header -->
-    <div style="
-      padding:12px 16px; background:rgba(0,212,255,.08);
-      border-bottom:1px solid rgba(0,212,255,.15);
-      display:flex; align-items:center; justify-content:space-between;
-    ">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:18px">🤖</span>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--cyan)">Trợ lý AI VKSND</div>
-          <div style="font-size:10px;color:var(--ts)" id="aiDataTime">Tra cứu số liệu tức thì</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="
-          background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);
-          color:#00e5a0;border-radius:6px;cursor:pointer;
-          font-size:11px;padding:3px 8px;font-family:var(--fb);
-        ">↻ Làm mới</button>
-        <button onclick="toggleAiChat()" style="
-          background:none;border:none;cursor:pointer;color:var(--ts);
-          font-size:18px;line-height:1;padding:4px;
-        ">×</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px" id="aiProviderIcon">🤖</span>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--cyan)" id="aiProviderName">Trợ lý AI VKSND</div>
+        <div style="font-size:10px;color:var(--ts)" id="aiDataTime">Tra cứu số liệu tức thì</div>
       </div>
     </div>
-
-    <!-- Messages -->
-    <div id="aiMessages" style="
-      flex:1; overflow-y:auto; padding:12px; display:flex;
-      flex-direction:column; gap:8px; scrollbar-width:thin;
-    ">
-      <div class="ai-msg ai-msg-bot">
-        Xin chào Viện trưởng, em là trợ lý AI công tác tham mưu, tổng hợp của VKSND tỉnh Gia Lai!<br>
-        Viện trưởng cần em cung cấp dữ liệu nào, vui lòng nhập yêu cầu.
+    <div style="display:flex;gap:5px;align-items:center">
+      <div id="aiProviderSwitcher" style="display:flex;border:1px solid rgba(0,212,255,.25);border-radius:7px;overflow:hidden;flex-shrink:0">
+        <button id="btnProvGemini" onclick="aiSetProvider('gemini')" style="height:26px;padding:0 9px;font-size:10px;font-weight:700;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1));color:var(--cyan);transition:all .18s" title="Dùng Gemini (qua GAS)">✦ Gemini</button>
+        <button id="btnProvClaude" onclick="aiSetProvider('claude')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng Claude (Anthropic API trực tiếp)">◆ Claude</button>
       </div>
-    </div>
-
-    <!-- Chọn nguồn dữ liệu -->
-    <div style="padding:8px 12px 0;border-top:1px solid rgba(0,212,255,.1)">
-      <div style="font-size:10px;color:var(--ts);margin-bottom:5px;letter-spacing:.5px">📂 NGUỒN DỮ LIỆU AI SẼ TÌM KIẾM:</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px" id="aiSourceBtns">
-        <button class="ai-src-btn" data-src="khuVuc"    onclick="aiToggleSrc(this)">📊 Số liệu khu vực</button>
-        <button class="ai-src-btn" data-src="chiTieu12" onclick="aiToggleSrc(this)">📋 Chỉ tiêu 12T</button>
-        <button class="ai-src-btn" data-src="chiTieu6"  onclick="aiToggleSrc(this)">📋 Chỉ tiêu 6T</button>
-        <button class="ai-src-btn" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy/ĐTBS</button>
-        <button class="ai-src-btn" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 Chuyển đổi số</button>
-        <button class="ai-src-btn" data-src="nq205"   onclick="aiToggleSrc(this)">📑 NQ 205</button>
-        <button class="ai-src-btn" data-src="phongNV" onclick="aiToggleSrc(this)">🏛️ Phòng NV</button>
-        <button class="ai-src-btn" data-src="drive" onclick="aiToggleSrc(this)" id="aiDriveBtn" title="Bật để tra cứu văn bản, tài liệu trong Google Drive">🗂️ Google Drive</button>
-      </div>
-
-    </div>
-
-    <!-- Input -->
-    <div style="padding:8px 12px 10px;display:flex;gap:8px">
-      <input id="aiInput" type="text" placeholder="Nhập câu hỏi..." style="
-        flex:1; height:36px; border-radius:8px; border:1px solid var(--bdm);
-        background:var(--n800); color:var(--tp); font-size:12px;
-        padding:0 12px; font-family:var(--fb); outline:none;
-      "
-      />
-      <button onclick="sendAiMsg()" style="
-        width:36px; height:36px; border-radius:8px; border:none; cursor:pointer;
-        background:linear-gradient(135deg,#0066cc,#00d4ff);
-        color:#fff; font-size:16px; flex-shrink:0;
-      ">↑</button>
+      <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0;border-radius:6px;cursor:pointer;font-size:11px;padding:3px 7px;font-family:var(--fb)">↻</button>
+      <button onclick="toggleAiChat()" style="background:none;border:none;cursor:pointer;color:var(--ts);font-size:18px;line-height:1;padding:4px">×</button>
     </div>
   </div>
+
+  <!-- Claude Key Banner -->
+  <div id="aiClaudeKeyBanner" style="display:none;padding:7px 14px;background:rgba(139,92,246,.12);border-bottom:1px solid rgba(139,92,246,.2);font-size:11px;color:#a78bfa;align-items:center;gap:8px">
+    <span>◆ Chưa có Claude API Key.</span>
+    <button onclick="aiShowKeyDialog()" style="background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;font-family:var(--fb);font-weight:700">Nhập Key</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="aiMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin">
+    <div class="ai-msg ai-msg-bot">
+      Xin chào Viện trưởng, em là trợ lý AI công tác tham mưu, tổng hợp của VKSND tỉnh Gia Lai!<br>
+      Viện trưởng cần em cung cấp dữ liệu nào, vui lòng nhập yêu cầu.
+    </div>
+  </div>
+
+  <!-- Nguồn dữ liệu -->
+  <div style="padding:7px 12px 0;border-top:1px solid rgba(0,212,255,.1)">
+    <div style="font-size:10px;color:var(--ts);margin-bottom:4px;letter-spacing:.5px">📂 NGUỒN DỮ LIỆU AI SẼ TÌM KIẾM:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px" id="aiSourceBtns">
+      <button class="ai-src-btn" data-src="khuVuc"    onclick="aiToggleSrc(this)">📊 Số liệu KV</button>
+      <button class="ai-src-btn" data-src="chiTieu12" onclick="aiToggleSrc(this)">📋 CT 12T</button>
+      <button class="ai-src-btn" data-src="chiTieu6"  onclick="aiToggleSrc(this)">📋 CT 6T</button>
+      <button class="ai-src-btn" data-src="anHuy"     onclick="aiToggleSrc(this)">⚖️ Án hủy</button>
+      <button class="ai-src-btn" data-src="shHsva"    onclick="aiToggleSrc(this)">💻 CĐS</button>
+      <button class="ai-src-btn" data-src="nq205"     onclick="aiToggleSrc(this)">📑 NQ 205</button>
+      <button class="ai-src-btn" data-src="phongNV"   onclick="aiToggleSrc(this)">🏛️ Phòng NV</button>
+      <button class="ai-src-btn" data-src="drive"     onclick="aiToggleSrc(this)" id="aiDriveBtn" title="Tra cứu Google Drive (chỉ Gemini)">🗂️ Drive</button>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div style="padding:8px 12px 10px;display:flex;gap:7px">
+    <input id="aiInput" type="text" placeholder="Nhập câu hỏi..." style="flex:1;height:36px;border-radius:8px;border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;font-family:var(--fb);outline:none"/>
+    <button onclick="sendAiMsg()" id="aiSendBtn" style="width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#0066cc,#00d4ff);color:#fff;font-size:16px;flex-shrink:0;transition:background .2s">↑</button>
+  </div>
+</div>
 </div>
 
 <style>
@@ -6144,6 +6134,289 @@ document.addEventListener('DOMContentLoaded', function() {
   var inp = document.getElementById('aiInput');
   if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sendAiMsg(); });
 });
+</script>
+
+
+<!-- CLAUDE API KEY DIALOG -->
+<div id="aiKeyDialog" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:rgba(8,15,32,.98);border:1px solid rgba(139,92,246,.35);border-radius:16px;padding:28px 28px 22px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-size:22px">◆</span>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:#c4b5fd">Cấu hình Claude</div>
+        <div style="font-size:11px;color:var(--ts);margin-top:2px">Key đã lưu sẵn trong GAS — chỉ cần chọn model</div>
+      </div>
+    </div>
+    <!-- Key lưu trong GAS Script Properties — admin đã cài sẵn, không cần nhập ở đây -->
+    <div style="margin-bottom:14px;padding:10px 12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px">
+      <div style="font-size:11px;color:#a78bfa;display:flex;align-items:center;gap:6px">
+        <span>🔐</span>
+        <span>API Key đã được cài sẵn trong hệ thống (GAS Script Properties). Không cần nhập lại.</span>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ts);display:block;margin-bottom:7px">Model Claude</label>
+      <select id="claudeModelSelect" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(15,28,53,.8);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer;outline:none">
+        <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (nhanh, tiết kiệm)</option>
+        <option value="claude-opus-4-5">Claude Opus 4.5 (thông minh nhất)</option>
+        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (cực nhanh)</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:9px">
+      <button onclick="aiSaveKey()" style="flex:1;height:40px;border-radius:9px;border:none;cursor:pointer;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;font-size:13px;font-weight:700;font-family:var(--fb)">Áp dụng</button>
+      <button onclick="aiHideKeyDialog()" style="height:40px;padding:0 18px;border-radius:9px;border:1px solid rgba(139,92,246,.3);background:transparent;color:var(--ts);font-size:13px;cursor:pointer;font-family:var(--fb)">Hủy</button>
+    </div>
+    <div id="claudeKeyErr" style="display:none;margin-top:10px;font-size:11px;color:var(--coral);padding:8px 12px;background:rgba(239,68,68,.1);border-radius:7px;border:1px solid rgba(239,68,68,.2)"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CLAUDE AI INTEGRATION — V1 (thêm vào V28)
+// Gọi thẳng Anthropic API từ browser — không qua GAS
+// Provider: 'gemini' (mặc định) | 'claude'
+// ══════════════════════════════════════════════════════════════
+const _AI_CLAUDE_MDL_SESS = 'vksnd_claude_mdl_v1';
+let _aiProvider = 'gemini';
+
+// Key lưu trong GAS Script Properties — KHÔNG ở browser
+// Model vẫn chọn ở browser (không nhạy cảm)
+function _claudeGetModel() { try { return sessionStorage.getItem(_AI_CLAUDE_MDL_SESS) || 'claude-sonnet-4-5'; } catch(_){ return 'claude-sonnet-4-5'; } }
+
+function aiSetProvider(p) {
+  _aiProvider = p;
+  const btnG = document.getElementById('btnProvGemini');
+  const btnC = document.getElementById('btnProvClaude');
+  const icon = document.getElementById('aiProviderIcon');
+  const name = document.getElementById('aiProviderName');
+  const banner = document.getElementById('aiClaudeKeyBanner');
+  const sendBtn = document.getElementById('aiSendBtn');
+  const driveBtn = document.getElementById('aiDriveBtn');
+  const isGemini = (p === 'gemini');
+
+  if (btnG) {
+    btnG.style.background  = isGemini ? 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))' : 'var(--n800)';
+    btnG.style.color = isGemini ? 'var(--cyan)' : 'var(--ts)';
+    btnG.style.fontWeight = isGemini ? '700' : '600';
+  }
+  if (btnC) {
+    btnC.style.background  = !isGemini ? 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))' : 'var(--n800)';
+    btnC.style.color = !isGemini ? '#c4b5fd' : 'var(--ts)';
+    btnC.style.fontWeight = !isGemini ? '700' : '600';
+  }
+  if (icon) icon.textContent = isGemini ? '🤖' : '◆';
+  if (name) {
+    name.textContent = isGemini ? 'Trợ lý AI VKSND' : 'Claude — Trợ lý AI VKSND';
+    name.style.color = isGemini ? 'var(--cyan)' : '#c4b5fd';
+  }
+  if (sendBtn) sendBtn.style.background = isGemini
+    ? 'linear-gradient(135deg,#0066cc,#00d4ff)'
+    : 'linear-gradient(135deg,#6d28d9,#8b5cf6)';
+  if (driveBtn) {
+    driveBtn.style.opacity = isGemini ? '1' : '.4';
+    driveBtn.title = isGemini ? 'Tra cứu tài liệu Google Drive' : 'Google Drive chỉ hoạt động với Gemini';
+    if (!isGemini) driveBtn.classList.remove('ai-src-active');
+  }
+  if (banner) banner.style.display = 'none'; // Key luôn có sẵn ở GAS — không cần banner
+  _aiAddMsg(`<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:${isGemini?'var(--cyan)':'#c4b5fd'}">${isGemini?'Gemini (qua GAS)':'Claude '+_claudeGetModel()+' (API trực tiếp)'}</strong></span>`, 'bot');
+}
+
+function aiShowKeyDialog() {
+  const dlg = document.getElementById('aiKeyDialog');
+  if (!dlg) return;
+  const sel = document.getElementById('claudeModelSelect');
+  if (sel) sel.value = _claudeGetModel() || 'claude-sonnet-4-5';
+  const err = document.getElementById('claudeKeyErr');
+  if (err) err.style.display = 'none';
+  dlg.style.display = 'flex';
+  setTimeout(() => inp && inp.focus(), 100);
+}
+
+function aiHideKeyDialog() {
+  const dlg = document.getElementById('aiKeyDialog');
+  if (dlg) dlg.style.display = 'none';
+}
+
+function aiSaveKey() {
+  // Key lưu trong GAS Script Properties — không cần nhập ở browser
+  // Hàm này chỉ lưu lựa chọn model
+  const sel = document.getElementById('claudeModelSelect');
+  const model = (sel && sel.value) || 'claude-sonnet-4-5';
+  try { sessionStorage.setItem(_AI_CLAUDE_MDL_SESS, model); } catch(e) {}
+  aiHideKeyDialog();
+  _aiAddMsg(`<span style="font-size:11px">✅ Đã chọn model: <strong style="color:#c4b5fd">${model}</strong></span>`, 'bot');
+  if (_aiProvider !== 'claude') aiSetProvider('claude');
+}
+
+async function _callClaudeAPI(messages, systemPrompt) {
+  const model = _claudeGetModel();
+
+  // GAS mode: gọi trực tiếp qua google.script.run
+  if (GAS) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(d => {
+          if (d && d.error) reject(new Error(d.error));
+          else resolve(d && d.reply ? d.reply : '[Không có phản hồi]');
+        })
+        .withFailureHandler(err => reject(new Error(err && err.message ? err.message : String(err))))
+        .askClaude({ messages, systemPrompt, model });
+    });
+  }
+
+  // Vercel/JSONP mode: gọi GAS Web App qua JSONP
+  return new Promise((resolve, reject) => {
+    const cbName = '_gcb_claude_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const url = new URL(GAS_API_URL);
+    url.searchParams.set('action',   'askClaude');
+    url.searchParams.set('callback', cbName);
+
+    // Gửi tối đa 12 turns gần nhất để tránh URL quá dài
+    const recentMsgs = messages.slice(-12);
+    url.searchParams.set('payload', JSON.stringify({ messages: recentMsgs, systemPrompt, model }));
+
+    const urlLen = url.toString().length;
+    if (urlLen > 8000) {
+      // URL quá dài → cắt systemPrompt
+      const shortSys = systemPrompt.slice(0, 2000) + '\n...(đã rút gọn)';
+      url.searchParams.set('payload', JSON.stringify({ messages: recentMsgs, systemPrompt: shortSys, model }));
+    }
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Claude timeout (90s) — GAS mất kết nối hoặc quá tải'));
+    }, 90000);
+
+    window[cbName] = (data) => {
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data && data.reply ? data.reply : '[Không có phản hồi]');
+    };
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = () => { cleanup(); reject(new Error('JSONP error: askClaude')); };
+    document.head.appendChild(script);
+    console.log('[JSONP askClaude] URL length:', url.toString().length, '| model:', model);
+  });
+}
+function _buildClaudeSystemPrompt() {
+  const f = (typeof getFilterParams === 'function') ? getFilterParams() : {};
+  let dataSummary = '';
+  try {
+    if (window.DATA?.overview) {
+      const kpi = DATA.overview.kpi || {};
+      dataSummary += '\n=== DỮ LIỆU DASHBOARD HIỆN TẠI ===\n';
+      dataSummary += `Bộ lọc: T.${f.thangTu||1}/${f.namTu||2026} → T.${f.thangDen||12}/${f.namDen||2026}${f.kv ? ' | '+f.kv : ' | Tất cả'}\n\n`;
+      dataSummary += `Tin báo: ${kpi.tinBaoMoi||0} | Khởi tố: ${kpi.khoidToMoiRaw||kpi.khoidToMoi||0}\n`;
+      dataSummary += `Truy tố: ${kpi.truyToRaw||kpi.truyTo||0} | Xét xử: ${kpi.xetXuRaw||kpi.xetXu||0}\n`;
+      dataSummary += `Tạm giam: ${kpi.tamGiam||0} | Tạm giữ: ${kpi.tamGiu||0}\n`;
+      const ts = DATA.overview.trangThaiSummary || {};
+      if (Object.keys(ts).length) dataSummary += 'Kết quả CT: ' + Object.entries(ts).map(e=>e[0]+'='+e[1]).join(', ') + '\n';
+      if (DATA.overview.perKV?.length) {
+        dataSummary += '\nSố liệu theo đơn vị:\n';
+        DATA.overview.perKV.forEach(r => { dataSummary += `  ${r.donVi}: TinBáo=${r.tinBao} KhởiTố=${r.khoiTo}\n`; });
+      }
+    }
+    if (window.DATA12?._ctDetailAll?.length) {
+      const d12 = DATA12._ctDetailAll;
+      dataSummary += `\n=== CHỈ TIÊU 12 THÁNG (${d12.length} dòng) ===\n`;
+      const dvMap = {};
+      d12.forEach(r => {
+        if (!dvMap[r.donVi]) dvMap[r.donVi] = {dat:0,vuot:0,kdat:0,kps:0};
+        const ts = r.trangThai||'';
+        if (ts==='Đạt') dvMap[r.donVi].dat++;
+        else if (ts==='Vượt') dvMap[r.donVi].vuot++;
+        else if (ts==='Không đạt') dvMap[r.donVi].kdat++;
+        else if (ts==='Không phát sinh') dvMap[r.donVi].kps++;
+      });
+      Object.entries(dvMap).forEach(([dv,v]) => {
+        dataSummary += `  ${dv}: Đạt=${v.dat} Vượt=${v.vuot} KĐạt=${v.kdat} KPS=${v.kps}\n`;
+      });
+    }
+  } catch(e) { dataSummary += '\n(Lỗi trích xuất: ' + e.message + ')'; }
+
+  return [
+    'TRỢ LÝ AI PHÂN TÍCH DỮ LIỆU — VKSND TỈNH GIA LAI',
+    'Xưng hô: gọi "Viện trưởng", tự xưng "em".',
+    'Phong cách: NGẮN GỌN, ĐÚNG TRỌNG TÂM, bám sát số liệu thực tế.',
+    '',
+    'NGUYÊN TẮC: Chỉ trả lời dựa trên dữ liệu nguồn. Không suy diễn.',
+    'Câu nối tiếp → đọc lịch sử hội thoại và kế thừa ngữ cảnh.',
+    'Không tìm thấy → "Báo cáo Viện trưởng, hiện chưa có thông tin phù hợp."',
+    '',
+    dataSummary || '(Dữ liệu chưa tải — trả lời dựa trên câu hỏi người dùng.)'
+  ].join('\n');
+}
+
+// Override sendAiMsg để route đúng provider
+const _sendAiMsgGemini = sendAiMsg;
+
+sendAiMsg = async function() {
+  if (_aiProvider === 'gemini') { _sendAiMsgGemini(); return; }
+
+  const input = document.getElementById('aiInput');
+  const q = (input && input.value || '').trim();
+  if (!q || _aiSending) return;
+  input.value = '';
+  _aiSending = true;
+
+  _aiAddMsg(q, 'user');
+  _aiHistory.push({ role:'user', content:q });
+
+  const typing = _aiTyping();
+  try {
+    const recentHistory = _aiHistory.slice(-16).filter(m =>
+      m.role !== 'assistant' || (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️') && !m.content.startsWith('◆'))
+    );
+    const reply = await _callClaudeAPI(recentHistory, _buildClaudeSystemPrompt());
+    typing.remove();
+    _aiAddMsg(_aiFormatReply(reply), 'bot');
+    _aiHistory.push({ role:'assistant', content:reply });
+    if (_aiHistory.length > 30) _aiHistory = _aiHistory.slice(-30);
+  } catch(err) {
+    typing.remove();
+    const errMsg = err?.message || String(err);
+    let display = errMsg;
+    if (errMsg.includes('401') || errMsg.includes('authentication'))
+      display = '⚠️ Claude API Key không hợp lệ. Liên hệ admin để cập nhật key trong GAS Script Properties.';
+    else if (errMsg.includes('429') || errMsg.includes('rate'))
+      display = '⚠️ Vượt giới hạn rate limit. Vui lòng thử lại sau vài giây.';
+    else if (errMsg.includes('overloaded'))
+      display = '⚠️ Claude đang bận. Vui lòng thử lại sau ít phút.';
+    _aiAddMsg(display, 'bot');
+  }
+  _aiSending = false;
+};
+
+// Enter trong input — ghi đè để dùng sendAiMsg mới
+(function(){
+  const inp = document.getElementById('aiInput');
+  if (!inp) return;
+  const ni = inp.cloneNode(true);
+  inp.parentNode.replaceChild(ni, inp);
+  ni.addEventListener('keydown', e => { if (e.key === 'Enter') sendAiMsg(); });
+})();
+
+// Đóng dialog khi click ngoài
+document.addEventListener('click', function(e) {
+  const dlg = document.getElementById('aiKeyDialog');
+  if (!dlg || dlg.style.display === 'none') return;
+  if (!e.target.closest('#aiKeyDialog > div')) aiHideKeyDialog();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') aiHideKeyDialog(); });
+(function(){
+  const ki = document.getElementById('claudeKeyInput');
+  if (ki) ki.addEventListener('keydown', e => { if (e.key === 'Enter') aiSaveKey(); });
+})();
+
+console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: stored in GAS Props');
 </script>
 
 <script>
