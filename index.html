@@ -6248,8 +6248,11 @@ function aiSaveKey() {
   if (_aiProvider !== 'claude') aiSetProvider('claude');
 }
 
-async function _callClaudeAPI(messages, systemPrompt) {
-  const model = _claudeGetModel();
+async function _callClaudeAPI(messages, contextParams) {
+  // contextParams: { namTu, namDen, thangTu, thangDen, kv, kyBaoCao, dataSources }
+  // GAS tự build context từ Sheets + Drive — giống hệt Gemini
+  const model   = _claudeGetModel();
+  const payload = { messages, contextParams, model };
 
   // GAS mode: gọi trực tiếp qua google.script.run
   if (GAS) {
@@ -6260,31 +6263,26 @@ async function _callClaudeAPI(messages, systemPrompt) {
           else resolve(d && d.reply ? d.reply : '[Không có phản hồi]');
         })
         .withFailureHandler(err => reject(new Error(err && err.message ? err.message : String(err))))
-        .askClaude({ messages, systemPrompt, model });
+        .askClaude(payload);
     });
   }
 
   // Vercel/JSONP mode: gọi GAS Web App qua JSONP
+  // Chỉ gửi 8 turns gần nhất để URL không quá dài
   return new Promise((resolve, reject) => {
-    const cbName = '_gcb_claude_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const cbName     = '_gcb_claude_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const recentMsgs = messages.slice(-8);
     const url = new URL(GAS_API_URL);
     url.searchParams.set('action',   'askClaude');
     url.searchParams.set('callback', cbName);
+    url.searchParams.set('payload',  JSON.stringify({ messages: recentMsgs, contextParams, model }));
 
-    // Gửi tối đa 12 turns gần nhất để tránh URL quá dài
-    const recentMsgs = messages.slice(-12);
-    url.searchParams.set('payload', JSON.stringify({ messages: recentMsgs, systemPrompt, model }));
-
-    const urlLen = url.toString().length;
-    if (urlLen > 8000) {
-      // URL quá dài → cắt systemPrompt
-      const shortSys = systemPrompt.slice(0, 2000) + '\n...(đã rút gọn)';
-      url.searchParams.set('payload', JSON.stringify({ messages: recentMsgs, systemPrompt: shortSys, model }));
-    }
+    console.log('[JSONP askClaude] URL length:', url.toString().length, '| model:', model,
+                '| sources:', contextParams && contextParams.dataSources);
 
     const timer = setTimeout(() => {
       cleanup();
-      reject(new Error('Claude timeout (90s) — GAS mất kết nối hoặc quá tải'));
+      reject(new Error('Claude timeout (90s)'));
     }, 90000);
 
     window[cbName] = (data) => {
@@ -6303,56 +6301,7 @@ async function _callClaudeAPI(messages, systemPrompt) {
     script.src = url.toString();
     script.onerror = () => { cleanup(); reject(new Error('JSONP error: askClaude')); };
     document.head.appendChild(script);
-    console.log('[JSONP askClaude] URL length:', url.toString().length, '| model:', model);
   });
-}
-function _buildClaudeSystemPrompt() {
-  const f = (typeof getFilterParams === 'function') ? getFilterParams() : {};
-  let dataSummary = '';
-  try {
-    if (window.DATA?.overview) {
-      const kpi = DATA.overview.kpi || {};
-      dataSummary += '\n=== DỮ LIỆU DASHBOARD HIỆN TẠI ===\n';
-      dataSummary += `Bộ lọc: T.${f.thangTu||1}/${f.namTu||2026} → T.${f.thangDen||12}/${f.namDen||2026}${f.kv ? ' | '+f.kv : ' | Tất cả'}\n\n`;
-      dataSummary += `Tin báo: ${kpi.tinBaoMoi||0} | Khởi tố: ${kpi.khoidToMoiRaw||kpi.khoidToMoi||0}\n`;
-      dataSummary += `Truy tố: ${kpi.truyToRaw||kpi.truyTo||0} | Xét xử: ${kpi.xetXuRaw||kpi.xetXu||0}\n`;
-      dataSummary += `Tạm giam: ${kpi.tamGiam||0} | Tạm giữ: ${kpi.tamGiu||0}\n`;
-      const ts = DATA.overview.trangThaiSummary || {};
-      if (Object.keys(ts).length) dataSummary += 'Kết quả CT: ' + Object.entries(ts).map(e=>e[0]+'='+e[1]).join(', ') + '\n';
-      if (DATA.overview.perKV?.length) {
-        dataSummary += '\nSố liệu theo đơn vị:\n';
-        DATA.overview.perKV.forEach(r => { dataSummary += `  ${r.donVi}: TinBáo=${r.tinBao} KhởiTố=${r.khoiTo}\n`; });
-      }
-    }
-    if (window.DATA12?._ctDetailAll?.length) {
-      const d12 = DATA12._ctDetailAll;
-      dataSummary += `\n=== CHỈ TIÊU 12 THÁNG (${d12.length} dòng) ===\n`;
-      const dvMap = {};
-      d12.forEach(r => {
-        if (!dvMap[r.donVi]) dvMap[r.donVi] = {dat:0,vuot:0,kdat:0,kps:0};
-        const ts = r.trangThai||'';
-        if (ts==='Đạt') dvMap[r.donVi].dat++;
-        else if (ts==='Vượt') dvMap[r.donVi].vuot++;
-        else if (ts==='Không đạt') dvMap[r.donVi].kdat++;
-        else if (ts==='Không phát sinh') dvMap[r.donVi].kps++;
-      });
-      Object.entries(dvMap).forEach(([dv,v]) => {
-        dataSummary += `  ${dv}: Đạt=${v.dat} Vượt=${v.vuot} KĐạt=${v.kdat} KPS=${v.kps}\n`;
-      });
-    }
-  } catch(e) { dataSummary += '\n(Lỗi trích xuất: ' + e.message + ')'; }
-
-  return [
-    'TRỢ LÝ AI PHÂN TÍCH DỮ LIỆU — VKSND TỈNH GIA LAI',
-    'Xưng hô: gọi "Viện trưởng", tự xưng "em".',
-    'Phong cách: NGẮN GỌN, ĐÚNG TRỌNG TÂM, bám sát số liệu thực tế.',
-    '',
-    'NGUYÊN TẮC: Chỉ trả lời dựa trên dữ liệu nguồn. Không suy diễn.',
-    'Câu nối tiếp → đọc lịch sử hội thoại và kế thừa ngữ cảnh.',
-    'Không tìm thấy → "Báo cáo Viện trưởng, hiện chưa có thông tin phù hợp."',
-    '',
-    dataSummary || '(Dữ liệu chưa tải — trả lời dựa trên câu hỏi người dùng.)'
-  ].join('\n');
 }
 
 // Override sendAiMsg để route đúng provider
@@ -6375,7 +6324,18 @@ sendAiMsg = async function() {
     const recentHistory = _aiHistory.slice(-16).filter(m =>
       m.role !== 'assistant' || (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️') && !m.content.startsWith('◆'))
     );
-    const reply = await _callClaudeAPI(recentHistory, _buildClaudeSystemPrompt());
+    // contextParams gửi lên GAS để tự build context từ Sheets + Drive
+    const f2 = (typeof getFilterParams === 'function') ? getFilterParams() : {};
+    const claudeCtxParams = {
+      namTu      : f2.namTu    || '2026',
+      namDen     : f2.namDen   || '2026',
+      thangTu    : f2.thangTu  || '1',
+      thangDen   : f2.thangDen || '12',
+      kv         : f2.kv       || '',
+      kyBaoCao   : f2.kyBaoCao || '12thang',
+      dataSources: aiGetSources()  // tick box nào thì GAS đọc nguồn đó
+    };
+    const reply = await _callClaudeAPI(recentHistory, claudeCtxParams);
     typing.remove();
     _aiAddMsg(_aiFormatReply(reply), 'bot');
     _aiHistory.push({ role:'assistant', content:reply });
