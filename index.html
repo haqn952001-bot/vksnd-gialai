@@ -5696,13 +5696,91 @@ window.addEventListener('load', () => {
 </script>
 
 
+<script>
+let _aiOpen    = false;
+let _aiHistory = []; // lịch sử đầy đủ — GAS sẽ tự filter 12 turns gần nhất
+let _aiSending = false;
+
+// ── Patterns phát hiện câu hỏi nối tiếp (đồng bộ với GAS) ────
+const _CONT_RE = /số liệu (trên|đó|vừa|này|kia)|so (sánh|với).*(trên|đó|vừa|này|kia)|^so sánh\b|các (kv|đơn vị|khu vực) khác|^còn (kv|đơn vị|tháng|khu vực)\b|^thế còn\b|^vậy còn\b|^còn lại\b|toàn ngành|tổng (cộng|số|cả ngành)|^(chi tiết|phân tích|đánh giá) (hơn|thêm)?\b|^(xếp hạng|rank|top)\b/i;
+
+function toggleAiChat() {
+  _aiOpen = !_aiOpen;
+  const panel  = document.getElementById('aiPanel');
+  const bubble = document.getElementById('aiBubble');
+  const wrap   = document.getElementById('aiChat');
+
+  if (_aiOpen) {
+    panel.style.display = 'flex';
+    bubble.style.transform = 'scale(.9)';
+
+    // Tính vị trí bubble để quyết định panel mở về hướng nào
+    const bRect = bubble.getBoundingClientRect();
+    const pW = 340, pH = 480;
+    const vW = window.innerWidth,  vH = window.innerHeight;
+    const MARGIN = 12; // khoảng cách tối thiểu với cạnh màn hình
+
+    // Hướng ngang: ưu tiên bên trái bubble (mặc định). Nếu không đủ chỗ thì sang phải
+    let panelLeft;
+    if (bRect.right - pW >= MARGIN) {
+      panelLeft = bRect.right - pW; // căn phải panel = phải bubble
+    } else {
+      panelLeft = Math.max(MARGIN, bRect.left); // đẩy sang phải nếu cần
+    }
+    // Giới hạn không ra ngoài màn hình
+    panelLeft = Math.min(panelLeft, vW - pW - MARGIN);
+
+    // Hướng dọc: ưu tiên mở lên trên bubble. Nếu không đủ chỗ thì mở xuống dưới
+    let panelTop;
+    if (bRect.top - pH - MARGIN >= 0) {
+      panelTop = bRect.top - pH - 8; // mở lên trên
+    } else {
+      panelTop = bRect.bottom + 8;   // mở xuống dưới
+    }
+    // Giới hạn không ra ngoài màn hình
+    panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
+
+    // Áp dụng vị trí tuyệt đối cho panel (tách khỏi aiChat wrapper để tự do định vị)
+    panel.style.position = 'fixed';
+    panel.style.left = panelLeft + 'px';
+    panel.style.top  = panelTop  + 'px';
+    panel.style.zIndex = '9999';
+
+    document.getElementById('aiInput')?.focus();
+  } else {
+    panel.style.display = 'none';
+    bubble.style.transform = 'scale(1)';
+  }
+}
+
+/** Xóa lịch sử — AI đọc data mới */
+function refreshAiData() {
+  _aiHistory = [];
+  const box = document.getElementById('aiMessages');
+  if (box) box.innerHTML = '';
+  _aiAddMsg(
+    'Dữ liệu đã được làm mới! Em sẽ đọc số liệu mới nhất từ Google Sheets cho câu hỏi tiếp theo.<br>' +
+    '<span style="font-size:10px;color:var(--ts)">⏱ ' + new Date().toLocaleTimeString('vi-VN') + '</span>',
+    'bot'
+  );
+  const dt = document.getElementById('aiDataTime');
+  if (dt) dt.textContent = 'Đã làm mới lúc ' + new Date().toLocaleTimeString('vi-VN');
+}
+
+// Bind bubble click bằng addEventListener (an toàn hơn onclick inline)
+document.addEventListener('DOMContentLoaded', function() {
+  var bubble = document.getElementById('aiBubble');
+  if (bubble) bubble.addEventListener('click', function() { toggleAiChat(); });
+});
+</script>
+
 <div id="aiChat" style="
   position:fixed; bottom:72px; right:16px; z-index:500;
   display:flex; flex-direction:column; align-items:flex-end; gap:8px;
   user-select:none;
 ">
   <!-- Chat bubble button — giữ để drag, click để mở -->
-  <button id="aiBubble" onclick="toggleAiChat()" style="
+  <button id="aiBubble" style="
     width:52px; height:52px; border-radius:50%; border:none; cursor:grab;
     background:linear-gradient(135deg,#0066cc,#00d4ff);
     box-shadow:0 4px 20px rgba(0,212,255,.4);
@@ -5924,75 +6002,6 @@ window.addEventListener('load', () => {
 
 <script>
 // ══ AI CHAT — V6 Gemini Only + Context Enrichment ══════════════
-let _aiOpen    = false;
-let _aiHistory = []; // lịch sử đầy đủ — GAS sẽ tự filter 12 turns gần nhất
-let _aiSending = false;
-
-// ── Patterns phát hiện câu hỏi nối tiếp (đồng bộ với GAS) ────
-const _CONT_RE = /số liệu (trên|đó|vừa|này|kia)|so (sánh|với).*(trên|đó|vừa|này|kia)|^so sánh\b|các (kv|đơn vị|khu vực) khác|^còn (kv|đơn vị|tháng|khu vực)\b|^thế còn\b|^vậy còn\b|^còn lại\b|toàn ngành|tổng (cộng|số|cả ngành)|^(chi tiết|phân tích|đánh giá) (hơn|thêm)?\b|^(xếp hạng|rank|top)\b/i;
-
-function toggleAiChat() {
-  _aiOpen = !_aiOpen;
-  const panel  = document.getElementById('aiPanel');
-  const bubble = document.getElementById('aiBubble');
-  const wrap   = document.getElementById('aiChat');
-
-  if (_aiOpen) {
-    panel.style.display = 'flex';
-    bubble.style.transform = 'scale(.9)';
-
-    // Tính vị trí bubble để quyết định panel mở về hướng nào
-    const bRect = bubble.getBoundingClientRect();
-    const pW = 340, pH = 480;
-    const vW = window.innerWidth,  vH = window.innerHeight;
-    const MARGIN = 12; // khoảng cách tối thiểu với cạnh màn hình
-
-    // Hướng ngang: ưu tiên bên trái bubble (mặc định). Nếu không đủ chỗ thì sang phải
-    let panelLeft;
-    if (bRect.right - pW >= MARGIN) {
-      panelLeft = bRect.right - pW; // căn phải panel = phải bubble
-    } else {
-      panelLeft = Math.max(MARGIN, bRect.left); // đẩy sang phải nếu cần
-    }
-    // Giới hạn không ra ngoài màn hình
-    panelLeft = Math.min(panelLeft, vW - pW - MARGIN);
-
-    // Hướng dọc: ưu tiên mở lên trên bubble. Nếu không đủ chỗ thì mở xuống dưới
-    let panelTop;
-    if (bRect.top - pH - MARGIN >= 0) {
-      panelTop = bRect.top - pH - 8; // mở lên trên
-    } else {
-      panelTop = bRect.bottom + 8;   // mở xuống dưới
-    }
-    // Giới hạn không ra ngoài màn hình
-    panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
-
-    // Áp dụng vị trí tuyệt đối cho panel (tách khỏi aiChat wrapper để tự do định vị)
-    panel.style.position = 'fixed';
-    panel.style.left = panelLeft + 'px';
-    panel.style.top  = panelTop  + 'px';
-    panel.style.zIndex = '9999';
-
-    document.getElementById('aiInput')?.focus();
-  } else {
-    panel.style.display = 'none';
-    bubble.style.transform = 'scale(1)';
-  }
-}
-
-/** Xóa lịch sử — AI đọc data mới */
-function refreshAiData() {
-  _aiHistory = [];
-  const box = document.getElementById('aiMessages');
-  if (box) box.innerHTML = '';
-  _aiAddMsg(
-    'Dữ liệu đã được làm mới! Em sẽ đọc số liệu mới nhất từ Google Sheets cho câu hỏi tiếp theo.<br>' +
-    '<span style="font-size:10px;color:var(--ts)">⏱ ' + new Date().toLocaleTimeString('vi-VN') + '</span>',
-    'bot'
-  );
-  const dt = document.getElementById('aiDataTime');
-  if (dt) dt.textContent = 'Đã làm mới lúc ' + new Date().toLocaleTimeString('vi-VN');
-}
 
 function _aiAddMsg(html, role) {
   const box = document.getElementById('aiMessages');
