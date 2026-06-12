@@ -5803,12 +5803,25 @@ function _aiSkeleton() {
   const box = document.getElementById('aiMessages');
   const wrap = document.createElement('div');
   wrap.className = 'ai-skeleton';
-  [82, 65, 48].forEach(w => {
+
+  // Label "Đang suy nghĩ" + 4 chấm nhấp nháy
+  const label = document.createElement('div');
+  label.className = 'ai-skeleton-label';
+  label.innerHTML =
+    '<span style="opacity:.7">Đang suy nghĩ</span>' +
+    '<div class="ai-skeleton-dots">' +
+      '<span></span><span></span><span></span><span></span>' +
+    '</div>';
+  wrap.appendChild(label);
+
+  // 3 dòng shimmer
+  [78, 62, 44].forEach(w => {
     const ln = document.createElement('div');
     ln.className = 'ai-skeleton-line';
     ln.style.width = w + '%';
     wrap.appendChild(ln);
   });
+
   box.appendChild(wrap);
   box.scrollTop = box.scrollHeight;
   return wrap;
@@ -6353,11 +6366,40 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 @keyframes aiCursor { 0%,100%{opacity:1} 50%{opacity:0} }
 
 /* Skeleton shimmer — thay typing dots */
-.ai-skeleton { display:flex; flex-direction:column; gap:6px; padding:10px 14px; align-self:flex-start; max-width:82%; }
+.ai-skeleton {
+  display:flex; flex-direction:column; gap:7px;
+  padding:11px 14px 10px; align-self:flex-start; max-width:82%;
+  background:rgba(0,212,255,.05); border:1px solid rgba(0,212,255,.12);
+  border-radius:12px; border-bottom-left-radius:3px;
+}
+.ai-skeleton-label {
+  font-size:11px; color:var(--ts); font-family:var(--fb);
+  display:flex; align-items:center; gap:4px; margin-bottom:2px;
+}
+.ai-skeleton-dots {
+  display:inline-flex; gap:2px; align-items:center;
+}
+.ai-skeleton-dots span {
+  width:4px; height:4px; border-radius:50%;
+  background:var(--cyan); opacity:.5;
+  animation:aiDotPulse 1.4s ease-in-out infinite;
+}
+.ai-skeleton-dots span:nth-child(1) { animation-delay:0s; }
+.ai-skeleton-dots span:nth-child(2) { animation-delay:.2s; }
+.ai-skeleton-dots span:nth-child(3) { animation-delay:.4s; }
+.ai-skeleton-dots span:nth-child(4) { animation-delay:.6s; }
+@keyframes aiDotPulse {
+  0%,80%,100% { opacity:.2; transform:scale(.8); }
+  40%         { opacity:1;  transform:scale(1.1); }
+}
 .ai-skeleton-line {
-  height:9px; border-radius:5px;
-  background:linear-gradient(90deg,rgba(0,212,255,.06) 25%,rgba(0,212,255,.18) 50%,rgba(0,212,255,.06) 75%);
-  background-size:200% 100%; animation:aiShimmer 1.4s ease-in-out infinite;
+  height:8px; border-radius:4px;
+  background:linear-gradient(90deg,
+    rgba(0,212,255,.08) 25%,
+    rgba(0,212,255,.22) 50%,
+    rgba(0,212,255,.08) 75%);
+  background-size:200% 100%;
+  animation:aiShimmer 1.4s ease-in-out infinite;
 }
 @keyframes aiShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .ai-msg-bot { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.15); color:var(--tp); align-self:flex-start; border-bottom-left-radius:3px; }
