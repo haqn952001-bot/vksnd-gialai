@@ -5994,11 +5994,60 @@ function sendAiMsg() {
     .askAI(payload);
 }
 
-// Enter gửi tin
-document.addEventListener('DOMContentLoaded', function() {
+// Enter gửi tin + Force-bind tất cả nút trong aiPanel
+// bypass mọi race condition của inline event handler
+function _aiBindAll() {
+  // ── BƯỚC 1: Bind các nút nguồn dữ liệu (aiToggleSrc) — PHẢI TRƯỚC ──
+  // Vì #aiSourceBtns nằm trong #aiPanel, nếu để loop generic chạy trước
+  // sẽ bind sai handler (this = window thay vì btn)
+  document.querySelectorAll('#aiSourceBtns .ai-src-btn').forEach(function(btn) {
+    if (btn._aiBound) return;
+    btn.removeAttribute('onclick');
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      aiToggleSrc(btn);
+    });
+    btn._aiBound = true;
+  });
+
+  // ── BƯỚC 2: Bind nút input Enter ──
   var inp = document.getElementById('aiInput');
-  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sendAiMsg(); });
-});
+  if (inp && !inp._aiBound) {
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') sendAiMsg(); });
+    inp._aiBound = true;
+  }
+
+  // ── BƯỚC 3: Bind nút gửi (aiSendBtn) ──
+  var sendBtn = document.getElementById('aiSendBtn');
+  if (sendBtn && !sendBtn._aiBound) {
+    sendBtn.removeAttribute('onclick');
+    sendBtn.addEventListener('click', function() { sendAiMsg(); });
+    sendBtn._aiBound = true;
+  }
+
+  // ── BƯỚC 4: Bind các nút còn lại trong #aiPanel (× đóng, ↻ refresh, provider switch) ──
+  // QUAN TRỌNG: skip các button đã bound ở trên (ai-src-btn)
+  document.querySelectorAll('#aiPanel [onclick]').forEach(function(el) {
+    if (el._aiBound) return;
+    if (el.classList && el.classList.contains('ai-src-btn')) return; // skip source btns
+    var code = el.getAttribute('onclick') || '';
+    el.removeAttribute('onclick');
+    el.addEventListener('click', function(e) {
+      try { (new Function(code))(); } catch(err) { console.error('[AI bind]', code, err); }
+    });
+    el._aiBound = true;
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _aiBindAll);
+} else {
+  _aiBindAll();
+}
+// Bind lại sau 200ms phòng trường hợp DOM bị inject muộn
+setTimeout(_aiBindAll, 200);
+setTimeout(_aiBindAll, 1000);
 </script>
 
 <script>
