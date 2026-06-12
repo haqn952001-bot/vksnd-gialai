@@ -5782,6 +5782,23 @@ window.addEventListener('load', () => {
 
 <style>
 .ai-msg { max-width:90%; padding:9px 12px; border-radius:12px; font-size:12px; line-height:1.55; }
+
+/* Typewriter cursor nhấp nháy cuối dòng đang render */
+.ai-msg-bot.ai-streaming::after {
+  content:''; display:inline-block; width:2px; height:13px;
+  background:var(--cyan); margin-left:2px; vertical-align:middle;
+  border-radius:1px; animation:aiCursor .6s ease-in-out infinite;
+}
+@keyframes aiCursor { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Skeleton shimmer — thay typing dots */
+.ai-skeleton { display:flex; flex-direction:column; gap:6px; padding:10px 14px; align-self:flex-start; max-width:82%; }
+.ai-skeleton-line {
+  height:9px; border-radius:5px;
+  background:linear-gradient(90deg,rgba(0,212,255,.06) 25%,rgba(0,212,255,.18) 50%,rgba(0,212,255,.06) 75%);
+  background-size:200% 100%; animation:aiShimmer 1.4s ease-in-out infinite;
+}
+@keyframes aiShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .ai-msg-bot { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.15); color:var(--tp); align-self:flex-start; border-bottom-left-radius:3px; }
 .ai-msg-user{ background:rgba(0,102,204,.3); border:1px solid rgba(0,102,204,.4); color:var(--tp); align-self:flex-end; border-bottom-right-radius:3px; }
 .ai-src-btn {
@@ -5999,6 +6016,71 @@ function _aiTyping() {
   return div;
 }
 
+/* Skeleton shimmer 3 dòng — phản hồi tức thì thay typing dots */
+function _aiSkeleton() {
+  const box = document.getElementById('aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-skeleton';
+  [82, 65, 48].forEach(w => {
+    const ln = document.createElement('div');
+    ln.className = 'ai-skeleton-line';
+    ln.style.width = w + '%';
+    wrap.appendChild(ln);
+  });
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+  return wrap;
+}
+
+/**
+ * Typewriter effect — render từng ký tự HTML sau khi nhận đủ response
+ * Cải thiện perceived TTFT: response hiện dần thay vì bật 1 lần
+ * - Giữ nguyên HTML tags (bold, code...) — không typewrite bên trong tag
+ * - Pause tự nhiên sau dấu câu
+ * @param {string} html   — nội dung đã _aiFormatReply()
+ * @param {number} [speed=7] — ms/ký tự (7ms ≈ 143 ký tự/giây)
+ * @returns {Promise<HTMLElement>}
+ */
+function _aiTypewriter(html, speed) {
+  speed = speed || 7;
+  const box = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ai-msg-bot ai-streaming';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+
+  return new Promise(resolve => {
+    let i = 0;
+    function tick() {
+      if (i >= html.length) {
+        div.classList.remove('ai-streaming');
+        resolve(div);
+        return;
+      }
+      // Bỏ qua nguyên block <tag> — không typewrite từng ký tự bên trong tag
+      if (html[i] === '<') {
+        const close = html.indexOf('>', i);
+        i = close >= 0 ? close + 1 : html.length;
+        div.innerHTML = html.slice(0, i);
+        box.scrollTop = box.scrollHeight;
+        tick(); // tag không delay
+        return;
+      }
+      i++;
+      div.innerHTML = html.slice(0, i);
+      box.scrollTop = box.scrollHeight;
+      const ch = html[i - 1];
+      const delay = ch === '.' || ch === '!' || ch === '?' ? speed * 9
+                  : ch === ',' || ch === ':' || ch === ';' ? speed * 3
+                  : ch === '
+' ? speed * 4
+                  : speed;
+      setTimeout(tick, delay);
+    }
+    tick();
+  });
+}
+
 /** Hiện badge nhỏ "Đang dùng ngữ cảnh..." khi phát hiện câu nối tiếp */
 function _aiContextHint() {
   const box = document.getElementById('aiMessages');
@@ -6062,12 +6144,12 @@ function sendAiMsg() {
   var _driveBtn = document.querySelector('#aiSourceBtns .ai-src-btn[data-src="drive"]');
   var _driveActive = _driveBtn && _driveBtn.classList.contains('ai-src-active');
 
-  const typing = _aiTyping();
+  const skeleton = _aiSkeleton();
 
   // Demo mode (chạy file HTML trực tiếp, không phải GAS hay Vercel)
   if (!GAS && MODE !== 'VERCEL') {
     setTimeout(function() {
-      typing.remove();
+      skeleton.remove();
       _aiAddMsg('Trợ lý AI chỉ hoạt động khi chạy qua Google Apps Script. Hiện đang ở chế độ demo.', 'bot');
       _aiSending = false;
     }, 800);
@@ -6099,11 +6181,13 @@ function sendAiMsg() {
        !m.content.startsWith('Lỗi Gemini'));
   });
 
-  function _onReply(reply) {
-    typing.remove();
-    _aiAddMsg(_aiFormatReply(reply), 'bot');
+  async function _onReply(reply) {
+    skeleton.remove();
     const isErr = /^\[Lỗi|^⚠️|^\[Error|^Lỗi kết nối|^Lỗi Gemini|^Server Gemini|^Hệ thống AI đang bận/.test(reply);
-    if (!isErr) {
+    if (isErr) {
+      _aiAddMsg(_aiFormatReply(reply), 'bot');
+    } else {
+      await _aiTypewriter(_aiFormatReply(reply));
       _aiHistory.push({ role: 'assistant', content: reply });
       if (_aiHistory.length > 30) _aiHistory = _aiHistory.slice(-30);
     }
@@ -6111,7 +6195,7 @@ function sendAiMsg() {
   }
 
   function _onErr(err) {
-    typing.remove();
+    skeleton.remove();
     _aiAddMsg('Lỗi kết nối: ' + (err && err.message ? err.message : String(err)), 'bot');
     _aiSending = false;
   }
@@ -6319,7 +6403,7 @@ sendAiMsg = async function() {
   _aiAddMsg(q, 'user');
   _aiHistory.push({ role:'user', content:q });
 
-  const typing = _aiTyping();
+  const skeleton = _aiSkeleton();
   try {
     const recentHistory = _aiHistory.slice(-16).filter(m =>
       m.role !== 'assistant' || (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️') && !m.content.startsWith('◆'))
@@ -6336,12 +6420,12 @@ sendAiMsg = async function() {
       dataSources: aiGetSources()  // tick box nào thì GAS đọc nguồn đó
     };
     const reply = await _callClaudeAPI(recentHistory, claudeCtxParams);
-    typing.remove();
-    _aiAddMsg(_aiFormatReply(reply), 'bot');
+    skeleton.remove();
+    await _aiTypewriter(_aiFormatReply(reply));
     _aiHistory.push({ role:'assistant', content:reply });
     if (_aiHistory.length > 30) _aiHistory = _aiHistory.slice(-30);
   } catch(err) {
-    typing.remove();
+    skeleton.remove();
     const errMsg = err?.message || String(err);
     let display = errMsg;
     if (errMsg.includes('401') || errMsg.includes('authentication'))
