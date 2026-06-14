@@ -1550,6 +1550,14 @@ body::after{
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
       </svg>Thanh tra - Khiếu tố
     </div>
+    <div class="nav-label">Phân tích</div>
+    <div class="nav-item" data-page="thammuuai" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a4 4 0 0 1 4 4c0 1.7-1 3.1-2.4 3.7L13 10v2h-2v-2l-.6-.3A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
+        <path d="M10 14h4"/><path d="M10 17h4"/><path d="M11 20h2"/>
+        <circle cx="12" cy="6" r="1" fill="currentColor" opacity=".5"/>
+      </svg>Tham mưu AI
+    </div>
 
     <!-- ═══ USER PROFILE CARD — Footer sidebar ═══ -->
     <div class="user-profile-card" onclick="_toggleUserMenu(this)" title="Tài khoản người dùng">
@@ -2164,6 +2172,100 @@ body::after{
       <div id="ttra-body"><div style="padding:40px;text-align:center;color:var(--ts)">Đang tải dữ liệu Thanh tra…</div></div>
     </div>
 
+    <!-- PAGE: THAM MƯU AI -->
+    <div class="page" id="page-thammuuai">
+      <div class="ph fi">
+        <div>
+          <div class="ph-sub">PHÂN TÍCH DỮ LIỆU — THAM MƯU, ĐỀ XUẤT</div>
+          <h1>Tham mưu AI</h1>
+        </div>
+      </div>
+
+      <!-- Bộ lọc kỳ phân tích -->
+      <div class="cc fi fi1" style="padding:16px 20px">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ts)">Kỳ phân tích:</div>
+          <select id="fTmKy" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;cursor:pointer;min-width:140px">
+            <option value="thang">Theo tháng hiện tại</option>
+            <option value="6thang">6 tháng đầu năm</option>
+            <option value="12thang" selected>12 tháng (cả năm)</option>
+          </select>
+          <select id="fTmNam" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
+            <option value="2026">Năm 2026</option>
+            <option value="2025">Năm 2025</option>
+          </select>
+          <select id="fTmKV" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer;min-width:120px">
+            <option value="">Toàn tỉnh</option>
+          </select>
+          <button onclick="runThamMuuAI()" id="btnThamMuu" style="
+            height:32px;padding:0 18px;border-radius:var(--rsm);border:none;cursor:pointer;
+            background:linear-gradient(135deg,#6d28d9,#8b5cf6);
+            color:#fff;font-size:12px;font-weight:700;font-family:var(--fb);
+            display:flex;align-items:center;gap:6px;transition:opacity .2s;
+          ">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2a4 4 0 0 1 4 4c0 1.7-1 3.1-2.4 3.7L13 10v2h-2v-2l-.6-.3A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
+              <path d="M10 14h4"/><path d="M11 17h2"/>
+            </svg>
+            Phân tích ngay
+          </button>
+          <select id="fTmModel" style="height:32px;border-radius:var(--rsm);border:1px solid rgba(139,92,246,.3);background:var(--n800);color:#c4b5fd;font-size:11px;padding:0 10px;cursor:pointer" title="Chọn AI model">
+            <option value="gemini">✦ Gemini</option>
+            <option value="claude">◆ Claude</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Kết quả phân tích -->
+      <div id="tmResult" class="fi fi2" style="display:none">
+        <!-- KPI tóm tắt -->
+        <div class="kpi-grid fi" id="tmKpiRow" style="display:none"></div>
+
+        <!-- Nội dung phân tích chính -->
+        <div class="cc" style="margin-top:16px">
+          <div class="cc-hd">
+            <div class="cc-title" id="tmTitle">KẾT QUẢ PHÂN TÍCH</div>
+            <div class="cc-pill" id="tmMeta">—</div>
+          </div>
+          <div id="tmContent" style="
+            font-size:13px;line-height:1.75;color:var(--tp);
+            max-height:70vh;overflow-y:auto;padding:4px 0;
+          "></div>
+        </div>
+      </div>
+
+      <!-- Skeleton khi đang phân tích -->
+      <div id="tmLoading" class="fi fi2" style="display:none">
+        <div class="cc" style="padding:28px">
+          <div class="ai-skeleton" style="max-width:100%;align-self:stretch">
+            <div class="ai-skeleton-label">
+              <span style="opacity:.7">AI đang phân tích dữ liệu</span>
+              <div class="ai-skeleton-dots">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="ai-skeleton-line" style="width:92%"></div>
+            <div class="ai-skeleton-line" style="width:78%"></div>
+            <div class="ai-skeleton-line" style="width:85%"></div>
+            <div class="ai-skeleton-line" style="width:65%"></div>
+            <div class="ai-skeleton-line" style="width:72%"></div>
+            <div class="ai-skeleton-line" style="width:58%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Placeholder khi chưa phân tích -->
+      <div id="tmPlaceholder" class="cc fi fi2" style="text-align:center;padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:16px;opacity:.5">🧠</div>
+        <div style="font-size:15px;font-weight:700;color:var(--tp);margin-bottom:8px">Chọn kỳ báo cáo và nhấn "Phân tích ngay"</div>
+        <div style="font-size:12px;color:var(--ts);max-width:500px;margin:0 auto;line-height:1.6">
+          AI sẽ phân tích toàn bộ số liệu trong kỳ đã chọn, bao gồm hoạt động từng phòng nghiệp vụ,
+          đưa ra nhận xét về những chỉ tiêu cần chú ý, dự báo xu hướng và đề xuất phương án
+          đôn đốc, quán triệt các đơn vị thực hiện.
+        </div>
+      </div>
+    </div><!-- /thammuuai -->
+
   </main>
 </div><!-- /app -->
 
@@ -2239,6 +2341,12 @@ body::after{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>Thanh tra
+  </button>
+  <button class="mobile-nav-btn" data-page="thammuuai" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2a4 4 0 0 1 4 4c0 1.7-1 3.1-2.4 3.7L13 10v2h-2v-2l-.6-.3A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
+      <path d="M10 14h4"/><path d="M11 17h2"/>
+    </svg>Tham mưu
   </button>
 </nav>
 
@@ -2670,6 +2778,7 @@ function renderPage(pg) {
   if (pg === 'phong10') { _loadTabAndRender('phong10', function(d){ renderPhong('phong10', d); }); return; }
   if (pg === 'phong11') { _loadTabAndRender('phong11', function(d){ renderPhong('phong11', d); }); return; }
   if (pg === 'ttra')    { _loadTabAndRender('ttra',    function(d){ renderPhong('ttra', d); });    return; }
+  if (pg === 'thammuuai') { _tmPopulateKV(); return; }
   // Tab còn lại — cần DATA từ getData()
   if (!DATA) return;
   if (pg === 'overview') renderOverview();
@@ -6009,6 +6118,262 @@ function sendAiMsg() {
 
 // Enter gửi tin + Force-bind tất cả nút trong aiPanel
 // bypass mọi race condition của inline event handler
+
+// ══════════════════════════════════════════════════════════════
+// THAM MƯU AI — Phân tích số liệu kỳ báo cáo
+// ══════════════════════════════════════════════════════════════
+var _tmRunning = false;
+
+function runThamMuuAI() {
+  if (_tmRunning) return;
+  _tmRunning = true;
+
+  var ky    = document.getElementById('fTmKy').value;
+  var nam   = document.getElementById('fTmNam').value;
+  var kvRaw = document.getElementById('fTmKV').value;
+  var model = document.getElementById('fTmModel').value;
+
+  // Phân biệt: chọn KV (đơn vị khu vực) hay Phòng nghiệp vụ
+  var isPhong  = kvRaw.indexOf('__phong__') === 0;
+  var phongKey = isPhong ? kvRaw.replace('__phong__', '') : '';
+  var kv       = isPhong ? '' : kvRaw;
+
+  // UI: ẩn placeholder, hiện loading
+  document.getElementById('tmPlaceholder').style.display = 'none';
+  document.getElementById('tmResult').style.display = 'none';
+  document.getElementById('tmLoading').style.display = 'block';
+
+  var btn = document.getElementById('btnThamMuu');
+  btn.disabled = true;
+  btn.style.opacity = '.5';
+
+  // Build context params
+  var thangTu = '1', thangDen = '12';
+  if (ky === 'thang') {
+    var now = new Date();
+    thangTu = String(now.getMonth() + 1);
+    thangDen = thangTu;
+  } else if (ky === '6thang') {
+    thangDen = '6';
+  }
+
+  // Chọn dataSources phù hợp
+  var dataSources;
+  if (isPhong) {
+    // Chỉ gửi dữ liệu của phòng được chọn
+    var phongTabMap = {
+      'phong1':'phong1','phong2':'phong2','phong7':'phong7','phong8':'phong8',
+      'phong9':'phong9','phong10':'phong10','phong11':'phong11',
+      'ttra':'ttra','phong15':'phong15'
+    };
+    dataSources = [phongTabMap[phongKey] || phongKey];
+  } else {
+    // Toàn tỉnh hoặc KV → gửi tất cả nguồn
+    dataSources = ['khuVuc','chiTieu12','chiTieu6','anHuy','shHsva','nq205','phongNV'];
+  }
+
+  var contextParams = {
+    namTu: nam, namDen: nam,
+    thangTu: thangTu, thangDen: thangDen,
+    kv: kv,
+    kyBaoCao: ky === 'thang' ? '12thang' : ky,
+    dataSources: dataSources
+  };
+
+  // Label hiển thị
+  var phongLabels = {
+    'phong1':'Phòng 1','phong2':'Phòng 2','phong7':'Phòng 7','phong8':'Phòng 8',
+    'phong9':'Phòng 9','phong10':'Phòng 10','phong11':'Phòng 11',
+    'ttra':'Thanh tra','phong15':'Phòng 15'
+  };
+  var dvLabel = isPhong ? (phongLabels[phongKey] || phongKey) : (kv || 'toàn tỉnh');
+  var kyLabel = ky === 'thang' ? ('Tháng ' + thangTu + '/' + nam)
+              : ky === '6thang' ? '6 tháng đầu năm ' + nam
+              : '12 tháng năm ' + nam;
+
+  // Build prompt yêu cầu phân tích
+  var analyzePrompt = [
+    'Hãy phân tích TOÀN BỘ dữ liệu kỳ báo cáo ' + kyLabel + ' — ' + dvLabel + '.',
+    '',
+    isPhong
+      ? 'YÊU CẦU PHÂN TÍCH CHUYÊN SÂU ' + dvLabel.toUpperCase() + ' (trình bày theo 5 phần):'
+      : 'YÊU CẦU PHÂN TÍCH (trình bày theo đúng 6 phần dưới đây):',
+    '',
+    '## I. TỔNG QUAN TÌNH HÌNH',
+    'Tóm tắt ngắn gọn kết quả nổi bật: tin báo, khởi tố, truy tố, xét xử, tạm giam, THADS.',
+    'Nêu rõ con số cụ thể.',
+    '',
+    '## II. NHỮNG CHỈ SỐ CẦN CHÚ Ý',
+    'Chỉ rõ các đơn vị/chỉ tiêu có kết quả BẤT THƯỜNG:',
+    '- Đơn vị nào "Không đạt" nhiều nhất?',
+    '- Chỉ tiêu nào có tỷ lệ đạt thấp nhất?',
+    '- Đơn vị nào có án hủy, trả hồ sơ ĐTBS có lỗi cao?',
+    '- Chỉ số nào biến động mạnh so với bình quân?',
+    '',
+    '## III. DỰ BÁO XU HƯỚNG',
+    'Dựa trên số liệu timeline theo tháng, dự báo:',
+    '- Xu hướng tin báo tội phạm trong thời gian tới',
+    '- Dự báo áp lực công tác xét xử, THADS',
+    '- Rủi ro các chỉ tiêu có thể không đạt cuối kỳ',
+    '',
+    '## IV. ĐỀ XUẤT VÀ KIẾN NGHỊ',
+    'Đề xuất cụ thể cho lãnh đạo Viện:',
+    '- Đơn vị nào cần đôn đốc, nhắc nhở trực tiếp?',
+    '- Chỉ tiêu nào cần tập trung cải thiện?',
+    '- Biện pháp cụ thể để nâng cao chất lượng?',
+    '- Nội dung cần quán triệt các đơn vị trong thời gian tới?',
+    '',
+    '## V. PHÂN TÍCH HOẠT ĐỘNG TỪNG PHÒNG NGHIỆP VỤ',
+    'Với MỖI phòng có dữ liệu (P1, P2, P7, P9, P10, P11, Thanh tra), phân tích:',
+    '- **Kết quả nổi bật**: số liệu chính đã đạt được (con số cụ thể)',
+    '- **Điểm mạnh**: lĩnh vực/chỉ tiêu phòng làm tốt',
+    '- **Điểm yếu**: chỉ tiêu chưa đạt, tỷ lệ thấp, vấn đề cần khắc phục',
+    '- **Đề xuất riêng**: biện pháp cụ thể cho phòng đó trong thời gian tới',
+    'Trình bày mỗi phòng 1 mục con (### Phòng X — Tên phòng).',
+    '',
+    '## VI. BẢNG TỔNG HỢP ĐƠN VỊ CẦN QUAN TÂM',
+    'Liệt kê dạng bảng: Đơn vị/Phòng | Vấn đề | Mức độ (🔴🟡🟢) | Đề xuất xử lý',
+    '',
+    'LƯU Ý: Bám sát số liệu thực tế. Mỗi nhận xét PHẢI có con số cụ thể kèm theo.',
+    'Trình bày rõ ràng, dùng Markdown heading (##, ###), bullet (-), bold (**), bảng (|).'
+  ].join('\n');
+
+  // Khi chọn 1 phòng cụ thể → prompt chuyên sâu thay vì prompt toàn tỉnh
+  if (isPhong) {
+    analyzePrompt = [
+      'Hãy phân tích CHUYÊN SÂU hoạt động của ' + dvLabel + ' trong kỳ ' + kyLabel + '.',
+      '',
+      '## I. TỔNG QUAN KẾT QUẢ',
+      'Tóm tắt các kết quả công tác chính đã thực hiện, nêu rõ con số cụ thể.',
+      'So sánh với mặt bằng chung nếu có dữ liệu.',
+      '',
+      '## II. ĐIỂM MẠNH',
+      'Những lĩnh vực, chỉ tiêu phòng thực hiện tốt, vượt yêu cầu.',
+      '',
+      '## III. ĐIỂM YẾU VÀ CHỈ SỐ CẦN CHÚ Ý',
+      '- Chỉ tiêu/lĩnh vực nào chưa đạt yêu cầu?',
+      '- Tỷ lệ nào thấp đáng lo ngại?',
+      '- Có vụ việc nào có lỗi, bị hủy, trả hồ sơ?',
+      '- Chỉ số nào biến động bất thường so với tháng trước?',
+      '',
+      '## IV. DỰ BÁO VÀ RỦI RO',
+      '- Xu hướng công việc trong thời gian tới',
+      '- Rủi ro không hoàn thành chỉ tiêu cuối kỳ',
+      '- Áp lực công việc dự kiến',
+      '',
+      '## V. ĐỀ XUẤT CỤ THỂ',
+      '- Biện pháp khắc phục điểm yếu',
+      '- Nội dung cần tập trung trong thời gian tới',
+      '- Kiến nghị với lãnh đạo Viện (nếu có)',
+      '',
+      'LƯU Ý: Bám sát số liệu thực tế. Mỗi nhận xét PHẢI có con số cụ thể.',
+      'Trình bày rõ ràng, dùng Markdown heading (##), bullet (-), bold (**).'
+    ].join('\n');
+  }
+
+  var messages = [{ role: 'user', content: analyzePrompt }];
+
+  function onResult(reply) {
+    document.getElementById('tmLoading').style.display = 'none';
+    document.getElementById('tmResult').style.display = 'block';
+    document.getElementById('tmTitle').textContent = 'KẾT QUẢ PHÂN TÍCH — ' + kyLabel.toUpperCase();
+    document.getElementById('tmMeta').textContent = (model === 'claude' ? '◆ Claude' : '✦ Gemini') + ' | ' + new Date().toLocaleTimeString('vi-VN');
+
+    var el = document.getElementById('tmContent');
+    // Dùng typewriter effect nếu có
+    if (typeof _aiFormatReply === 'function' && typeof _aiTypewriter === 'function') {
+      el.innerHTML = '';
+      var formatted = _aiFormatReply(reply);
+      // Tạo temp div cho typewriter
+      var tw = document.createElement('div');
+      tw.className = 'ai-msg-bot ai-streaming';
+      tw.style.cssText = 'max-width:100%;background:transparent;border:none;padding:0;font-size:inherit;line-height:inherit';
+      el.appendChild(tw);
+      var i = 0;
+      function tick() {
+        if (i >= formatted.length) { tw.classList.remove('ai-streaming'); _tmRunning = false; btn.disabled = false; btn.style.opacity = '1'; return; }
+        if (formatted[i] === '<') { var cl = formatted.indexOf('>', i); i = cl >= 0 ? cl + 1 : formatted.length; tw.innerHTML = formatted.slice(0, i); el.scrollTop = el.scrollHeight; tick(); return; }
+        i++;
+        tw.innerHTML = formatted.slice(0, i);
+        el.scrollTop = el.scrollHeight;
+        var ch = formatted[i-1];
+        var delay = ch === '.' || ch === '!' || ch === '?' ? 50 : ch === ',' || ch === ':' ? 18 : 5;
+        setTimeout(tick, delay);
+      }
+      tick();
+    } else {
+      el.innerHTML = typeof _aiFormatReply === 'function' ? _aiFormatReply(reply) : reply;
+      _tmRunning = false; btn.disabled = false; btn.style.opacity = '1';
+    }
+  }
+
+  function onError(err) {
+    document.getElementById('tmLoading').style.display = 'none';
+    document.getElementById('tmResult').style.display = 'block';
+    document.getElementById('tmTitle').textContent = 'LỖI PHÂN TÍCH';
+    document.getElementById('tmContent').innerHTML = '<div style="color:var(--coral);padding:20px">' + (err && err.message ? err.message : String(err)) + '</div>';
+    _tmRunning = false; btn.disabled = false; btn.style.opacity = '1';
+  }
+
+  // Gọi AI theo model đã chọn
+  if (model === 'claude') {
+    _callClaudeAPI(messages, contextParams).then(onResult).catch(onError);
+  } else {
+    // Gemini via GAS
+    var payload = { messages: messages, contextParams: contextParams };
+    if (typeof gasAskAI === 'function') {
+      gasAskAI(payload).then(onResult).catch(onError);
+    } else if (typeof google !== 'undefined' && google.script) {
+      google.script.run.withSuccessHandler(function(d) {
+        onResult(typeof d === 'string' ? d : (d && d.reply ? d.reply : JSON.stringify(d)));
+      }).withFailureHandler(onError).askAI(payload);
+    } else {
+      onError(new Error('Không có kết nối AI'));
+    }
+  }
+}
+
+// Populate KV filter cho tab Tham mưu khi data sẵn sàng
+function _tmPopulateKV() {
+  var sel = document.getElementById('fTmKV');
+  if (!sel || sel.options.length > 1) return;
+
+  // Nhóm 1: Đơn vị khu vực (KV1, KV2...)
+  var dvList = (DATA && DATA.overview && DATA.overview.donViList) || [];
+  if (dvList.length > 0) {
+    var grp1 = document.createElement('optgroup');
+    grp1.label = '── Đơn vị khu vực ──';
+    dvList.forEach(function(dv) {
+      var o = document.createElement('option');
+      o.value = dv; o.textContent = dv;
+      grp1.appendChild(o);
+    });
+    sel.appendChild(grp1);
+  }
+
+  // Nhóm 2: Phòng nghiệp vụ
+  var phongList = [
+    { value: 'phong1',  label: 'Phòng 1 — KSĐT án KT-CV,MT' },
+    { value: 'phong2',  label: 'Phòng 2 — KSĐT án TTXH, an ninh' },
+    { value: 'phong7',  label: 'Phòng 7 — Kiểm sát DS' },
+    { value: 'phong8',  label: 'Phòng 8 — KSXX hình sự' },
+    { value: 'phong9',  label: 'Phòng 9 — KSXX án dân sự' },
+    { value: 'phong10', label: 'Phòng 10 — KSXX án HC, KDTM-LĐ' },
+    { value: 'phong11', label: 'Phòng 11 — KS THADS, THAHC' },
+    { value: 'ttra',    label: 'Thanh tra — Khiếu tố' },
+    { value: 'phong15', label: 'Phòng 15 — Tổ chức - Cán bộ' }
+  ];
+  var grp2 = document.createElement('optgroup');
+  grp2.label = '── Phòng nghiệp vụ ──';
+  phongList.forEach(function(p) {
+    var o = document.createElement('option');
+    o.value = '__phong__' + p.value;
+    o.textContent = p.label;
+    grp2.appendChild(o);
+  });
+  sel.appendChild(grp2);
+}
+
 function _aiBindAll() {
   // ── BƯỚC 1: Bind các nút nguồn dữ liệu (aiToggleSrc) — PHẢI TRƯỚC ──
   // Vì #aiSourceBtns nằm trong #aiPanel, nếu để loop generic chạy trước
@@ -6401,6 +6766,38 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   animation:aiShimmer 1.4s ease-in-out infinite;
 }
 @keyframes aiShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Tham mưu AI — Markdown content styling */
+#tmContent h2 {
+  color:var(--cyan); font-size:15px; font-weight:800;
+  margin:22px 0 10px; padding-bottom:5px;
+  border-bottom:1px solid rgba(0,212,255,.15);
+}
+#tmContent h3 {
+  color:var(--amber); font-size:13px; font-weight:700;
+  margin:14px 0 6px; padding-left:8px;
+  border-left:3px solid var(--amber); border-bottom:none;
+}
+#tmContent h2:first-child { margin-top:4px; }
+#tmContent strong { color:var(--amber); }
+#tmContent ul, #tmContent ol { padding-left:20px; margin:6px 0; }
+#tmContent li { margin:4px 0; }
+#tmContent table { width:100%; border-collapse:collapse; margin:12px 0; font-size:12px; }
+#tmContent th {
+  text-align:left; padding:7px 10px; font-size:10px; font-weight:700;
+  letter-spacing:.5px; text-transform:uppercase;
+  color:var(--tm); background:rgba(19,32,64,.7);
+  border-bottom:1px solid var(--bd);
+}
+#tmContent td {
+  padding:7px 10px; border-bottom:1px solid rgba(255,255,255,.03); color:var(--ts);
+}
+#tmContent tr:hover td { background:rgba(0,212,255,.03); color:var(--tp); }
+#tmContent code { background:rgba(0,212,255,.08); padding:1px 5px; border-radius:3px; font-family:var(--fm); font-size:11px; }
+#tmContent blockquote {
+  border-left:3px solid var(--cyan); padding:6px 14px; margin:8px 0;
+  background:rgba(0,212,255,.04); color:var(--ts); font-style:italic;
+}
 .ai-msg-bot { background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.15); color:var(--tp); align-self:flex-start; border-bottom-left-radius:3px; }
 .ai-msg-user{ background:rgba(0,102,204,.3); border:1px solid rgba(0,102,204,.4); color:var(--tp); align-self:flex-end; border-bottom-right-radius:3px; }
 .ai-src-btn {
