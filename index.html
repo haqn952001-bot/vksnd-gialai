@@ -6645,10 +6645,12 @@ async function doLogin() {
       sessionStorage.setItem(_SESSION_KEY, JSON.stringify({
         user: user, ts: Date.now()
       }));
+      _updateProfileCard();
       btn.textContent = '✓ Thành công';
       btn.style.background = 'linear-gradient(135deg,#00994d,#00e5a0)';
       setTimeout(function(){
         _hideLogin();
+        _updateProfileCard();
         // Nếu data chưa load thì load ngay
         if (!DATA) reload();
       }, 500);
