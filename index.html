@@ -2185,10 +2185,32 @@ body::after{
       <div class="cc fi fi1" style="padding:16px 20px">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ts)">Kỳ phân tích:</div>
-          <select id="fTmKy" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;cursor:pointer;min-width:140px">
-            <option value="thang">Theo tháng hiện tại</option>
-            <option value="6thang">6 tháng đầu năm</option>
-            <option value="12thang" selected>12 tháng (cả năm)</option>
+          <select id="fTmKy" onchange="tmOnKyChange()" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;cursor:pointer;min-width:160px">
+            <optgroup label="── Theo tháng ──">
+              <option value="thang_auto">Tháng hiện tại</option>
+              <option value="thang_1">Tháng 1</option>
+              <option value="thang_2">Tháng 2</option>
+              <option value="thang_3">Tháng 3</option>
+              <option value="thang_4">Tháng 4</option>
+              <option value="thang_5">Tháng 5</option>
+              <option value="thang_6">Tháng 6</option>
+              <option value="thang_7">Tháng 7</option>
+              <option value="thang_8">Tháng 8</option>
+              <option value="thang_9">Tháng 9</option>
+              <option value="thang_10">Tháng 10</option>
+              <option value="thang_11">Tháng 11</option>
+              <option value="thang_12">Tháng 12</option>
+            </optgroup>
+            <optgroup label="── Theo quý ──">
+              <option value="quy_1">Quý I (T10–T12)</option>
+              <option value="quy_2">Quý II (T1–T3)</option>
+              <option value="quy_3">Quý III (T4–T6)</option>
+              <option value="quy_4">Quý IV (T7–T9)</option>
+            </optgroup>
+            <optgroup label="── Theo kỳ báo cáo ──">
+              <option value="6thang">6 tháng đầu năm (T1–T6)</option>
+              <option value="12thang" selected>Cả năm (T1–T12)</option>
+            </optgroup>
           </select>
           <select id="fTmNam" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
             <option value="2026">Năm 2026</option>
@@ -6147,15 +6169,20 @@ function runThamMuuAI() {
   btn.disabled = true;
   btn.style.opacity = '.5';
 
-  // Build context params
+  // Build context params — xử lý đầy đủ các kỳ
   var thangTu = '1', thangDen = '12';
-  if (ky === 'thang') {
+  if (ky === 'thang_auto') {
     var now = new Date();
-    thangTu = String(now.getMonth() + 1);
-    thangDen = thangTu;
-  } else if (ky === '6thang') {
-    thangDen = '6';
-  }
+    thangTu = thangDen = String(now.getMonth() + 1);
+  } else if (ky.indexOf('thang_') === 0) {
+    var t = ky.replace('thang_', '');
+    thangTu = thangDen = t;
+  } else if (ky === 'quy_1') { thangTu = '10'; thangDen = '12'; }
+  else if (ky === 'quy_2')   { thangTu = '1';  thangDen = '3';  }
+  else if (ky === 'quy_3')   { thangTu = '4';  thangDen = '6';  }
+  else if (ky === 'quy_4')   { thangTu = '7';  thangDen = '9';  }
+  else if (ky === '6thang')  { thangTu = '1';  thangDen = '6';  }
+  // 12thang: mặc định thangTu=1, thangDen=12
 
   // Chọn dataSources phù hợp
   var dataSources;
@@ -6187,9 +6214,15 @@ function runThamMuuAI() {
     'ttra':'Thanh tra','phong15':'Phòng 15'
   };
   var dvLabel = isPhong ? (phongLabels[phongKey] || phongKey) : (kv || 'toàn tỉnh');
-  var kyLabel = ky === 'thang' ? ('Tháng ' + thangTu + '/' + nam)
-              : ky === '6thang' ? '6 tháng đầu năm ' + nam
-              : '12 tháng năm ' + nam;
+  var kyLabel;
+  if (ky === 'thang_auto' || ky.indexOf('thang_') === 0) {
+    kyLabel = 'Tháng ' + thangTu + '/' + nam;
+  } else if (ky === 'quy_1') { kyLabel = 'Quý I (T10-T12)/' + nam; }
+  else if (ky === 'quy_2')   { kyLabel = 'Quý II (T1-T3)/' + nam; }
+  else if (ky === 'quy_3')   { kyLabel = 'Quý III (T4-T6)/' + nam; }
+  else if (ky === 'quy_4')   { kyLabel = 'Quý IV (T7-T9)/' + nam; }
+  else if (ky === '6thang')  { kyLabel = '6 tháng đầu năm ' + nam; }
+  else                        { kyLabel = '12 tháng năm ' + nam; }
 
   // Build prompt yêu cầu phân tích
   var analyzePrompt = [
@@ -6342,6 +6375,12 @@ function runThamMuuAI() {
 }
 
 // Populate KV filter cho tab Tham mưu khi data sẵn sàng
+/** Khi thay đổi kỳ — cập nhật label nút phân tích */
+function tmOnKyChange() {
+  // Không cần làm gì thêm — runThamMuuAI tự đọc giá trị khi nhấn nút
+  // Có thể thêm preview label nếu cần
+}
+
 function _tmPopulateKV() {
   var sel = document.getElementById('fTmKV');
   if (!sel || sel.options.length > 1) return;
