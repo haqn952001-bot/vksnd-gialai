@@ -6570,7 +6570,6 @@ const _USERS = {
   'chanhvanphong' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
   'truongphong1'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
   'truongphong2'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
-  'truongphong3'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
   'truongphong7'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
   'truongphong9'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
   'truongphong10' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
@@ -6691,8 +6690,17 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ═══ USER PROFILE CARD — cập nhật từ session & menu ═══
 const _USER_PROFILE = {
-  'vientruong': { name: 'Viện trưởng',   role: 'VKSND tỉnh Gia Lai',  initials: 'VT' },
-  'admin':      { name: 'Quản trị viên', role: 'Hệ thống Dashboard',  initials: 'AD' }
+  'vientruong'    : { name: 'Viện trưởng',      role: 'VKSND tỉnh Gia Lai',              initials: 'VT'  },
+  'chanhvanphong' : { name: 'Chánh VP',          role: 'Văn phòng tổng hợp',              initials: 'VP'  },
+  'truongphong1'  : { name: 'Trưởng phòng 1',    role: 'Phòng KSĐT án KT-CV,MT',          initials: 'P1'  },
+  'truongphong2'  : { name: 'Trưởng phòng 2',    role: 'Phòng KSĐT án TTXH, an ninh',     initials: 'P2'  },
+  'truongphong7'  : { name: 'Trưởng phòng 7',    role: 'Phòng 7 - Kiểm sát DS',           initials: 'P7'  },
+  'truongphong9'  : { name: 'Trưởng phòng 9',    role: 'Phòng KSXX án dân sự',            initials: 'P9'  },
+  'truongphong10' : { name: 'Trưởng phòng 10',   role: 'Phòng KSXX án HC, KDTM-LĐ',      initials: 'P10' },
+  'truongphong11' : { name: 'Trưởng phòng 11',   role: 'Phòng KS THADS, THAHC',           initials: 'P11' },
+  'chanhthanhtra' : { name: 'Chánh Thanh tra',   role: 'Thanh tra - Khiếu tố',            initials: 'TT'  },
+  'truongphong15' : { name: 'Trưởng phòng 15',   role: 'Phòng Tổ chức - Cán bộ',          initials: 'P15' },
+  'admin'         : { name: 'Quản trị viên',     role: 'Hệ thống Dashboard',              initials: 'AD'  }
 };
 
 function _updateProfileCard() {
