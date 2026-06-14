@@ -6326,8 +6326,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   <!-- Messages -->
   <div id="aiMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin">
     <div class="ai-msg ai-msg-bot">
-      Xin chào Viện trưởng, em là trợ lý AI công tác tham mưu, tổng hợp của VKSND tỉnh Gia Lai!<br>
-      Viện trưởng cần em cung cấp dữ liệu nào, vui lòng nhập yêu cầu.
+      Xin chào, tôi là trợ lý công tác tham mưu, tổng hợp AI của VKSND tỉnh Gia Lai! Đồng chí cần cung cấp dữ liệu, vui lòng nhập yêu cầu.
     </div>
   </div>
 
@@ -6567,7 +6566,17 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 // Thông tin đăng nhập (hash SHA-256 để tránh lộ plaintext trong source)
 // user: vientruong | pass: vksgialai
 const _USERS = {
-  'vientruong': '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b'
+  'vientruong'    : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'chanhvanphong' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong1'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong2'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong3'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong7'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong9'  : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong10' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong11' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'chanhthanhtra' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b',
+  'truongphong15' : '3bdbd59442f67da0d7c2518ef0a2fe15eaff9a8b2d7ed2d99892e4f308a5023b'
 };
 // SHA-256('vksgialai') — tính sẵn
 const _SESSION_KEY = 'vksnd_auth_v1';
