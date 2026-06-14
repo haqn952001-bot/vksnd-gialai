@@ -6316,17 +6316,25 @@ function runThamMuuAI() {
   }
 
   // Gọi AI theo model đã chọn
+  // analyzeMode: GAS sẽ build context ngắn, analyzePrompt là user message chính
+  var analyzePayload = {
+    messages      : messages,
+    contextParams : contextParams,
+    analyzePrompt : analyzePrompt,   // prompt yêu cầu phân tích
+    analyzeMode   : true             // báo GAS xử lý theo chế độ phân tích
+  };
+
   if (model === 'claude') {
-    _callClaudeAPI(messages, contextParams).then(onResult).catch(onError);
+    _callClaudeAnalyze(analyzePayload).then(onResult).catch(onError);
   } else {
-    // Gemini via GAS
-    var payload = { messages: messages, contextParams: contextParams };
+    // Gemini via GAS — dùng askAI với payload phân tích
+    var geminiPayload = { messages: messages, contextParams: contextParams };
     if (typeof gasAskAI === 'function') {
-      gasAskAI(payload).then(onResult).catch(onError);
+      gasAskAI(geminiPayload).then(onResult).catch(onError);
     } else if (typeof google !== 'undefined' && google.script) {
       google.script.run.withSuccessHandler(function(d) {
         onResult(typeof d === 'string' ? d : (d && d.reply ? d.reply : JSON.stringify(d)));
-      }).withFailureHandler(onError).askAI(payload);
+      }).withFailureHandler(onError).askAI(geminiPayload);
     } else {
       onError(new Error('Không có kết nối AI'));
     }
@@ -6504,6 +6512,60 @@ function aiSaveKey() {
   aiHideKeyDialog();
   _aiAddMsg(`<span style="font-size:11px">✅ Đã chọn model: <strong style="color:#c4b5fd">${model}</strong></span>`, 'bot');
   if (_aiProvider !== 'claude') aiSetProvider('claude');
+}
+
+/**
+ * Gọi Claude cho chế độ PHÂN TÍCH (Tham mưu AI)
+ * Khác _callClaudeAPI: gửi analyzePrompt riêng, GAS build system context ngắn
+ * Tránh vượt token limit khi prompt + context đều dài
+ */
+async function _callClaudeAnalyze(payload) {
+  const model = _claudeGetModel();
+
+  // GAS mode
+  if (GAS) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(d => {
+          if (d && d.error) reject(new Error(d.error));
+          else resolve(d && d.reply ? d.reply : '[Không có phản hồi]');
+        })
+        .withFailureHandler(err => reject(new Error(err && err.message ? err.message : String(err))))
+        .askClaudeAnalyze({ ...payload, model });
+    });
+  }
+
+  // Vercel/JSONP mode
+  return new Promise((resolve, reject) => {
+    const cbName = '_gcb_cla_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const url    = new URL(GAS_API_URL);
+    url.searchParams.set('action',   'askClaudeAnalyze');
+    url.searchParams.set('callback', cbName);
+    // Gửi payload đơn giản hơn — giới hạn URL length
+    const safePayload = {
+      contextParams  : payload.contextParams,
+      analyzePrompt  : (payload.analyzePrompt || '').slice(0, 3000),
+      model          : model,
+      analyzeMode    : true
+    };
+    url.searchParams.set('payload', JSON.stringify(safePayload));
+    console.log('[askClaudeAnalyze] URL:', url.toString().length, 'chars');
+
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout (120s)')); }, 120000);
+    window[cbName] = (data) => {
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data && data.reply ? data.reply : '[Không có phản hồi]');
+    };
+    function cleanup() {
+      clearTimeout(timer); delete window[cbName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    }
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = () => { cleanup(); reject(new Error('JSONP error: askClaudeAnalyze')); };
+    document.head.appendChild(script);
+  });
 }
 
 async function _callClaudeAPI(messages, contextParams) {
