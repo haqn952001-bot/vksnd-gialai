@@ -11,6 +11,11 @@
 <meta name="description" content="Dashboard Công tác VKSND tỉnh Gia Lai 2026">
 <title>VKSND Gia Lai — Dashboard 2026</title>
 <base target="_top"/>
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22VKSND+Gia+Lai+Dashboard%22%2C%22short_name%22%3A%22VKSND+GL%22%2C%22description%22%3A%22Dashboard+c%C3%B4ng+t%C3%A1c+VKSND+t%E1%BB%89nh+Gia+Lai%22%2C%22start_url%22%3A%22%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23020817%22%2C%22theme_color%22%3A%22%23FACC15%22%2C%22orientation%22%3A%22any%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg+xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527+viewBox%3D%25270+0+192+192%2527%253E%253Ccircle+cx%3D%252796%2527+cy%3D%252796%2527+r%3D%252796%2527+fill%3D%2527%23020817%2527%2F%253E%253Cpolygon+points%3D%252796%2C20+112%2C72+168%2C72+124%2C104+140%2C156+96%2C124+52%2C156+68%2C104+24%2C72+80%2C72%2527+fill%3D%2527%23FACC15%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VKSND GL">
+<meta name="mobile-web-app-capable" content="yes">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -1186,15 +1191,56 @@ body::after{
 <!-- LOGIN PAGE -->
 <div id="loginPage">
   <div class="login-box">
-    <div class="login-logo">
-      <div class="login-badge">VK</div>
-      <div>
-        <div class="login-org">VKSND TỈNH GIA LAI</div>
-        <div class="login-org-sub">Hệ thống Dashboard — Công tác 2026</div>
+        <!-- Logo VKSND — ngôi sao SVG, không dùng ảnh base64 -->
+    <div style="text-align:center;margin-bottom:20px">
+      <!-- Ngôi sao SVG -->
+      <div style="position:relative;width:96px;height:96px;margin:0 auto 16px;">
+        <div style="position:absolute;inset:-8px;border-radius:50%;
+          background:radial-gradient(circle,rgba(250,204,21,.12) 0%,transparent 70%);
+          animation:blink 2.5s ease-in-out infinite;"></div>
+        <svg viewBox="0 0 96 96" width="96" height="96" style="position:relative;z-index:1">
+          <defs>
+            <radialGradient id="lg1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FDE68A"/>
+              <stop offset="60%" stop-color="#FACC15"/>
+              <stop offset="100%" stop-color="#D97706"/>
+            </radialGradient>
+            <filter id="lf1">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FACC15" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+          <!-- Vòng ngoài -->
+          <circle cx="48" cy="48" r="46" fill="none" stroke="rgba(250,204,21,.25)" stroke-width="1.2"/>
+          <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(250,204,21,.12)" stroke-width=".7"/>
+          <!-- Ngôi sao 5 cánh -->
+          <polygon
+            points="48,9 57.5,35.5 85.5,35.5 63.2,52.4 72,79 48,62 24,79 32.8,52.4 10.5,35.5 38.5,35.5"
+            fill="url(#lg1)" filter="url(#lf1)"/>
+          <!-- Chữ VK -->
+          <text x="48" y="55" text-anchor="middle"
+            font-family="Be Vietnam Pro,sans-serif"
+            font-size="13" font-weight="900" fill="#020817"
+            letter-spacing="2">VK</text>
+        </svg>
+      </div>
+      <!-- Dòng 1: Viện KSND tối cao — mờ, nhỏ -->
+      <div style="font-size:11px;font-weight:600;
+        color:rgba(250,204,21,.5);
+        letter-spacing:1px;text-transform:uppercase;
+        margin-bottom:4px">
+        Viện KSND tối cao
+      </div>
+      <!-- Dòng 2: Viện KSND tỉnh Gia Lai — nổi bật -->
+      <div style="font-size:16px;font-weight:800;
+        color:#FACC15;
+        letter-spacing:.6px;
+        text-shadow:0 0 20px rgba(250,204,21,.5),0 0 40px rgba(250,204,21,.2)">
+        Viện KSND tỉnh Gia Lai
       </div>
     </div>
-    <div class="login-heading">Đăng nhập</div>
-    <div class="login-desc">Vui lòng nhập tài khoản để truy cập hệ thống</div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(250,204,21,.18),transparent);margin-bottom:22px"></div>
+    <div class="login-heading">Đăng nhập hệ thống</div>
+    <div class="login-desc">Vui lòng nhập tài khoản được cấp để truy cập Dashboard</div>
     <div class="login-err" id="loginErr">Tên đăng nhập hoặc mật khẩu không đúng</div>
     <div class="login-field">
       <label class="login-label" for="loginUser">Tên đăng nhập</label>
@@ -1472,7 +1518,18 @@ body::after{
         <span class="btn-txt">Đổi kỳ</span>
       </button>
     </div>
-    <div class="tl-status">
+    <button id="btnInstallApp" onclick="_installPWA()" style="
+  display:none;height:28px;padding:0 11px;border-radius:6px;
+  border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.1);
+  color:var(--gold);font-size:11px;font-weight:700;font-family:var(--fb);
+  cursor:pointer;align-items:center;gap:5px;white-space:nowrap;
+  animation:confirmPulse 2s ease-in-out infinite;flex-shrink:0">
+  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>Cài App
+</button>
+<div class="tl-status">
       <div class="dot"></div>
       <span id="tsUp">--:--</span>
     </div>
@@ -2170,7 +2227,18 @@ body::after{
         <div class="ph-sub">HOẠT ĐỘNG THANH TRA — KHIẾU TỐ — VKSND TỈNH GIA LAI</div>
         <h1>Thanh tra - Khiếu tố</h1>
       </div></div>
-      <div id="ttra-body"><div style="padding:40px;text-align:center;color:var(--ts)">Đang tải dữ liệu Thanh tra…</div></div>
+      <div id="ttra-body"><div class="tab-skeleton">
+  <div class="sk-line" style="width:45%;height:28px;margin-bottom:16px"></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+    <div class="sk-line" style="height:80px"></div>
+    <div class="sk-line" style="height:80px"></div>
+    <div class="sk-line" style="height:80px"></div>
+    <div class="sk-line" style="height:80px"></div>
+  </div>
+  <div class="sk-line" style="height:220px;margin-bottom:16px"></div>
+  <div class="sk-line" style="width:70%;height:14px;margin-bottom:8px"></div>
+  <div class="sk-line" style="width:55%;height:14px"></div>
+</div></div>
     </div>
 
     <!-- PAGE: THAM MƯU AI -->
@@ -2248,7 +2316,28 @@ body::after{
         <div class="cc" style="margin-top:16px">
           <div class="cc-hd">
             <div class="cc-title" id="tmTitle">KẾT QUẢ PHÂN TÍCH</div>
-            <div class="cc-pill" id="tmMeta">—</div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div class="cc-pill" id="tmMeta">—</div>
+              <button id="btnTmCopy" onclick="tmCopyResult()" style="
+                display:none;height:27px;padding:0 10px;border-radius:6px;
+                border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.08);
+                color:var(--gold);font-size:11px;font-weight:600;font-family:var(--fb);
+                cursor:pointer;align-items:center;gap:5px;transition:all .18s;white-space:nowrap">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:3px">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg><span id="tmCopyTxt">Copy</span>
+              </button>
+              <button onclick="tmExportTxt()" style="
+                height:27px;padding:0 10px;border-radius:6px;
+                border:1px solid rgba(16,185,129,.25);background:rgba(16,185,129,.07);
+                color:var(--emerald);font-size:11px;font-weight:600;font-family:var(--fb);
+                cursor:pointer;display:none;align-items:center;gap:5px;
+                white-space:nowrap;transition:all .18s" id="btnTmExport">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:3px">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>Tải .txt
+              </button>
+            </div>
           </div>
           <div id="tmContent" style="
             font-size:13px;line-height:1.75;color:var(--tp);
@@ -2543,8 +2632,13 @@ function nav(el) {
     el2.classList.toggle('hidden', isChiTieu);
   });
 
-  // renderPage() sẽ tự gọi reload/render phù hợp cho từng tab
-  renderPage(el.dataset.page);
+  // Lazy load: chỉ render overview mỗi lần, tab khác chỉ render lần đầu
+  var _pg = el.dataset.page;
+  if (!window._tabLoaded) window._tabLoaded = {};
+  if (!window._tabLoaded[_pg] || _pg === 'overview') {
+    renderPage(_pg);
+    window._tabLoaded[_pg] = true;
+  }
 
   // Đồng bộ bottom navigation mobile
   const pg = el.dataset.page;
@@ -3873,7 +3967,7 @@ function _renderCtDetailPage() {
     ? `Trang ${_ctDetailPage+1} / ${maxPage}` : '—';
 
   // Render trực tiếp — không có guard/return sớm (giống tab 6 tháng)
-  _renderDetailRows('ctDetail', pageRows);
+  _renderDetailRowsVS('ctDetail', pageRows);
 
   // Scroll bảng về đầu khi chuyển trang
   const tbody = $('ctDetail');
@@ -4150,7 +4244,7 @@ function _renderCt6Page() {
   $('ct6DetailPageNum') && ($('ct6DetailPageNum').textContent = total > 0
     ? `Trang ${_ct6Page+1} / ${maxPage}` : '—');
 
-  _renderDetailRows('ct6Detail', pageRows);
+  _renderDetailRowsVS('ct6Detail', pageRows);
 }
 
 function ct6PagePrev() { _ct6Page = Math.max(0, _ct6Page - 1); _renderCt6Page(); }
@@ -4221,6 +4315,66 @@ function _renderDetailRows(elId, rows) {
     </tr>`;
   }).join('') || `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--tm);font-size:12px">Không có dữ liệu phù hợp với bộ lọc</td></tr>`;
 }
+
+// Virtual scroll wrapper — tự động dùng khi rows > 80
+function _renderDetailRowsVS(elId, rows, scrollContId) {
+  if (!rows || rows.length === 0) {
+    var el = $(elId);
+    if (el) el.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--tm)">Không có dữ liệu</td></tr>';
+    return;
+  }
+  if (rows.length > 80) {
+    // Render từng chunk 60 dòng qua virtual scroll
+    var PAGE = 60;
+    var done = 0;
+    var tbody = $(elId);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    function renderNext() {
+      if (done >= rows.length) return;
+      var chunk = rows.slice(done, done + PAGE);
+      done += chunk.length;
+      // Dùng _renderDetailRows vào tmp rồi move nodes
+      var tmp = document.createElement('table');
+      var tmpBody = document.createElement('tbody');
+      tmp.appendChild(tmpBody);
+      _renderDetailRows(tmpBody.id = '_vs_tmp_' + Date.now(), chunk);
+      // innerHTML của tmpBody
+      tbody.insertAdjacentHTML('beforeend', chunk.map ? '' : '');
+      _renderDetailRows('_vs_tmp_helper', chunk);
+      var helper = document.getElementById('_vs_tmp_helper');
+      if (helper) tbody.insertAdjacentHTML('beforeend', helper.innerHTML);
+      if (done < rows.length) {
+        var sentinel = document.createElement('tr');
+        sentinel.className = '_vs_sent';
+        sentinel.innerHTML = '<td style="height:1px;padding:0;border:none" colspan="7"></td>';
+        tbody.appendChild(sentinel);
+        var cont = scrollContId ? document.getElementById(scrollContId)
+                  : tbody.closest('[style*="overflow-y"]');
+        var obs = new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) {
+            obs.disconnect();
+            var old = tbody.querySelector('._vs_sent');
+            if (old) old.remove();
+            renderNext();
+          }
+        }, { root: cont || null, threshold: 0.01, rootMargin: '300px 0px' });
+        obs.observe(sentinel);
+      }
+    }
+    // Thêm hidden helper div
+    if (!document.getElementById('_vs_tmp_helper')) {
+      var h = document.createElement('tbody');
+      h.id = '_vs_tmp_helper';
+      h.style.display = 'none';
+      document.body.appendChild(h);
+    }
+    renderNext();
+  } else {
+    _renderDetailRows(elId, rows);
+  }
+}
+
 
 function _renderSummaryRows(elId, rows) {
   $(elId).innerHTML = rows.map(r => {
@@ -6311,6 +6465,9 @@ function runThamMuuAI() {
     document.getElementById('tmLoading').style.display = 'none';
     document.getElementById('tmResult').style.display = 'block';
     document.getElementById('tmTitle').textContent = 'KẾT QUẢ PHÂN TÍCH — ' + kyLabel.toUpperCase();
+    ['btnTmCopy','btnTmExport'].forEach(function(id){
+      var b = document.getElementById(id); if(b) b.style.display='flex';
+    });
     var _cbtn = document.getElementById('btnTmCopy');
     if (_cbtn) _cbtn.style.display = 'flex';
     document.getElementById('tmMeta').textContent = (model === 'claude' ? '◆ Claude' : '✦ Gemini') + ' | ' + new Date().toLocaleTimeString('vi-VN');
@@ -6465,6 +6622,86 @@ function tmExportTxt() {
   a.download  = 'ThamMuuAI_' + new Date().toLocaleDateString('vi-VN').replace(/\//g,'-') + '.txt';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+
+// ══ THAM MƯU AI: Copy & Export ════════════════════════════
+function tmCopyResult() {
+  var el  = document.getElementById('tmContent');
+  var btn = document.getElementById('btnTmCopy');
+  var txt = document.getElementById('tmCopyTxt');
+  if (!el) return;
+  var title   = (document.getElementById('tmTitle')||{}).textContent||'KET QUA';
+  var meta    = (document.getElementById('tmMeta') ||{}).textContent||'';
+  var content = '# ' + title + '\n' + meta + '\n\n' + el.innerText;
+  var _ok = function(){
+    if(txt) txt.textContent='✓ Đã copy';
+    if(btn){ btn.style.background='rgba(16,185,129,.2)'; btn.style.borderColor='rgba(16,185,129,.4)'; btn.style.color='var(--emerald)'; }
+    setTimeout(function(){
+      if(txt) txt.textContent='Copy';
+      if(btn){ btn.style.background='rgba(250,204,21,.08)'; btn.style.borderColor='rgba(250,204,21,.3)'; btn.style.color='var(--gold)'; }
+    }, 2200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(content).then(_ok).catch(function(){
+      _fallbackCopy(content); _ok();
+    });
+  } else { _fallbackCopy(content); _ok(); }
+}
+function _fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText='position:fixed;opacity:0;top:-9999px';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+}
+function tmExportTxt() {
+  var el    = document.getElementById('tmContent');
+  var title = (document.getElementById('tmTitle')||{}).textContent||'KET_QUA';
+  var meta  = (document.getElementById('tmMeta') ||{}).textContent||'';
+  if (!el) return;
+  var sep     = '='.repeat(60);
+  var ts      = new Date().toLocaleString('vi-VN');
+  var content = title+'\n'+meta+'\n'+sep+'\nXuất lúc: '+ts+'\n'+sep+'\n\n'+el.innerText;
+  var blob    = new Blob([content],{type:'text/plain;charset=utf-8'});
+  var url     = URL.createObjectURL(blob);
+  var a       = document.createElement('a');
+  a.href=url; a.download='ThamMuuAI_'+new Date().toLocaleDateString('vi-VN').replace(/\//g,'-')+'.txt';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+
+// ══ VIRTUAL SCROLL ═══════════════════════════════════════
+function _vsRender(tbodyId, allRows, renderFn, scrollContId) {
+  var tbody = document.getElementById(tbodyId);
+  var cont  = scrollContId ? document.getElementById(scrollContId) : null;
+  if (!tbody || !allRows.length) return;
+  var CHUNK = 60, rendered = 0, total = allRows.length;
+  tbody.innerHTML = '';
+  function renderChunk() {
+    if (rendered >= total) return;
+    var frag = document.createDocumentFragment();
+    var tmp  = document.createElement('tbody');
+    tmp.innerHTML = allRows.slice(rendered, rendered + CHUNK).map(renderFn).join('');
+    while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+    // Xóa sentinel cũ nếu có
+    var old = tbody.querySelector('._vs_sentinel');
+    if (old) old.remove();
+    tbody.appendChild(frag);
+    rendered += CHUNK;
+    // Thêm sentinel mới nếu còn dòng
+    if (rendered < total) {
+      var sentinel = document.createElement('tr');
+      sentinel.className = '_vs_sentinel';
+      sentinel.innerHTML = '<td colspan="20" style="height:1px;padding:0;border:none"></td>';
+      tbody.appendChild(sentinel);
+      var obs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) { obs.disconnect(); renderChunk(); }
+      }, { root: cont, threshold: 0.01, rootMargin: '200px' });
+      obs.observe(sentinel);
+    }
+  }
+  renderChunk();
 }
 
 function _aiBindAll() {
@@ -6877,6 +7114,16 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 @keyframes aiCursor { 0%,100%{opacity:1} 50%{opacity:0} }
 
 /* Skeleton shimmer — thay typing dots */
+.tab-skeleton { padding:20px; }
+.sk-line {
+  border-radius:6px;
+  background:linear-gradient(90deg,
+    rgba(250,204,21,.04) 25%,
+    rgba(250,204,21,.10) 50%,
+    rgba(250,204,21,.04) 75%);
+  background-size:200% 100%;
+  animation:aiShimmer 1.5s ease-in-out infinite;
+}
 .ai-skeleton {
   display:flex; flex-direction:column; gap:7px;
   padding:11px 14px 10px; align-self:flex-start; max-width:82%;
@@ -7346,5 +7593,57 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
+<script>
+// ══ PWA: Service Worker + Install Prompt ══════════════════
+(function() {
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    var swCode = [
+      "const CACHE='vksnd-v1';",
+      "const ASSETS=['/'];",
+      "self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));",
+      "self.addEventListener('fetch',e=>{",
+      "  if(e.request.url.includes('script.google.com')||e.request.url.includes('googleapis.com'))return;",
+      "  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/'))));",
+      "});"
+    ].join('\n');
+    var blob = new Blob([swCode], {type:'application/javascript'});
+    var swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(function(){});
+  }
+
+  // Install prompt (Android Chrome)
+  var _deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    _deferredPrompt = e;
+    // Hiện nút cài app sau 5 giây
+    setTimeout(function() {
+      var btn = document.getElementById('btnInstallApp');
+      if (btn) btn.style.display = 'flex';
+    }, 5000);
+  });
+
+  window.addEventListener('appinstalled', function() {
+    _deferredPrompt = null;
+    var btn = document.getElementById('btnInstallApp');
+    if (btn) btn.style.display = 'none';
+  });
+
+  window._installPWA = function() {
+    if (!_deferredPrompt) {
+      // iOS fallback
+      alert('Để cài app trên iPhone/iPad:\n1. Nhấn nút Share (□↑) ở Safari\n2. Chọn "Add to Home Screen"\n3. Nhấn "Add"');
+      return;
+    }
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(r) {
+      _deferredPrompt = null;
+      var btn = document.getElementById('btnInstallApp');
+      if (btn) btn.style.display = 'none';
+    });
+  };
+})();
+</script>
 </body>
 </html>
