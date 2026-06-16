@@ -577,9 +577,10 @@ body::after{
 .tw th{
   text-align:left;padding:9px 14px;
   font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--tm);background:rgba(15,28,53,.95);border-bottom:1px solid var(--bd);
-  backdrop-filter:blur(8px);
+  color:var(--tm);background:rgba(10,35,66,.97);border-bottom:1px solid var(--bd);
+  backdrop-filter:blur(12px);
   white-space:nowrap;
+  position:sticky;top:0;z-index:2;
 }
 .tw td{
   padding:9px 14px;
@@ -6310,6 +6311,8 @@ function runThamMuuAI() {
     document.getElementById('tmLoading').style.display = 'none';
     document.getElementById('tmResult').style.display = 'block';
     document.getElementById('tmTitle').textContent = 'KẾT QUẢ PHÂN TÍCH — ' + kyLabel.toUpperCase();
+    var _cbtn = document.getElementById('btnTmCopy');
+    if (_cbtn) _cbtn.style.display = 'flex';
     document.getElementById('tmMeta').textContent = (model === 'claude' ? '◆ Claude' : '✦ Gemini') + ' | ' + new Date().toLocaleTimeString('vi-VN');
 
     var el = document.getElementById('tmContent');
@@ -6419,6 +6422,49 @@ function _tmPopulateKV() {
     grp2.appendChild(o);
   });
   sel.appendChild(grp2);
+}
+
+
+// ── THAM MƯU AI: Copy và Export kết quả ─────────────────
+function tmCopyResult() {
+  var el  = document.getElementById('tmContent');
+  var btn = document.getElementById('btnTmCopy');
+  var txt = document.getElementById('btnTmCopyTxt');
+  if (!el) return;
+  var title   = (document.getElementById('tmTitle')||{}).textContent || 'KET QUA PHAN TICH';
+  var meta    = (document.getElementById('tmMeta') ||{}).textContent || '';
+  var content = '# ' + title + '\n' + meta + '\n\n' + el.innerText;
+  navigator.clipboard.writeText(content).then(function() {
+    if (txt) txt.textContent = '✓ Đã copy';
+    if (btn) btn.style.background = 'rgba(16,185,129,.2)';
+    setTimeout(function() {
+      if (txt) txt.textContent = 'Copy';
+      if (btn) btn.style.background = 'rgba(250,204,21,.08)';
+    }, 2000);
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = content; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    if (txt) txt.textContent = '✓ Đã copy';
+    setTimeout(function(){ if (txt) txt.textContent = 'Copy'; }, 2000);
+  });
+}
+
+function tmExportTxt() {
+  var el    = document.getElementById('tmContent');
+  var title = (document.getElementById('tmTitle')||{}).textContent || 'KET_QUA';
+  var meta  = (document.getElementById('tmMeta') ||{}).textContent || '';
+  if (!el) return;
+  var sep     = '='.repeat(60);
+  var content = title + '\n' + meta + '\n' + sep + '\n\n' + el.innerText;
+  var blob    = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  var url     = URL.createObjectURL(blob);
+  var a       = document.createElement('a');
+  a.href      = url;
+  a.download  = 'ThamMuuAI_' + new Date().toLocaleDateString('vi-VN').replace(/\//g,'-') + '.txt';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function _aiBindAll() {
