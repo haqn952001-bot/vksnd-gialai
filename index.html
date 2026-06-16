@@ -1223,19 +1223,19 @@ body::after{
             letter-spacing="2">VK</text>
         </svg>
       </div>
-      <!-- Dòng 1: Viện KSND tối cao — mờ, nhỏ -->
-      <div style="font-size:11px;font-weight:600;
-        color:rgba(250,204,21,.5);
-        letter-spacing:1px;text-transform:uppercase;
-        margin-bottom:4px">
-        Viện KSND tối cao
+      <!-- Dòng 1: VIỆN KSND TỐI CAO — mờ -->
+      <div style="font-size:11px;font-weight:700;
+        color:rgba(250,204,21,.45);
+        letter-spacing:2px;text-transform:uppercase;
+        margin-bottom:5px">
+        VIỆN KSND TỐI CAO
       </div>
-      <!-- Dòng 2: Viện KSND tỉnh Gia Lai — nổi bật -->
-      <div style="font-size:16px;font-weight:800;
+      <!-- Dòng 2: VIỆN KSND TỈNH GIA LAI — nổi bật -->
+      <div style="font-size:15px;font-weight:800;
         color:#FACC15;
-        letter-spacing:.6px;
+        letter-spacing:1.2px;text-transform:uppercase;
         text-shadow:0 0 20px rgba(250,204,21,.5),0 0 40px rgba(250,204,21,.2)">
-        Viện KSND tỉnh Gia Lai
+        VIỆN KSND TỈNH GIA LAI
       </div>
     </div>
     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(250,204,21,.18),transparent);margin-bottom:22px"></div>
@@ -6381,81 +6381,40 @@ function runThamMuuAI() {
 
   // Build prompt yêu cầu phân tích
   var analyzePrompt = [
-    'Hãy phân tích TOÀN BỘ dữ liệu kỳ báo cáo ' + kyLabel + ' — ' + dvLabel + '.',
+    'Phân tích số liệu ' + kyLabel + ' — ' + dvLabel + '. Súc tích, bám số liệu thực tế.',
     '',
-    isPhong
-      ? 'YÊU CẦU PHÂN TÍCH CHUYÊN SÂU ' + dvLabel.toUpperCase() + ' (trình bày theo 5 phần):'
-      : 'YÊU CẦU PHÂN TÍCH (trình bày theo đúng 6 phần dưới đây):',
+    '## I. SỐ LIỆU CHÍNH',
+    'Liệt kê nhanh các con số nổi bật (tin báo, khởi tố, truy tố, xét xử, tạm giam, THADS). Ghi số cụ thể.',
     '',
-    '## I. TỔNG QUAN TÌNH HÌNH',
-    'Tóm tắt ngắn gọn kết quả nổi bật: tin báo, khởi tố, truy tố, xét xử, tạm giam, THADS.',
-    'Nêu rõ con số cụ thể.',
+    '## II. ĐIỂM MẠNH — ĐIỂM YẾU',
+    '**Mạnh:** Chỉ tiêu/đơn vị vượt hoặc đạt tốt (kèm số liệu).',
+    '**Yếu:** Chỉ tiêu không đạt, tỷ lệ thấp, án hủy/trả hồ sơ có lỗi cao (kèm số liệu).',
     '',
-    '## II. NHỮNG CHỈ SỐ CẦN CHÚ Ý',
-    'Chỉ rõ các đơn vị/chỉ tiêu có kết quả BẤT THƯỜNG:',
-    '- Đơn vị nào "Không đạt" nhiều nhất?',
-    '- Chỉ tiêu nào có tỷ lệ đạt thấp nhất?',
-    '- Đơn vị nào có án hủy, trả hồ sơ ĐTBS có lỗi cao?',
-    '- Chỉ số nào biến động mạnh so với bình quân?',
+    '## III. BIỆN PHÁP CHỈ ĐẠO',
+    '- Đơn vị/chỉ tiêu cụ thể cần đôn đốc',
+    '- Nội dung cần quán triệt',
+    '- Đề xuất ưu tiên trong thời gian tới',
     '',
-    '## III. DỰ BÁO XU HƯỚNG',
-    'Dựa trên số liệu timeline theo tháng, dự báo:',
-    '- Xu hướng tin báo tội phạm trong thời gian tới',
-    '- Dự báo áp lực công tác xét xử, THADS',
-    '- Rủi ro các chỉ tiêu có thể không đạt cuối kỳ',
-    '',
-    '## IV. ĐỀ XUẤT VÀ KIẾN NGHỊ',
-    'Đề xuất cụ thể cho lãnh đạo Viện:',
-    '- Đơn vị nào cần đôn đốc, nhắc nhở trực tiếp?',
-    '- Chỉ tiêu nào cần tập trung cải thiện?',
-    '- Biện pháp cụ thể để nâng cao chất lượng?',
-    '- Nội dung cần quán triệt các đơn vị trong thời gian tới?',
-    '',
-    '## V. PHÂN TÍCH HOẠT ĐỘNG TỪNG PHÒNG NGHIỆP VỤ',
-    'Với MỖI phòng có dữ liệu (P1, P2, P7, P9, P10, P11, Thanh tra), phân tích:',
-    '- **Kết quả nổi bật**: số liệu chính đã đạt được (con số cụ thể)',
-    '- **Điểm mạnh**: lĩnh vực/chỉ tiêu phòng làm tốt',
-    '- **Điểm yếu**: chỉ tiêu chưa đạt, tỷ lệ thấp, vấn đề cần khắc phục',
-    '- **Đề xuất riêng**: biện pháp cụ thể cho phòng đó trong thời gian tới',
-    'Trình bày mỗi phòng 1 mục con (### Phòng X — Tên phòng).',
-    '',
-    '## VI. BẢNG TỔNG HỢP ĐƠN VỊ CẦN QUAN TÂM',
-    'Liệt kê dạng bảng: Đơn vị/Phòng | Vấn đề | Mức độ (🔴🟡🟢) | Đề xuất xử lý',
-    '',
-    'LƯU Ý: Bám sát số liệu thực tế. Mỗi nhận xét PHẢI có con số cụ thể kèm theo.',
-    'Trình bày rõ ràng, dùng Markdown heading (##, ###), bullet (-), bold (**), bảng (|).'
+    'YÊU CẦU: Mỗi nhận xét có số liệu cụ thể. Dùng **bold** cho điểm quan trọng. Không viết lan man.'
   ].join('\n');
 
   // Khi chọn 1 phòng cụ thể → prompt chuyên sâu thay vì prompt toàn tỉnh
   if (isPhong) {
     analyzePrompt = [
-      'Hãy phân tích CHUYÊN SÂU hoạt động của ' + dvLabel + ' trong kỳ ' + kyLabel + '.',
+      'Phân tích ' + dvLabel + ' — ' + kyLabel + '. Bám số liệu, súc tích.',
       '',
-      '## I. TỔNG QUAN KẾT QUẢ',
-      'Tóm tắt các kết quả công tác chính đã thực hiện, nêu rõ con số cụ thể.',
-      'So sánh với mặt bằng chung nếu có dữ liệu.',
+      '## I. SỐ LIỆU CHÍNH',
+      'Các con số kết quả công tác chính (ghi rõ số cụ thể từ dữ liệu nguồn).',
       '',
-      '## II. ĐIỂM MẠNH',
-      'Những lĩnh vực, chỉ tiêu phòng thực hiện tốt, vượt yêu cầu.',
+      '## II. ĐIỂM MẠNH — ĐIỂM YẾU',
+      '**Mạnh:** Chỉ tiêu/lĩnh vực làm tốt (kèm số).',
+      '**Yếu:** Chỉ tiêu chưa đạt, có lỗi, tỷ lệ thấp (kèm số).',
       '',
-      '## III. ĐIỂM YẾU VÀ CHỈ SỐ CẦN CHÚ Ý',
-      '- Chỉ tiêu/lĩnh vực nào chưa đạt yêu cầu?',
-      '- Tỷ lệ nào thấp đáng lo ngại?',
-      '- Có vụ việc nào có lỗi, bị hủy, trả hồ sơ?',
-      '- Chỉ số nào biến động bất thường so với tháng trước?',
+      '## III. BIỆN PHÁP CHỈ ĐẠO',
+      '- Nội dung cần chấn chỉnh, khắc phục',
+      '- Đề xuất ưu tiên thời gian tới',
       '',
-      '## IV. DỰ BÁO VÀ RỦI RO',
-      '- Xu hướng công việc trong thời gian tới',
-      '- Rủi ro không hoàn thành chỉ tiêu cuối kỳ',
-      '- Áp lực công việc dự kiến',
-      '',
-      '## V. ĐỀ XUẤT CỤ THỂ',
-      '- Biện pháp khắc phục điểm yếu',
-      '- Nội dung cần tập trung trong thời gian tới',
-      '- Kiến nghị với lãnh đạo Viện (nếu có)',
-      '',
-      'LƯU Ý: Bám sát số liệu thực tế. Mỗi nhận xét PHẢI có con số cụ thể.',
-      'Trình bày rõ ràng, dùng Markdown heading (##), bullet (-), bold (**).'
+      'YÊU CẦU: Số liệu cụ thể, không suy diễn. Dùng **bold** điểm quan trọng.'
     ].join('\n');
   }
 
