@@ -7266,14 +7266,19 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
     const bubble = document.getElementById('aiBubble');
     if (!wrap || !bubble) return;
 
-    // Khôi phục vị trí đã lưu
+    // Khôi phục vị trí đã lưu — chỉ áp dụng nếu vị trí hợp lệ (trong viewport)
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-      if (saved) {
+      if (saved && saved.top > 0 && saved.left > 0
+          && saved.top < window.innerHeight - 60
+          && saved.left < window.innerWidth - 60) {
         wrap.style.bottom = 'auto';
         wrap.style.right  = 'auto';
         wrap.style.top    = saved.top  + 'px';
         wrap.style.left   = saved.left + 'px';
+      } else {
+        // Xóa vị trí cũ không hợp lệ, dùng vị trí mặc định
+        localStorage.removeItem(STORE_KEY);
       }
     } catch(e) {}
 
@@ -7347,6 +7352,16 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 
     bubble.addEventListener('pointerdown', onPointerDown);
   }
+
+  // Reset vị trí cũ nếu nằm ngoài viewport
+  try {
+    var _pos = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (_pos && (_pos.top <= 0 || _pos.left <= 0
+        || _pos.top >= window.innerHeight - 60
+        || _pos.left >= window.innerWidth - 60)) {
+      localStorage.removeItem(STORE_KEY);
+    }
+  } catch(e) { localStorage.removeItem('aiChat_pos'); }
 
   // Chạy sau khi DOM sẵn sàng
   if (document.readyState === 'loading') {
