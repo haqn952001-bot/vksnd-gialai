@@ -4816,11 +4816,7 @@ function wsConfirm() {
     ws.classList.add('hide');
   }
   window._vksndWelcomed = true;
-  // Đảm bảo aiChat hiện sau khi chọn kỳ
-  setTimeout(function(){
-    var chat = document.getElementById('aiChat');
-    if (chat && chat.style.display === 'none') chat.style.display = 'flex';
-  }, 300);
+  // aiChat luôn hiện (z-index tự xử lý layering)
   try {
     sessionStorage.setItem('vksnd_welcomed','1');
     sessionStorage.setItem('vksnd_filter', JSON.stringify(r));
@@ -7066,8 +7062,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') aiHideKeyDia
 console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: stored in GAS Props');
 </script>
 <div id="aiChat" style="
-  position:fixed; bottom:72px; right:16px; z-index:10001;
-  display:none; flex-direction:column; align-items:flex-end; gap:8px;
+  position:fixed; bottom:72px; right:16px; z-index:9999;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
   user-select:none;
 ">
   <!-- Chat bubble button — giữ để drag, click để mở -->
@@ -7453,11 +7449,7 @@ function _hideLogin() {
     p.style.transition = 'opacity .35s ease';
     setTimeout(function(){ p.style.display = 'none'; }, 350);
   }
-  // Hiện bubble trợ lý AI sau khi đăng nhập
-  setTimeout(function(){
-    var chat = document.getElementById('aiChat');
-    if (chat) chat.style.display = 'flex';
-  }, 400);
+  // aiChat luôn hiện (z-index tự xử lý layering)
 }
 
 async function doLogin() {
