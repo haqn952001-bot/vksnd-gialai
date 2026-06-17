@@ -6465,40 +6465,42 @@ function runThamMuuAI() {
 
   // Build prompt yêu cầu phân tích
   var analyzePrompt = [
-    'Phân tích số liệu ' + kyLabel + ' — ' + dvLabel + '. Súc tích, bám số liệu thực tế.',
+    'Phân tích số liệu ' + kyLabel + ' — ' + dvLabel + '.',
+    'QUAN TRỌNG: Phải viết ĐỦ và HOÀN CHỈNH cả 3 phần. Mỗi phần tối đa 150 từ. Không liệt kê quá dài.',
     '',
-    '## I. SỐ LIỆU CHÍNH',
-    'Liệt kê nhanh các con số nổi bật (tin báo, khởi tố, truy tố, xét xử, tạm giam, THADS). Ghi số cụ thể.',
+    '## I. SỐ LIỆU CHÍNH (tối đa 5 dòng)',
+    'Chỉ nêu 5 số liệu quan trọng nhất: tin báo, khởi tố, truy tố, xét xử, tạm giam. Ghi số cụ thể.',
     '',
-    '## II. ĐIỂM MẠNH — ĐIỂM YẾU',
-    '**Mạnh:** Chỉ tiêu/đơn vị vượt hoặc đạt tốt (kèm số liệu).',
-    '**Yếu:** Chỉ tiêu không đạt, tỷ lệ thấp, án hủy/trả hồ sơ có lỗi cao (kèm số liệu).',
+    '## II. ĐIỂM MẠNH — ĐIỂM YẾU (tối đa 6 dòng)',
+    '**Mạnh (2-3 ý):** Chỉ chọn điểm THẬT SỰ nổi bật — vượt trội so với đơn vị khác hoặc tốt hơn cùng kỳ trước. Kèm số liệu chứng minh.',
+    '**Yếu (2-3 ý):** Chỉ chọn điểm THẬT SỰ hạn chế — thấp hơn các đơn vị khác hoặc giảm so với cùng kỳ trước. Kèm số liệu chứng minh.',
     '',
-    '## III. BIỆN PHÁP CHỈ ĐẠO',
-    '- Đơn vị/chỉ tiêu cụ thể cần đôn đốc',
-    '- Nội dung cần quán triệt',
-    '- Đề xuất ưu tiên trong thời gian tới',
+    '## III. BIỆN PHÁP CHỈ ĐẠO (tối đa 4 dòng, PHẢI HOÀN THÀNH)',
+    '- Chỉ rõ 2-3 biện pháp cụ thể, thiết thực',
+    '- Đơn vị/chỉ tiêu cần đôn đốc',
+    '- Nội dung ưu tiên thời gian tới',
     '',
-    'YÊU CẦU: Mỗi nhận xét có số liệu cụ thể. Dùng **bold** cho điểm quan trọng. Không viết lan man.'
+    'BẮT BUỘC: Viết ngắn từng phần để đảm bảo hoàn thành đủ 3 phần. Dùng **bold** điểm quan trọng.'
   ].join('\n');
 
   // Khi chọn 1 phòng cụ thể → prompt chuyên sâu thay vì prompt toàn tỉnh
   if (isPhong) {
     analyzePrompt = [
-      'Phân tích ' + dvLabel + ' — ' + kyLabel + '. Bám số liệu, súc tích.',
+      'Phân tích ' + dvLabel + ' — ' + kyLabel + '.',
+      'QUAN TRỌNG: Phải viết ĐỦ và HOÀN CHỈNH cả 3 phần. Mỗi phần tối đa 120 từ.',
       '',
-      '## I. SỐ LIỆU CHÍNH',
-      'Các con số kết quả công tác chính (ghi rõ số cụ thể từ dữ liệu nguồn).',
+      '## I. SỐ LIỆU CHÍNH (tối đa 5 dòng)',
+      'Chỉ nêu các con số quan trọng nhất từ dữ liệu nguồn. Ghi số cụ thể.',
       '',
-      '## II. ĐIỂM MẠNH — ĐIỂM YẾU',
-      '**Mạnh:** Chỉ tiêu/lĩnh vực làm tốt (kèm số).',
-      '**Yếu:** Chỉ tiêu chưa đạt, có lỗi, tỷ lệ thấp (kèm số).',
+      '## II. ĐIỂM MẠNH — ĐIỂM YẾU (tối đa 6 dòng)',
+      '**Mạnh (2-3 ý):** Chỉ chọn điểm THẬT SỰ nổi bật — vượt trội so với phòng khác hoặc tốt hơn cùng kỳ trước. Kèm số liệu chứng minh.',
+      '**Yếu (2-3 ý):** Chỉ chọn điểm THẬT SỰ hạn chế — thấp hơn phòng khác hoặc giảm so với cùng kỳ trước. Kèm số liệu chứng minh.',
       '',
-      '## III. BIỆN PHÁP CHỈ ĐẠO',
-      '- Nội dung cần chấn chỉnh, khắc phục',
-      '- Đề xuất ưu tiên thời gian tới',
+      '## III. BIỆN PHÁP CHỈ ĐẠO (tối đa 4 dòng, PHẢI HOÀN THÀNH)',
+      '- 2-3 biện pháp cụ thể, thiết thực',
+      '- Nội dung cần chấn chỉnh và ưu tiên',
       '',
-      'YÊU CẦU: Số liệu cụ thể, không suy diễn. Dùng **bold** điểm quan trọng.'
+      'BẮT BUỘC: Viết ngắn từng phần để đảm bảo hoàn thành đủ 3 phần. Dùng **bold** điểm quan trọng.'
     ].join('\n');
   }
 
