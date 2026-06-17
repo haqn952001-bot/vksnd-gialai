@@ -4816,6 +4816,11 @@ function wsConfirm() {
     ws.classList.add('hide');
   }
   window._vksndWelcomed = true;
+  // Đảm bảo aiChat hiện sau khi chọn kỳ
+  setTimeout(function(){
+    var chat = document.getElementById('aiChat');
+    if (chat && chat.style.display === 'none') chat.style.display = 'flex';
+  }, 300);
   try {
     sessionStorage.setItem('vksnd_welcomed','1');
     sessionStorage.setItem('vksnd_filter', JSON.stringify(r));
@@ -4834,12 +4839,18 @@ function wsConfirm() {
 
 
 function wsCheckAndInit() {
-  // Luôn show welcome screen để chọn kỳ báo cáo
+  // Nếu đã chọn kỳ báo cáo trong session này → bỏ qua
+  if (window._vksndWelcomed || sessionStorage.getItem('vksnd_welcomed') === '1') {
+    const ws = $('welcomeScreen');
+    if (ws) ws.style.cssText = 'display:none!important;visibility:hidden!important;pointer-events:none!important;';
+    return;
+  }
+  // Chưa chọn kỳ → show welcome screen
   const ws = $('welcomeScreen');
   if (ws) {
     ws.style.cssText = '';
     ws.scrollTop = 0;
-    _wsCenter(); // căn giữa dọc
+    _wsCenter();
   }
 }
 
