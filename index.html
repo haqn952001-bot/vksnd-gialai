@@ -1578,6 +1578,16 @@ body::after{
       </svg>Triển khai NQ 205
     </div>
     <div class="nav-label">Phòng nghiệp vụ</div>
+    <div class="nav-item" data-page="phong1" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>Hoạt động Phòng 1
+    </div>
+    <div class="nav-item" data-page="phong2" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+      </svg>Hoạt động Phòng 2
+    </div>
     <div class="nav-item" data-page="phong7" onclick="nav(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
@@ -2175,6 +2185,30 @@ body::after{
         </div>
       </div>
     </div><!-- /thnq205 -->
+
+    <!-- PAGE: PHÒNG 1 -->
+    <div class="page" id="page-phong1">
+      <div class="ph fi"><div>
+        <div class="ph-sub">HOẠT ĐỘNG CỦA PHÒNG 1 — VKSND TỈNH GIA LAI</div>
+        <h1>Hoạt động Phòng 1</h1>
+      </div></div>
+      <div id="phong1-body"><div class="tab-skeleton">
+        <div class="sk-line" style="width:45%;height:28px;margin-bottom:16px"></div>
+        <div class="sk-line" style="height:220px"></div>
+      </div></div>
+    </div>
+
+    <!-- PAGE: PHÒNG 2 -->
+    <div class="page" id="page-phong2">
+      <div class="ph fi"><div>
+        <div class="ph-sub">HOẠT ĐỘNG CỦA PHÒNG 2 — VKSND TỈNH GIA LAI</div>
+        <h1>Hoạt động Phòng 2</h1>
+      </div></div>
+      <div id="phong2-body"><div class="tab-skeleton">
+        <div class="sk-line" style="width:45%;height:28px;margin-bottom:16px"></div>
+        <div class="sk-line" style="height:220px"></div>
+      </div></div>
+    </div>
 
     <!-- PAGE: PHÒNG 7 -->
     <div class="page" id="page-phong7">
@@ -2889,6 +2923,8 @@ function renderPage(pg) {
   if (pg === 'shhsva')  { _loadTabAndRender('shhsva',  renderShHsva);  return; }
   if (pg === 'thnq205') { _loadTabAndRender('thnq205', renderThNq205); return; }
   // Tab Phòng 7/8/9/10/11 + Thanh tra — generic
+  if (pg === 'phong1')  { _loadTabAndRender('phong1',  function(d){ renderPhong('phong1', d); });  return; }
+  if (pg === 'phong2')  { _loadTabAndRender('phong2',  function(d){ renderPhong('phong2', d); });  return; }
   if (pg === 'phong7')  { _loadTabAndRender('phong7',  function(d){ renderPhong('phong7', d); });  return; }
   if (pg === 'phong8')  { _loadTabAndRender('phong8',  function(d){ renderPhong('phong8', d); });  return; }
   if (pg === 'phong9')  { _loadTabAndRender('phong9',  function(d){ renderPhong('phong9', d); });  return; }
@@ -5271,7 +5307,7 @@ function hideLoader() { $('ld').classList.add('hide'); }
 
 // Lazy load tab nặng — chỉ gọi GAS khi user thực sự vào tab
 // Danh sách tab dùng cấu trúc "phong" generic (lazy load, render bảng + KPI + chart)
-const _PHONG_LIKE_TABS = ['phong7','phong8','phong9','phong10','phong11','ttra'];
+const _PHONG_LIKE_TABS = ['phong1','phong2','phong7','phong8','phong9','phong10','phong11','ttra'];
 function _isPhongTab(tab) { return _PHONG_LIKE_TABS.indexOf(tab) >= 0; }
 
 function _loadTabAndRender(tab, renderFn) {
@@ -6185,12 +6221,76 @@ function aiGetSources() {
 
 /** Format markdown đơn giản → HTML */
 function _aiFormatReply(text) {
+  if (!text) return '';
+  var lines = text.split('\n');
+  var out   = [];
+  var inTable = false;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+
+    // Heading ## / ###
+    if (/^### (.+)/.test(line)) {
+      out.push('<h3 style="color:var(--amber);font-size:13px;font-weight:700;margin:14px 0 6px;padding-left:8px;border-left:3px solid var(--amber)">' + line.replace(/^### /, '') + '</h3>');
+      continue;
+    }
+    if (/^## (.+)/.test(line)) {
+      out.push('<h2 style="color:var(--cyan);font-size:14px;font-weight:800;margin:18px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(0,212,255,.15)">' + line.replace(/^## /, '') + '</h2>');
+      continue;
+    }
+    if (/^# (.+)/.test(line)) {
+      out.push('<h2 style="color:var(--cyan);font-size:15px;font-weight:800;margin:18px 0 8px">' + line.replace(/^# /, '') + '</h2>');
+      continue;
+    }
+
+    // Table row (|...|)
+    if (/^\|.+\|$/.test(line.trim())) {
+      if (!inTable) {
+        out.push('<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:12px">');
+        inTable = true;
+      }
+      var isHeader = i + 1 < lines.length && /^\|[-:| ]+\|$/.test(lines[i+1].trim());
+      var isSep    = /^\|[-:| ]+\|$/.test(line.trim());
+      if (isSep) continue;
+      var cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|');
+      var tag   = isHeader ? 'th' : 'td';
+      var style = isHeader
+        ? 'padding:6px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--tm);background:rgba(19,32,64,.8);border-bottom:1px solid var(--bd)'
+        : 'padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--ts)';
+      out.push('<tr>' + cells.map(function(cell){
+        return '<' + tag + ' style="' + style + '">' + _fmtInline(cell.trim()) + '</' + tag + '>';
+      }).join('') + '</tr>');
+      continue;
+    } else if (inTable) {
+      out.push('</table>');
+      inTable = false;
+    }
+
+    // List item (- hoặc * đầu dòng)
+    if (/^[\-\*] (.+)/.test(line)) {
+      out.push('<div style="display:flex;gap:6px;margin:3px 0;padding-left:4px"><span style="color:var(--cyan);flex-shrink:0;margin-top:1px">▸</span><span>' + _fmtInline(line.replace(/^[\-\*] /, '')) + '</span></div>');
+      continue;
+    }
+
+    // Dòng trống
+    if (line.trim() === '') {
+      out.push('<div style="height:6px"></div>');
+      continue;
+    }
+
+    // Dòng thường
+    out.push('<div style="margin:2px 0;line-height:1.7">' + _fmtInline(line) + '</div>');
+  }
+
+  if (inTable) out.push('</table>');
+  return out.join('');
+}
+
+function _fmtInline(text) {
   return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,212,255,.1);padding:1px 4px;border-radius:3px;font-family:var(--fm);font-size:11px">$1</code>')
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>');
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--amber)">$1</strong>')
+    .replace(/\*(.+?)\*/g,       '<em>$1</em>')
+    .replace(/`([^`]+)`/g,        '<code style="background:rgba(0,212,255,.1);padding:1px 5px;border-radius:3px;font-family:var(--fm);font-size:11px;color:var(--cyan)">$1</code>');
 }
 
 /** Gửi câu hỏi đến AI */
@@ -6432,31 +6532,10 @@ function runThamMuuAI() {
     document.getElementById('tmMeta').textContent = (model === 'claude' ? '◆ Claude' : '✦ Gemini') + ' | ' + new Date().toLocaleTimeString('vi-VN');
 
     var el = document.getElementById('tmContent');
-    // Dùng typewriter effect nếu có
-    if (typeof _aiFormatReply === 'function' && typeof _aiTypewriter === 'function') {
-      el.innerHTML = '';
-      var formatted = _aiFormatReply(reply);
-      // Tạo temp div cho typewriter
-      var tw = document.createElement('div');
-      tw.className = 'ai-msg-bot ai-streaming';
-      tw.style.cssText = 'max-width:100%;background:transparent;border:none;padding:0;font-size:inherit;line-height:inherit';
-      el.appendChild(tw);
-      var i = 0;
-      function tick() {
-        if (i >= formatted.length) { tw.classList.remove('ai-streaming'); _tmRunning = false; btn.disabled = false; btn.style.opacity = '1'; return; }
-        if (formatted[i] === '<') { var cl = formatted.indexOf('>', i); i = cl >= 0 ? cl + 1 : formatted.length; tw.innerHTML = formatted.slice(0, i); el.scrollTop = el.scrollHeight; tick(); return; }
-        i++;
-        tw.innerHTML = formatted.slice(0, i);
-        el.scrollTop = el.scrollHeight;
-        var ch = formatted[i-1];
-        var delay = ch === '.' || ch === '!' || ch === '?' ? 50 : ch === ',' || ch === ':' ? 18 : 5;
-        setTimeout(tick, delay);
-      }
-      tick();
-    } else {
-      el.innerHTML = typeof _aiFormatReply === 'function' ? _aiFormatReply(reply) : reply;
-      _tmRunning = false; btn.disabled = false; btn.style.opacity = '1';
-    }
+    // Render thẳng HTML (không dùng typewriter vì content dài, có table/heading)
+    el.innerHTML = typeof _aiFormatReply === 'function' ? _aiFormatReply(reply) : reply;
+    el.scrollTop = 0;
+    _tmRunning = false; btn.disabled = false; btn.style.opacity = '1';
   }
 
   function onError(err) {
