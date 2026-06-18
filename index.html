@@ -2547,6 +2547,12 @@ function gasAskAI(params) {
     url.searchParams.set('callback', cbName);
 
     // Luôn gửi đủ contextParams — GAS cần đủ thông tin để build context
+    // Lấy chức danh người dùng đang đăng nhập
+    var _sess = null;
+    try { _sess = JSON.parse(sessionStorage.getItem('vksnd_session')); } catch(e){}
+    var _userTitle = (_sess && _USER_PROFILE[_sess.user])
+      ? _USER_PROFILE[_sess.user].name : '';
+
     const cpFull = {
       namTu      : cp.namTu      || '2026',
       namDen     : cp.namDen     || '2026',
@@ -2554,6 +2560,7 @@ function gasAskAI(params) {
       thangDen   : cp.thangDen   || '12',
       kv         : cp.kv         || '',
       kyBaoCao   : cp.kyBaoCao   || '12thang',
+      userTitle  : _userTitle,
       dataSources: cp.dataSources || []
     };
 
