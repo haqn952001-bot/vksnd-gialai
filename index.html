@@ -6447,29 +6447,80 @@ function runThamMuuAI() {
   else if (ky === 'quy_2')   { thangTu = '1';  thangDen = '3';  }
   else if (ky === 'quy_3')   { thangTu = '4';  thangDen = '6';  }
   else if (ky === 'quy_4')   { thangTu = '7';  thangDen = '9';  }
-  else if (ky === '6thang')  { thangTu = '1';  thangDen = '6';  }
+  else if (ky === '6thang')  {
+    // Kỳ báo cáo 6 tháng: T10 năm trước → T3 năm này
+    thangTu = '10'; thangDen = '3';
+    // namTu sẽ là năm trước, namDen là năm chọn
+  }
   // 12thang: mặc định thangTu=1, thangDen=12
 
   // Chọn dataSources phù hợp
   var dataSources;
   if (isPhong) {
-    // Chỉ gửi dữ liệu của phòng được chọn
+    // Ưu tiên sheet phòng tương ứng + các nguồn có hoạt động phòng
     var phongTabMap = {
       'phong1':'phong1','phong2':'phong2','phong7':'phong7','phong8':'phong8',
       'phong9':'phong9','phong10':'phong10','phong11':'phong11',
       'ttra':'ttra','phong15':'phong15'
     };
-    dataSources = [phongTabMap[phongKey] || phongKey];
+    var mainSrc = phongTabMap[phongKey] || phongKey;
+
+    // Các nguồn bổ sung theo từng phòng
+    var extraSrcMap = {
+      'phong1' : ['khuVuc','anHuy'],           // P1: THQCT hình sự → khuVuc + án hủy/trả HS
+      'phong2' : ['khuVuc','anHuy'],           // P2: THQCT hình sự
+      'phong7' : ['khuVuc','anHuy'],           // P7: KS xét xử DS
+      'phong8' : ['khuVuc','shHsva','nq205'],  // P8: CĐS → shHsva + nq205
+      'phong9' : ['khuVuc'],                   // P9: KS thi hành án DS
+      'phong10': ['khuVuc'],                   // P10: KS thi hành án HS
+      'phong11': ['khuVuc'],                   // P11: KS khiếu tố
+      'ttra'   : [],                           // Thanh tra: chỉ sheet riêng
+      'phong15': ['nq205','shHsva'],           // P15: NQ205, HSVA
+    };
+    var extraSrcs = extraSrcMap[phongKey] || [];
+
+    // Kỳ 6T/12T: thêm bảng chỉ tiêu tương ứng
+    if (ky === '6thang') extraSrcs.push('chiTieu6');
+    else if (ky === '12thang' || ky === 'canam') extraSrcs.push('chiTieu12');
+
+    dataSources = [mainSrc].concat(extraSrcs);
   } else {
-    // Toàn tỉnh hoặc KV → gửi tất cả nguồn
-    dataSources = ['khuVuc','chiTieu12','chiTieu6','anHuy','shHsva','nq205','phongNV'];
+    // Toàn tỉnh hoặc KV — chọn nguồn theo kỳ báo cáo
+    var isThang  = (ky.indexOf('thang_') === 0 || ky === 'thang_auto');
+    var is6Thang = (ky === '6thang');
+    var is12Thang = (ky === '12thang' || ky === 'canam');
+
+    if (isThang) {
+      // Kỳ tháng: lấy số liệu thực tế (khuVuc, anHuy...) — KHÔNG lấy bảng chỉ tiêu
+      dataSources = ['khuVuc', 'anHuy', 'shHsva', 'nq205', 'phongNV'];
+    } else if (is6Thang) {
+      // Kỳ 6 tháng: CHỈ lấy bảng chỉ tiêu 6 tháng
+      dataSources = ['chiTieu6'];
+    } else if (is12Thang) {
+      // Kỳ 12 tháng: CHỈ lấy bảng chỉ tiêu 12 tháng
+      dataSources = ['chiTieu12'];
+    } else {
+      // Quý (quy_1..4): lấy cả khuVuc lẫn chiTieu6 (6 tháng)
+      dataSources = ['khuVuc', 'chiTieu6', 'anHuy', 'shHsva', 'nq205'];
+    }
+  }
+
+  // Kỳ 6T và 12T: namTu = năm trước
+  var namTuFinal = nam;
+  if (ky === '6thang' || ky === '12thang' || ky === 'canam') {
+    namTuFinal = String(parseInt(nam) - 1);
+    if (ky === '12thang' || ky === 'canam') {
+      thangTu = '10'; thangDen = '9';
+    }
   }
 
   var contextParams = {
-    namTu: nam, namDen: nam,
+    namTu: namTuFinal, namDen: nam,
     thangTu: thangTu, thangDen: thangDen,
     kv: kv,
-    kyBaoCao: ky === 'thang' ? '12thang' : ky,
+    kyBaoCao: (ky === '6thang' || ky === 'quy_1' || ky === 'quy_2' || ky === 'quy_3' || ky === 'quy_4')
+      ? '6thang'
+      : '12thang',
     dataSources: dataSources
   };
 
