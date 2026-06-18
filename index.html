@@ -6455,53 +6455,60 @@ function runThamMuuAI() {
   // 12thang: mặc định thangTu=1, thangDen=12
 
   // Chọn dataSources phù hợp
+  // ════════════════════════════════════════════════════════
+  // DATASOURCES — phân biệt rõ 3 trường hợp:
+  // 1. Chọn PHÒNG  → CHỈ sheet Chi tiết_P + anHuy
+  // 2. Chọn KV     → CHỈ sheet Chi tiết số liệu KV + anHuy
+  // 3. Toàn tỉnh   → theo kỳ báo cáo
+  // ════════════════════════════════════════════════════════
   var dataSources;
+  var isKV = (!isPhong && kv !== '');  // chọn 1 KV cụ thể
+
   if (isPhong) {
-    // Ưu tiên sheet phòng tương ứng + các nguồn có hoạt động phòng
-    var phongTabMap = {
-      'phong1':'phong1','phong2':'phong2','phong7':'phong7','phong8':'phong8',
-      'phong9':'phong9','phong10':'phong10','phong11':'phong11',
-      'ttra':'ttra','phong15':'phong15'
+    // ── PHÒNG: CHỈ sheet Chi tiết_P tương ứng + trả hồ sơ/án hủy ──
+    // KHÔNG lấy khuVuc (số liệu KV không thuộc phạm vi phòng)
+    var _phongAnHuyMap = {
+      'phong1' : ['anHuy'],          // P1: KSĐT → trả hồ sơ ĐTBS
+      'phong2' : ['anHuy'],          // P2: KSĐT → trả hồ sơ ĐTBS
+      'phong7' : ['anHuy'],          // P7: KSXX HSPT → án hủy HS
+      'phong8' : [],                 // P8: TGTG/THAHS → không liên quan trực tiếp
+      'phong9' : ['anHuy'],          // P9: KSXX DS → án hủy DS
+      'phong10': ['anHuy'],          // P10: KSXX KDTM,HC → án hủy HC
+      'phong11': [],                 // P11: THADS → không liên quan trực tiếp
+      'ttra'   : [],                 // Thanh tra: chỉ sheet riêng
+      'phong15': [],                 // P15: Tổ chức - cán bộ
     };
-    var mainSrc = phongTabMap[phongKey] || phongKey;
+    dataSources = [phongKey].concat(_phongAnHuyMap[phongKey] || []);
 
-    // Các nguồn bổ sung theo từng phòng
-    var extraSrcMap = {
-      'phong1' : ['khuVuc','anHuy'],           // P1: THQCT hình sự → khuVuc + án hủy/trả HS
-      'phong2' : ['khuVuc','anHuy'],           // P2: THQCT hình sự
-      'phong7' : ['khuVuc','anHuy'],           // P7: KS xét xử DS
-      'phong8' : ['khuVuc','shHsva','nq205'],  // P8: CĐS → shHsva + nq205
-      'phong9' : ['khuVuc'],                   // P9: KS thi hành án DS
-      'phong10': ['khuVuc'],                   // P10: KS thi hành án HS
-      'phong11': ['khuVuc'],                   // P11: KS khiếu tố
-      'ttra'   : [],                           // Thanh tra: chỉ sheet riêng
-      'phong15': ['nq205','shHsva'],           // P15: NQ205, HSVA
-    };
-    var extraSrcs = extraSrcMap[phongKey] || [];
+    // Kỳ 6T/12T: bổ sung bảng chỉ tiêu tương ứng
+    if (ky === '6thang') dataSources.push('chiTieu6');
+    else if (ky === '12thang' || ky === 'canam') dataSources.push('chiTieu12');
 
-    // Kỳ 6T/12T: thêm bảng chỉ tiêu tương ứng
-    if (ky === '6thang') extraSrcs.push('chiTieu6');
-    else if (ky === '12thang' || ky === 'canam') extraSrcs.push('chiTieu12');
+  } else if (isKV) {
+    // ── KV CỤ THỂ: CHỈ Chi tiết số liệu KV + trả hồ sơ/án hủy ──
+    // KHÔNG lấy sheet phòng, KHÔNG lấy shHsva/nq205
+    if (ky.indexOf('thang_') === 0 || ky === 'thang_auto') {
+      dataSources = ['khuVuc', 'anHuy'];
+    } else if (ky === '6thang') {
+      dataSources = ['khuVuc', 'chiTieu6', 'anHuy'];
+    } else if (ky === '12thang' || ky === 'canam') {
+      dataSources = ['khuVuc', 'chiTieu12', 'anHuy'];
+    } else {
+      // Quý
+      dataSources = ['khuVuc', 'chiTieu6', 'anHuy'];
+    }
 
-    dataSources = [mainSrc].concat(extraSrcs);
   } else {
-    // Toàn tỉnh hoặc KV — chọn nguồn theo kỳ báo cáo
-    var isThang  = (ky.indexOf('thang_') === 0 || ky === 'thang_auto');
-    var is6Thang = (ky === '6thang');
-    var is12Thang = (ky === '12thang' || ky === 'canam');
-
-    if (isThang) {
-      // Kỳ tháng: lấy số liệu thực tế (khuVuc, anHuy...) — KHÔNG lấy bảng chỉ tiêu
+    // ── TOÀN TỈNH: theo kỳ báo cáo ──
+    if (ky.indexOf('thang_') === 0 || ky === 'thang_auto') {
       dataSources = ['khuVuc', 'anHuy', 'shHsva', 'nq205', 'phongNV'];
-    } else if (is6Thang) {
-      // Kỳ 6 tháng: CHỈ lấy bảng chỉ tiêu 6 tháng
+    } else if (ky === '6thang') {
       dataSources = ['chiTieu6'];
-    } else if (is12Thang) {
-      // Kỳ 12 tháng: CHỈ lấy bảng chỉ tiêu 12 tháng
+    } else if (ky === '12thang' || ky === 'canam') {
       dataSources = ['chiTieu12'];
     } else {
-      // Quý (quy_1..4): lấy cả khuVuc lẫn chiTieu6 (6 tháng)
-      dataSources = ['khuVuc', 'chiTieu6', 'anHuy', 'shHsva', 'nq205'];
+      // Quý
+      dataSources = ['khuVuc', 'chiTieu6', 'anHuy'];
     }
   }
 
@@ -6666,8 +6673,8 @@ function _tmPopulateKV() {
   var phongList = [
     { value: 'phong1',  label: 'Phòng 1 — KSĐT án KT-CV,MT' },
     { value: 'phong2',  label: 'Phòng 2 — KSĐT án TTXH, an ninh' },
-    { value: 'phong7',  label: 'Phòng 7 — Kiểm sát DS' },
-    { value: 'phong8',  label: 'Phòng 8 — KSXX hình sự' },
+    { value: 'phong7',  label: 'Phòng 7 — KSXX HSPT, GĐT, TT' },
+    { value: 'phong8',  label: 'Phòng 8 — KS TGTG, THAHS' },
     { value: 'phong9',  label: 'Phòng 9 — KSXX án dân sự' },
     { value: 'phong10', label: 'Phòng 10 — KSXX án HC, KDTM-LĐ' },
     { value: 'phong11', label: 'Phòng 11 — KS THADS, THAHC' },
