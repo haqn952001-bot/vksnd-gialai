@@ -2287,14 +2287,14 @@ body::after{
               <option value="thang_12">Tháng 12</option>
             </optgroup>
             <optgroup label="── Theo quý ──">
-              <option value="quy_1">Quý I (T10–T12)</option>
-              <option value="quy_2">Quý II (T1–T3)</option>
-              <option value="quy_3">Quý III (T4–T6)</option>
-              <option value="quy_4">Quý IV (T7–T9)</option>
+              <option value="quy_1">Quý I (T10–T12 năm trước)</option>
+              <option value="quy_2">Quý II (T1–T3 năm nay)</option>
+              <option value="quy_3">Quý III (T4–T6 năm nay)</option>
+              <option value="quy_4">Quý IV (T7–T9 năm nay)</option>
             </optgroup>
             <optgroup label="── Theo kỳ báo cáo ──">
-              <option value="6thang">6 tháng đầu năm (T1–T6)</option>
-              <option value="12thang" selected>Cả năm (T1–T12)</option>
+              <option value="6thang">6 tháng (T10 năm trước – T3 năm nay)</option>
+              <option value="12thang" selected>12 tháng (T10 năm trước – T9 năm nay)</option>
             </optgroup>
           </select>
           <select id="fTmNam" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
@@ -6443,7 +6443,7 @@ function runThamMuuAI() {
   } else if (ky.indexOf('thang_') === 0) {
     var t = ky.replace('thang_', '');
     thangTu = thangDen = t;
-  } else if (ky === 'quy_1') { thangTu = '10'; thangDen = '12'; }
+  } else if (ky === 'quy_1') { thangTu = '10'; thangDen = '12'; /* năm trước */ }
   else if (ky === 'quy_2')   { thangTu = '1';  thangDen = '3';  }
   else if (ky === 'quy_3')   { thangTu = '4';  thangDen = '6';  }
   else if (ky === 'quy_4')   { thangTu = '7';  thangDen = '9';  }
@@ -6534,11 +6534,11 @@ function runThamMuuAI() {
   var kyLabel;
   if (ky === 'thang_auto' || ky.indexOf('thang_') === 0) {
     kyLabel = 'Tháng ' + thangTu + '/' + nam;
-  } else if (ky === 'quy_1') { kyLabel = 'Quý I (T10-T12)/' + nam; }
-  else if (ky === 'quy_2')   { kyLabel = 'Quý II (T1-T3)/' + nam; }
-  else if (ky === 'quy_3')   { kyLabel = 'Quý III (T4-T6)/' + nam; }
-  else if (ky === 'quy_4')   { kyLabel = 'Quý IV (T7-T9)/' + nam; }
-  else if (ky === '6thang')  { kyLabel = '6 tháng đầu năm ' + nam; }
+  } else if (ky === 'quy_1') { kyLabel = 'Quý I (T10-T12/' + String(parseInt(nam)-1) + ')'; }
+  else if (ky === 'quy_2')   { kyLabel = 'Quý II (T1-T3/' + nam + ')'; }
+  else if (ky === 'quy_3')   { kyLabel = 'Quý III (T4-T6/' + nam + ')'; }
+  else if (ky === 'quy_4')   { kyLabel = 'Quý IV (T7-T9/' + nam + ')'; }
+  else if (ky === '6thang')  { kyLabel = 'Kỳ 6 tháng (T10/' + String(parseInt(nam)-1) + ' – T3/' + nam + ')'; }
   else                        { kyLabel = '12 tháng năm ' + nam; }
 
   // Build prompt yêu cầu phân tích
