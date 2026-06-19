@@ -6521,6 +6521,12 @@ function runThamMuuAI() {
     }
   }
 
+  // Lấy chức danh user đang đăng nhập
+  var _tmSess = null;
+  try { _tmSess = JSON.parse(sessionStorage.getItem('vksnd_session')); } catch(e) {}
+  var _tmTitle = (_tmSess && _USER_PROFILE[_tmSess.user])
+    ? _USER_PROFILE[_tmSess.user].name : '';
+
   var contextParams = {
     namTu: namTuFinal, namDen: nam,
     thangTu: thangTu, thangDen: thangDen,
@@ -6528,6 +6534,7 @@ function runThamMuuAI() {
     kyBaoCao: (ky === '6thang' || ky === 'quy_1' || ky === 'quy_2' || ky === 'quy_3' || ky === 'quy_4')
       ? '6thang'
       : '12thang',
+    userTitle  : _tmTitle,
     dataSources: dataSources
   };
 
