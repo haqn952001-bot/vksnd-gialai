@@ -5656,7 +5656,15 @@ function renderPhong(tab, d) {
 
   // ─ Tiêu đề bảng — custom cho Thanh tra ─
   const TAB_TABLE_TITLES = {
-    'ttra': 'BẢNG CHI TIẾT HOẠT ĐỘNG CỦA THANH TRA – KHIẾU TỐ'
+    'phong1' : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong2' : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong7' : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong8' : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong9' : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong10': 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong11': 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'phong15': 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG',
+    'ttra'   : 'BẢNG CHI TIẾT HOẠT ĐỘNG PHÒNG'
   };
   const tableTitle = TAB_TABLE_TITLES[tab]
     || (hasData
@@ -5666,6 +5674,16 @@ function renderPhong(tab, d) {
   // ── Whitelist cột hiển thị theo từng tab (theo yêu cầu) ─────────
   // null = ẩn toàn bộ bảng. [] / undefined = hiển thị tất cả. mảng = chỉ các cột trong whitelist
   const VISIBLE_COLS = {
+    'phong1': [
+      'Đơn vị','CTĐ','Tháng','Năm',
+      'Kiến nghị','Kháng nghị',
+      'Tóm tắt nội dung kiến nghị/kháng nghị','Ghi chú'
+    ],
+    'phong2': [
+      'Đơn vị','CTĐ','Tháng','Năm',
+      'Kiến nghị','Kháng nghị',
+      'Tóm tắt nội dung kiến nghị/kháng nghị','Ghi chú'
+    ],
     'phong7': [
       'Đơn vị','CTĐ','Tháng','Năm',
       'Số vụ VKSKV kháng nghị (mới)','Số bị cáo VKSKV kháng nghị (mới)',
