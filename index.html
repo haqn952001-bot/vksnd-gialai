@@ -1314,19 +1314,19 @@ body::after{
       <div class="ws-quy-grid">
         <button class="ws-quy-btn" data-quy="1" onclick="wsSelectQuy(this)">
           <div style="font-size:12px;font-weight:700;margin-bottom:3px">Quý I</div>
-          <div style="font-size:10px;opacity:.7;line-height:1.4">T.10/2025<br>→ T.12/2025</div>
+          <div class="ws-quy-range" data-quy="1" style="font-size:10px;opacity:.7;line-height:1.4">T.1/… → T.3/…</div>
         </button>
         <button class="ws-quy-btn" data-quy="2" onclick="wsSelectQuy(this)">
           <div style="font-size:12px;font-weight:700;margin-bottom:3px">Quý II</div>
-          <div style="font-size:10px;opacity:.7;line-height:1.4">T.1/2026<br>→ T.3/2026</div>
+          <div class="ws-quy-range" data-quy="2" style="font-size:10px;opacity:.7;line-height:1.4">T.4/… → T.6/…</div>
         </button>
         <button class="ws-quy-btn" data-quy="3" onclick="wsSelectQuy(this)">
           <div style="font-size:12px;font-weight:700;margin-bottom:3px">Quý III</div>
-          <div style="font-size:10px;opacity:.7;line-height:1.4">T.4/2026<br>→ T.6/2026</div>
+          <div class="ws-quy-range" data-quy="3" style="font-size:10px;opacity:.7;line-height:1.4">T.7/… → T.9/…</div>
         </button>
         <button class="ws-quy-btn" data-quy="4" onclick="wsSelectQuy(this)">
           <div style="font-size:12px;font-weight:700;margin-bottom:3px">Quý IV</div>
-          <div style="font-size:10px;opacity:.7;line-height:1.4">T.7/2026<br>→ T.9/2026</div>
+          <div class="ws-quy-range" data-quy="4" style="font-size:10px;opacity:.7;line-height:1.4">T.9/… → T.12/…</div>
         </button>
       </div>
     </div>
@@ -1349,7 +1349,7 @@ body::after{
         <div class="ws-arrow" style="padding-top:22px">năm</div>
         <div class="ws-field">
           <label>Năm</label>
-          <select id="wsNamTu" onchange="wsUpdateNote()">
+          <select id="wsNamTu" onchange="wsUpdateNote(); _wsUpdateQuyRange();">
             <option value="2026" selected>2026</option>
             <option value="2025">2025</option>
           </select>
@@ -4672,6 +4672,7 @@ function renderAnHuy() {
 // ══════════════════════════════════════════════════════════════
 let _wsPreset   = null;
 let _wsQuy      = null;     // quý đang chọn: '1'|'2'|'3'|'4'
+var _wsNamChon = '2026';
 let _wsTargetTab= null;     // tab sẽ chuyển đến sau khi load: null | 'chitieu6' | 'chitieu12'
 
 // Định nghĩa các preset cố định
@@ -4681,12 +4682,17 @@ const WS_PRESETS = {
 };
 
 // Định nghĩa 4 quý theo đặc thù cơ quan (năm tài chính bắt đầu T.10)
-const WS_QUY = {
-  '1': { thangTu:'10', namTu:'2025', thangDen:'12', namDen:'2025', label:'Quý I (T.10/2025 → T.12/2025)' },
-  '2': { thangTu:'1',  namTu:'2026', thangDen:'3',  namDen:'2026', label:'Quý II (T.1 → T.3/2026)' },
-  '3': { thangTu:'4',  namTu:'2026', thangDen:'6',  namDen:'2026', label:'Quý III (T.4 → T.6/2026)' },
-  '4': { thangTu:'7',  namTu:'2026', thangDen:'9',  namDen:'2026', label:'Quý IV (T.7 → T.9/2026)' }
-};
+function WS_QUY(nam) {
+  // Kỳ báo cáo theo quý — cùng năm chọn (đọc từ select wsNamTu)
+  var selNam = document.getElementById('wsNamTu');
+  var n = String(nam || (selNam && selNam.value) || '2026');
+  return {
+    '1': { thangTu:'1',  namTu:n, thangDen:'3',  namDen:n, label:'Quý I (T.1 → T.3/' + n + ')' },
+    '2': { thangTu:'4',  namTu:n, thangDen:'6',  namDen:n, label:'Quý II (T.4 → T.6/' + n + ')' },
+    '3': { thangTu:'7',  namTu:n, thangDen:'9',  namDen:n, label:'Quý III (T.7 → T.9/' + n + ')' },
+    '4': { thangTu:'9',  namTu:n, thangDen:'12', namDen:n, label:'Quý IV (T.9 → T.12/' + n + ')' }
+  };
+}
 
 function wsSelectPreset(btn) {
   // Reset trạng thái
@@ -4742,9 +4748,8 @@ function wsSelectPreset(btn) {
 }
 
 function _wsUpdateQuyRange() {
-  var activNam = document.querySelector('.ws-nam-btn.active');
-  var nam = activNam ? parseInt(activNam.dataset.nam) : new Date().getFullYear();
-  var prev = nam - 1;
+  var selNam = document.getElementById('wsNamTu');
+  var nam = selNam ? parseInt(selNam.value) : new Date().getFullYear();
   var ranges = {
     '1': 'T.1/' + nam + '<br>→ T.3/' + nam,
     '2': 'T.4/' + nam + '<br>→ T.6/' + nam,
@@ -4770,7 +4775,8 @@ function wsGetSelectedRange() {
 
   if (_wsPreset === 'quy') {
     if (!_wsQuy) return null;
-    return WS_QUY[_wsQuy];
+    var _selNam = document.getElementById('wsNamTu')?.value || '2026';
+    return WS_QUY(_selNam)[_wsQuy];
   }
   if (_wsPreset === '6thang' || _wsPreset === '12thang') {
     return WS_PRESETS[_wsPreset];
