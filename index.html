@@ -2549,7 +2549,7 @@ function gasAskAI(params) {
     // Luôn gửi đủ contextParams — GAS cần đủ thông tin để build context
     // Lấy chức danh người dùng đang đăng nhập
     var _sess = null;
-    try { _sess = JSON.parse(sessionStorage.getItem('vksnd_session')); } catch(e){}
+    try { _sess = JSON.parse(sessionStorage.getItem(_SESSION_KEY) || sessionStorage.getItem('vksnd_session') || '{}'); } catch(e){}
     var _userTitle = (_sess && _USER_PROFILE[_sess.user])
       ? _USER_PROFILE[_sess.user].name : '';
 
@@ -2560,7 +2560,7 @@ function gasAskAI(params) {
       thangDen   : cp.thangDen   || '12',
       kv         : cp.kv         || '',
       kyBaoCao   : cp.kyBaoCao   || '12thang',
-      userTitle  : _userTitle,
+      userTitle  : cp.userTitle  || _userTitle,  // ưu tiên userTitle từ caller
       dataSources: cp.dataSources || []
     };
 
@@ -6541,11 +6541,15 @@ function runThamMuuAI() {
   // Tất cả kỳ đều trong cùng năm chọn
   var namTuFinal = nam;
 
-  // Lấy chức danh user đang đăng nhập
-  var _tmSess = null;
-  try { _tmSess = JSON.parse(sessionStorage.getItem('vksnd_session')); } catch(e) {}
-  var _tmTitle = (_tmSess && _USER_PROFILE[_tmSess.user])
-    ? _USER_PROFILE[_tmSess.user].name : '';
+  // Lấy chức danh user đang đăng nhập — đọc đúng _SESSION_KEY
+  var _tmTitle = '';
+  try {
+    var _tmRaw = sessionStorage.getItem(_SESSION_KEY) || sessionStorage.getItem('vksnd_session') || '{}';
+    var _tmSess = JSON.parse(_tmRaw);
+    if (_tmSess && _tmSess.user && _USER_PROFILE[_tmSess.user]) {
+      _tmTitle = _USER_PROFILE[_tmSess.user].name;
+    }
+  } catch(e) { console.warn('_tmTitle err:', e); }
 
   var contextParams = {
     namTu: namTuFinal, namDen: nam,
