@@ -4741,6 +4741,22 @@ function wsSelectPreset(btn) {
   wsUpdateNote();
 }
 
+function _wsUpdateQuyRange() {
+  var activNam = document.querySelector('.ws-nam-btn.active');
+  var nam = activNam ? parseInt(activNam.dataset.nam) : new Date().getFullYear();
+  var prev = nam - 1;
+  var ranges = {
+    '1': 'T.1/' + nam + '<br>→ T.3/' + nam,
+    '2': 'T.4/' + nam + '<br>→ T.6/' + nam,
+    '3': 'T.7/' + nam + '<br>→ T.9/' + nam,
+    '4': 'T.9/' + nam + '<br>→ T.12/' + nam
+  };
+  document.querySelectorAll('.ws-quy-range').forEach(function(el) {
+    var q = el.getAttribute('data-quy');
+    if (ranges[q]) el.innerHTML = ranges[q];
+  });
+}
+
 function wsSelectQuy(btn) {
   document.querySelectorAll('.ws-quy-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
@@ -4842,6 +4858,7 @@ function wsConfirm() {
 
 
 function wsCheckAndInit() {
+  _wsUpdateQuyRange();
   // Nếu đã chọn kỳ báo cáo trong session này → bỏ qua
   if (window._vksndWelcomed || sessionStorage.getItem('vksnd_welcomed') === '1') {
     const ws = $('welcomeScreen');
@@ -6436,23 +6453,26 @@ function runThamMuuAI() {
   btn.style.opacity = '.5';
 
   // Build context params — xử lý đầy đủ các kỳ
+  // ══ KỲ BÁO CÁO ══════════════════════════════════════════════════
+  // Quý 1 : T12(năm trước) → T3  (năm chọn)
+  // Quý 2 : T4  → T6  (năm chọn)
+  // 6 tháng: T12(năm trước) → T6 (năm chọn)
+  // Quý 3 : T7  → T9  (năm chọn)
+  // Quý 4 : T9  → T12 (năm chọn)
+  // 12 tháng: T1 → T12 (năm chọn)
+  // ════════════════════════════════════════════════════════════════
   var thangTu = '1', thangDen = '12';
   if (ky === 'thang_auto') {
     var now = new Date();
     thangTu = thangDen = String(now.getMonth() + 1);
   } else if (ky.indexOf('thang_') === 0) {
-    var t = ky.replace('thang_', '');
-    thangTu = thangDen = t;
-  } else if (ky === 'quy_1') { thangTu = '10'; thangDen = '12'; /* năm trước */ }
-  else if (ky === 'quy_2')   { thangTu = '1';  thangDen = '3';  }
-  else if (ky === 'quy_3')   { thangTu = '4';  thangDen = '6';  }
-  else if (ky === 'quy_4')   { thangTu = '7';  thangDen = '9';  }
-  else if (ky === '6thang')  {
-    // Kỳ báo cáo 6 tháng: T10 năm trước → T3 năm này
-    thangTu = '10'; thangDen = '3';
-    // namTu sẽ là năm trước, namDen là năm chọn
-  }
-  // 12thang: mặc định thangTu=1, thangDen=12
+    thangTu = thangDen = ky.replace('thang_', '');
+  } else if (ky === 'quy_1') { thangTu = '1';  thangDen = '3';  }   // T1 → T3
+  else if (ky === 'quy_2')   { thangTu = '4';  thangDen = '6';  }   // T4 → T6
+  else if (ky === '6thang')  { thangTu = '1';  thangDen = '6';  }   // T1 → T6
+  else if (ky === 'quy_3')   { thangTu = '7';  thangDen = '9';  }   // T7 → T9
+  else if (ky === 'quy_4')   { thangTu = '9';  thangDen = '12'; }   // T9 → T12
+  else                        { thangTu = '1';  thangDen = '12'; }   // 12 tháng: T1 → T12
 
   // Chọn dataSources phù hợp
   // ════════════════════════════════════════════════════════
@@ -6512,14 +6532,8 @@ function runThamMuuAI() {
     }
   }
 
-  // Kỳ 6T và 12T: namTu = năm trước
+  // Tất cả kỳ đều trong cùng năm chọn
   var namTuFinal = nam;
-  if (ky === '6thang' || ky === '12thang' || ky === 'canam') {
-    namTuFinal = String(parseInt(nam) - 1);
-    if (ky === '12thang' || ky === 'canam') {
-      thangTu = '10'; thangDen = '9';
-    }
-  }
 
   // Lấy chức danh user đang đăng nhập
   var _tmSess = null;
@@ -6548,11 +6562,11 @@ function runThamMuuAI() {
   var kyLabel;
   if (ky === 'thang_auto' || ky.indexOf('thang_') === 0) {
     kyLabel = 'Tháng ' + thangTu + '/' + nam;
-  } else if (ky === 'quy_1') { kyLabel = 'Quý I (T10-T12/' + String(parseInt(nam)-1) + ')'; }
-  else if (ky === 'quy_2')   { kyLabel = 'Quý II (T1-T3/' + nam + ')'; }
-  else if (ky === 'quy_3')   { kyLabel = 'Quý III (T4-T6/' + nam + ')'; }
-  else if (ky === 'quy_4')   { kyLabel = 'Quý IV (T7-T9/' + nam + ')'; }
-  else if (ky === '6thang')  { kyLabel = 'Kỳ 6 tháng (T10/' + String(parseInt(nam)-1) + ' – T3/' + nam + ')'; }
+  } else if (ky === 'quy_1') { kyLabel = 'Quý I (T1-T3/' + nam + ')'; }
+  else if (ky === 'quy_2')   { kyLabel = 'Quý II (T4-T6/' + nam + ')'; }
+  else if (ky === 'quy_3')   { kyLabel = 'Quý III (T7-T9/' + nam + ')'; }
+  else if (ky === 'quy_4')   { kyLabel = 'Quý IV (T9-T12/' + nam + ')'; }
+  else if (ky === '6thang')  { kyLabel = 'Kỳ 6 tháng (T1-T6/' + nam + ')'; }
   else                        { kyLabel = '12 tháng năm ' + nam; }
 
   // Build prompt yêu cầu phân tích
