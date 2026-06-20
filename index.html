@@ -2680,6 +2680,9 @@ function nav(el) {
     b.classList.toggle('active', b.dataset.page === pg);
   });
   closeMobileMenu();
+
+  // Đồng bộ nguồn dữ liệu AI theo tab vừa chuyển (nếu panel đang mở thì update ngay)
+  if (typeof _aiAutoSyncSources === 'function') _aiAutoSyncSources();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -5332,31 +5335,16 @@ function deepMerge(t, s) {
 function showLoader(msg) {
   $('ldTxt').textContent = msg||'Đang tải…';
   $('ld').classList.remove('hide');
-  // Ẩn bubble AI trong khi loading — set từng property để không xóa vị trí drag đã lưu
-  var chat = document.getElementById('aiChat');
-  if (chat) {
-    chat.style.display       = 'none';
-    chat.style.visibility    = 'hidden';
-    chat.style.opacity       = '0';
-    chat.style.pointerEvents = 'none';
-  }
 }
 function hideLoader() {
   $('ld').classList.add('hide');
-  // Hiện lại bubble AI sau khi tải xong
+  // Hiện bubble trợ lý AI sau khi tải xong
   var chat = document.getElementById('aiChat');
   if (chat) {
     chat.classList.remove('loading-hide');
-    // Không dùng cssText để không xóa mất vị trí drag đã lưu (top/left)
-    // Chỉ restore từng property hiển thị
-    chat.style.removeProperty('display');
-    chat.style.removeProperty('visibility');
-    chat.style.removeProperty('opacity');
-    chat.style.removeProperty('pointer-events');
     chat.style.display    = 'flex';
     chat.style.visibility = 'visible';
     chat.style.opacity    = '1';
-    chat.style.pointerEvents = 'auto';
   }
 }
 
@@ -6056,9 +6044,6 @@ function closeMobileMenu() {
 
 window.addEventListener('load', () => {
   _checkLoginSession();
-  // Restore filter từ sessionStorage vào DOM select trước khi AI chatbot dùng getFilterParams()
-  // Nếu không gọi, các select vẫn ở mặc định T.1/2026 dù sessionStorage đang lưu T.10/2025
-  loadSavedFilter();
   wsCheckAndInit();
 });
 </script>
@@ -6124,11 +6109,17 @@ function toggleAiChat() {
     panel.style.display = 'flex';
     bubble.style.transform = 'scale(.9)';
 
+    // Tự động chọn nguồn dữ liệu theo tab đang hiển thị
+    _aiAutoSyncSources();
+
     // Tính vị trí bubble để quyết định panel mở về hướng nào
     const bRect = bubble.getBoundingClientRect();
-    const pW = 340, pH = 480;
+    const pW = 340;
     const vW = window.innerWidth,  vH = window.innerHeight;
     const MARGIN = 12; // khoảng cách tối thiểu với cạnh màn hình
+
+    // pH thực tế: lấy min(520, vH-120) để khớp với max-height CSS
+    const pH = Math.min(520, vH - 120);
 
     // Hướng ngang: ưu tiên bên trái bubble (mặc định). Nếu không đủ chỗ thì sang phải
     let panelLeft;
@@ -6147,7 +6138,7 @@ function toggleAiChat() {
     } else {
       panelTop = bRect.bottom + 8;   // mở xuống dưới
     }
-    // Giới hạn không ra ngoài màn hình
+    // Giới hạn không ra ngoài màn hình — đảm bảo input không bị cắt
     panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
 
     // Áp dụng vị trí tuyệt đối cho panel (tách khỏi aiChat wrapper để tự do định vị)
@@ -6306,6 +6297,53 @@ function aiGetSources() {
   return Array.from(document.querySelectorAll('#aiSourceBtns .ai-src-active'))
     .map(function(b){ return b.dataset.src; });
 }
+
+/**
+ * Tự động đồng bộ nguồn dữ liệu AI theo tab đang hiển thị.
+ * Gọi khi: (1) mở panel, (2) nav() chuyển tab.
+ * Map: data-page  →  dataSrc nút trong #aiSourceBtns
+ */
+var _AI_TAB_SRC_MAP = {
+  'overview'  : ['khuVuc'],          // Tổng quan → Số liệu KV
+  'khuvuc'    : ['khuVuc'],          // Chi tiết khu vực → Số liệu KV
+  'chitieu12' : ['chiTieu12'],       // Chỉ tiêu 12 tháng
+  'chitieu6'  : ['chiTieu6'],        // Chỉ tiêu 6 tháng
+  'anhuy'     : ['anHuy'],           // Án hủy / Trả hồ sơ
+  'shhsva'    : ['shHsva'],          // Chuyển đổi số nghiệp vụ
+  'thnq205'   : ['nq205'],           // Triển khai NQ 205
+  'phong1'    : ['phong1'],
+  'phong2'    : ['phong2'],
+  'phong7'    : ['phong7'],
+  'phong8'    : ['phong8'],
+  'phong9'    : ['phong9'],
+  'phong10'   : ['phong10'],
+  'phong11'   : ['phong11'],
+  'ttra'      : ['ttra'],
+  'thammuuai' : ['khuVuc','chiTieu12']  // Tab Tham mưu AI → giữ nguyên hoặc mặc định rộng
+};
+
+function _aiAutoSyncSources() {
+  // Tìm tab đang active
+  var activeNav = document.querySelector('.nav-item.active');
+  if (!activeNav) return;
+  var page = activeNav.dataset.page || '';
+  var srcs = _AI_TAB_SRC_MAP[page];
+  if (!srcs || srcs.length === 0) return;
+
+  // Bỏ active toàn bộ nút nguồn (trừ Drive — do user tự chọn)
+  document.querySelectorAll('#aiSourceBtns .ai-src-btn').forEach(function(btn) {
+    if (btn.dataset.src !== 'drive') {
+      btn.classList.remove('ai-src-active');
+    }
+  });
+
+  // Tick đúng nguồn theo tab
+  srcs.forEach(function(src) {
+    var btn = document.querySelector('#aiSourceBtns .ai-src-btn[data-src="' + src + '"]');
+    if (btn) btn.classList.add('ai-src-active');
+  });
+}
+
 
 /** Format markdown đơn giản → HTML */
 function _aiFormatReply(text) {
@@ -7236,7 +7274,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   <!-- Chat panel -->
   <div id="aiPanel" style="
   display:none; flex-direction:column;
-  width:360px; height:520px;
+  width:360px; height:auto; max-height:min(520px,calc(100vh - 120px)); min-height:320px;
   background:rgba(8,15,32,.98); border:1px solid rgba(0,212,255,.25);
   border-radius:16px; overflow:hidden;
   box-shadow:0 16px 48px rgba(0,0,0,.6);
