@@ -5332,16 +5332,31 @@ function deepMerge(t, s) {
 function showLoader(msg) {
   $('ldTxt').textContent = msg||'Đang tải…';
   $('ld').classList.remove('hide');
+  // Ẩn bubble AI trong khi loading — set từng property để không xóa vị trí drag đã lưu
+  var chat = document.getElementById('aiChat');
+  if (chat) {
+    chat.style.display       = 'none';
+    chat.style.visibility    = 'hidden';
+    chat.style.opacity       = '0';
+    chat.style.pointerEvents = 'none';
+  }
 }
 function hideLoader() {
   $('ld').classList.add('hide');
-  // Hiện bubble trợ lý AI sau khi tải xong
+  // Hiện lại bubble AI sau khi tải xong
   var chat = document.getElementById('aiChat');
   if (chat) {
     chat.classList.remove('loading-hide');
+    // Không dùng cssText để không xóa mất vị trí drag đã lưu (top/left)
+    // Chỉ restore từng property hiển thị
+    chat.style.removeProperty('display');
+    chat.style.removeProperty('visibility');
+    chat.style.removeProperty('opacity');
+    chat.style.removeProperty('pointer-events');
     chat.style.display    = 'flex';
     chat.style.visibility = 'visible';
     chat.style.opacity    = '1';
+    chat.style.pointerEvents = 'auto';
   }
 }
 
