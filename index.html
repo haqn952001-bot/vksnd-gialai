@@ -6056,6 +6056,9 @@ function closeMobileMenu() {
 
 window.addEventListener('load', () => {
   _checkLoginSession();
+  // Restore filter từ sessionStorage vào DOM select trước khi AI chatbot dùng getFilterParams()
+  // Nếu không gọi, các select vẫn ở mặc định T.1/2026 dù sessionStorage đang lưu T.10/2025
+  loadSavedFilter();
   wsCheckAndInit();
 });
 </script>
