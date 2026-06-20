@@ -5337,7 +5337,11 @@ function hideLoader() {
   $('ld').classList.add('hide');
   // Hiện bubble trợ lý AI sau khi tải xong
   var chat = document.getElementById('aiChat');
-  if (chat) { chat.style.visibility = 'visible'; chat.style.opacity = '1'; }
+  if (chat) {
+    chat.style.display    = 'flex';
+    chat.style.visibility = 'visible';
+    chat.style.opacity    = '1';
+  }
 }
 
 // Lazy load tab nặng — chỉ gọi GAS khi user thực sự vào tab
@@ -7195,7 +7199,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 </script>
 <div id="aiChat" style="
   position:fixed; bottom:72px; right:16px; z-index:9999;
-  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  display:none; flex-direction:column; align-items:flex-end; gap:8px;
   user-select:none; visibility:hidden; opacity:0;
   transition:opacity .4s ease;
 ">
