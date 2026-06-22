@@ -7753,6 +7753,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   display:none; flex-direction:column; align-items:flex-end; gap:8px;
   user-select:none; visibility:hidden; opacity:0;
   transition:opacity .4s ease;
+  max-width:calc(100vw - 16px);
 ">
   <!-- Chat bubble button — giữ để drag, click để mở -->
   <button id="aiBubble" style="
@@ -7768,7 +7769,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   <!-- Chat panel -->
   <div id="aiPanel" style="
   display:none; flex-direction:column;
-  width:460px; height:auto; max-height:min(640px,calc(100vh - 100px)); min-height:420px;
+  width:460px; max-width:min(460px,calc(100vw - 24px)); height:auto; max-height:min(640px,calc(100vh - 100px)); min-height:420px;
   background:rgba(8,15,32,.98); border:1px solid rgba(0,212,255,.25);
   border-radius:16px; overflow:hidden;
   box-shadow:0 16px 48px rgba(0,0,0,.6);
@@ -7956,10 +7957,59 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   pointer-events:none !important;
 }
 @media(max-width:767px){
-  #aiChat{ bottom:64px; right:10px }
+  /* aiChat: căn giữa ngang, không bị tràn */
+  #aiChat{
+    bottom:74px !important;
+    left:8px !important;
+    right:8px !important;
+    top:auto !important;
+    width:auto !important;
+    align-items:stretch !important;
+    max-width:none !important;
+  }
   #aiChat.loading-hide { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
-  #aiPanel{ width:calc(100vw - 20px); height:500px }
+  /* aiPanel: full width trừ margin, chiều cao tự adapt theo viewport */
+  #aiPanel{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    max-height:calc(100vh - 160px) !important;
+    min-height:360px !important;
+    border-radius:14px !important;
+  }
+  /* Bubble căn phải */
+  #aiBubble{
+    align-self:flex-end;
+    margin-right:0;
+  }
+  /* Message max-width tận dụng full width */
+  .ai-msg-bot, .ai-msg-user{
+    max-width:92% !important;
+  }
+  /* Chips không bị cắt */
+  .ai-suggest-chips{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+  }
 }
+@media(max-width:480px){
+  #aiChat{
+    bottom:70px;
+    left:4px !important;
+    right:4px !important;
+  }
+  #aiPanel{
+    max-height:calc(100vh - 140px) !important;
+    min-height:320px !important;
+    border-radius:12px !important;
+  }
+  #aiMessages{
+    padding:10px !important;
+  }
+  .ai-suggest-label{ font-size:8px !important; }
+  .ai-sq{ font-size:10px !important; padding:3px 7px !important; }
+}
+
 
 /* ═══ AI SUGGESTED QUESTIONS ════════════════════════════════════ */
 #aiSuggestWrap{
@@ -8032,6 +8082,18 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
     const bubble = document.getElementById('aiBubble');
     if (!wrap || !bubble) return;
 
+    // Trên mobile: bỏ qua drag, xóa vị trí cũ, để CSS media query căn chỉnh
+    const isMobile = window.innerWidth <= 767;
+    if (isMobile) {
+      try { localStorage.removeItem(STORE_KEY); } catch(e) {}
+      // Đặt lại về default (CSS sẽ xử lý qua media query)
+      wrap.style.removeProperty('top');
+      wrap.style.removeProperty('left');
+      wrap.style.removeProperty('bottom');
+      wrap.style.removeProperty('right');
+      return; // Không cài drag trên mobile
+    }
+
     // Khôi phục vị trí đã lưu — chỉ áp dụng nếu vị trí hợp lệ (trong viewport)
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY));
@@ -8043,7 +8105,6 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
         wrap.style.top    = saved.top  + 'px';
         wrap.style.left   = saved.left + 'px';
       } else {
-        // Xóa vị trí cũ không hợp lệ, dùng vị trí mặc định
         localStorage.removeItem(STORE_KEY);
       }
     } catch(e) {}
@@ -8128,6 +8189,19 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
       localStorage.removeItem(STORE_KEY);
     }
   } catch(e) { localStorage.removeItem('aiChat_pos'); }
+
+  // Resize: nếu thu nhỏ về mobile, reset inline position về default
+  window.addEventListener('resize', function() {
+    var wrap = document.getElementById('aiChat');
+    if (!wrap) return;
+    if (window.innerWidth <= 767) {
+      wrap.style.removeProperty('top');
+      wrap.style.removeProperty('left');
+      wrap.style.removeProperty('bottom');
+      wrap.style.removeProperty('right');
+      try { localStorage.removeItem(STORE_KEY); } catch(e) {}
+    }
+  });
 
   // Chạy sau khi DOM sẵn sàng
   if (document.readyState === 'loading') {
