@@ -6340,15 +6340,21 @@ function _renderAiSuggest(page) {
   var chips = document.getElementById('aiSuggestChips');
   if (!chips) return;
   var qs = _AI_SUGGEST[page] || _AI_SUGGEST['overview'];
-  // Thay placeholder tháng từ filter hiện tại
   var fp = typeof getFilterParams === 'function' ? getFilterParams() : {};
   var tu = fp.thangTu || '1', den = fp.thangDen || '12';
-  var html = qs.map(function(q) {
+
+  // Xóa chip cũ, dùng DOM API — tránh hoàn toàn lỗi escape trong innerHTML
+  chips.innerHTML = '';
+  qs.forEach(function(q) {
     var label = q.replace('{thangTu}', 'T.'+tu).replace('{thangDen}', 'T.'+den);
-    var escaped = label.replace(/"/g, '&quot;');
-    return '<button class="ai-sq" onclick="_aiSuggestClick(' + JSON.stringify(label) + ')" title="' + escaped + '">' + label + '</button>';
-  }).join('');
-  chips.innerHTML = html;
+    var btn = document.createElement('button');
+    btn.className = 'ai-sq';
+    btn.title = label;
+    btn.textContent = label;
+    // Gán event listener trực tiếp — không qua HTML attribute, không có vấn đề escape
+    btn.addEventListener('click', function() { _aiSuggestClick(label); });
+    chips.appendChild(btn);
+  });
 }
 
 function _aiSuggestClick(text) {
@@ -8035,6 +8041,9 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   display:flex;flex-wrap:nowrap;gap:5px;
   overflow-x:auto;padding-bottom:4px;
   scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x;
+  cursor:grab;
 }
 .ai-suggest-chips::-webkit-scrollbar{display:none}
 .ai-sq{
@@ -8044,6 +8053,8 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   color:var(--ts);font-size:10.5px;font-family:var(--fb);
   cursor:pointer;transition:all .16s;white-space:nowrap;
   max-width:220px;overflow:hidden;text-overflow:ellipsis;
+  pointer-events:auto;user-select:none;
+  -webkit-tap-highlight-color:rgba(0,212,255,.2);
 }
 .ai-sq:hover{
   background:rgba(0,212,255,.15);color:var(--cyan);
