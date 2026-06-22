@@ -6606,40 +6606,47 @@ function toggleAiChat() {
     // Tự động chọn nguồn dữ liệu theo tab đang hiển thị
     _aiAutoSyncSources();
 
-    // Tính vị trí bubble để quyết định panel mở về hướng nào
-    const bRect = bubble.getBoundingClientRect();
-    const pW = 340;
-    const vW = window.innerWidth,  vH = window.innerHeight;
-    const MARGIN = 12; // khoảng cách tối thiểu với cạnh màn hình
+    const vW = window.innerWidth, vH = window.innerHeight;
+    const isMobile = vW <= 767;
+    const MARGIN = 10;
 
-    // pH thực tế: lấy min(520, vH-120) để khớp với max-height CSS
-    const pH = Math.min(520, vH - 120);
-
-    // Hướng ngang: ưu tiên bên trái bubble (mặc định). Nếu không đủ chỗ thì sang phải
-    let panelLeft;
-    if (bRect.right - pW >= MARGIN) {
-      panelLeft = bRect.right - pW; // căn phải panel = phải bubble
+    if (isMobile) {
+      // ── MOBILE: CSS media query xử lý hoàn toàn, không dùng JS position ──
+      panel.style.removeProperty('position');
+      panel.style.removeProperty('left');
+      panel.style.removeProperty('top');
+      panel.style.removeProperty('right');
+      panel.style.removeProperty('bottom');
+      panel.style.removeProperty('width');
+      panel.style.removeProperty('zIndex');
     } else {
-      panelLeft = Math.max(MARGIN, bRect.left); // đẩy sang phải nếu cần
-    }
-    // Giới hạn không ra ngoài màn hình
-    panelLeft = Math.min(panelLeft, vW - pW - MARGIN);
+      // ── DESKTOP: tính position động dựa vào vị trí bubble thực tế ──
+      // Lấy kích thước THỰC TẾ của panel (không hardcode)
+      const pWDesired = 460;
+      const pW = Math.min(pWDesired, vW - MARGIN * 2);
+      const pH = Math.min(640, vH - 100);
 
-    // Hướng dọc: ưu tiên mở lên trên bubble. Nếu không đủ chỗ thì mở xuống dưới
-    let panelTop;
-    if (bRect.top - pH - MARGIN >= 0) {
-      panelTop = bRect.top - pH - 8; // mở lên trên
-    } else {
-      panelTop = bRect.bottom + 8;   // mở xuống dưới
-    }
-    // Giới hạn không ra ngoài màn hình — đảm bảo input không bị cắt
-    panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
+      const bRect = bubble.getBoundingClientRect();
 
-    // Áp dụng vị trí tuyệt đối cho panel (tách khỏi aiChat wrapper để tự do định vị)
-    panel.style.position = 'fixed';
-    panel.style.left = panelLeft + 'px';
-    panel.style.top  = panelTop  + 'px';
-    panel.style.zIndex = '9999';
+      // Ngang: cố gắng căn phải panel với phải bubble, clamp vào viewport
+      let panelLeft = bRect.right - pW;
+      panelLeft = Math.max(MARGIN, Math.min(panelLeft, vW - pW - MARGIN));
+
+      // Dọc: mở lên trên bubble nếu đủ chỗ, không thì mở xuống
+      let panelTop;
+      if (bRect.top - pH - MARGIN >= 0) {
+        panelTop = bRect.top - pH - 8;
+      } else {
+        panelTop = Math.max(MARGIN, bRect.bottom + 8);
+      }
+      panelTop = Math.max(MARGIN, Math.min(panelTop, vH - pH - MARGIN));
+
+      panel.style.position = 'fixed';
+      panel.style.left     = panelLeft + 'px';
+      panel.style.top      = panelTop  + 'px';
+      panel.style.width    = pW + 'px';
+      panel.style.zIndex   = '9999';
+    }
 
     document.getElementById('aiInput')?.focus();
   } else {
@@ -7970,12 +7977,16 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   #aiChat.loading-hide { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
   /* aiPanel: full width trừ margin, chiều cao tự adapt theo viewport */
   #aiPanel{
+    position:static !important;
     width:100% !important;
     max-width:100% !important;
     height:auto !important;
-    max-height:calc(100vh - 160px) !important;
-    min-height:360px !important;
+    max-height:calc(100svh - 160px) !important;
+    min-height:340px !important;
     border-radius:14px !important;
+    left:auto !important;
+    top:auto !important;
+    right:auto !important;
   }
   /* Bubble căn phải */
   #aiBubble{
