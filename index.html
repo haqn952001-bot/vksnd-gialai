@@ -90,6 +90,7 @@ body::after{
   border-bottom:1px solid var(--bdm);
   backdrop-filter:blur(20px);
   box-shadow:0 1px 0 rgba(250,204,21,.06), 0 4px 16px rgba(0,0,0,.4);
+  position:relative;z-index:200;overflow:visible;
 }
 .tl-logo{display:flex;align-items:center;gap:10px}
 .tl-badge{
@@ -103,7 +104,7 @@ body::after{
 .tl-title{font-size:12px;font-weight:700;line-height:1;color:var(--tp)}
 .tl-sub  {font-size:10px;color:var(--ts);line-height:1.5}
 .tl-space{flex:1}
-.tl-filters{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.tl-filters{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:visible}
 .tl-filters select,.btn-refresh{
   height:30px;border-radius:var(--rsm);
   border:1px solid var(--bdm);
@@ -1188,7 +1189,7 @@ body::after{
 .mobile-overlay.active{ display:block }
 
 /* ═══ TIME RANGE SLIDER ══════════════════════════════════════════ */
-.tr-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+.tr-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;overflow:visible}
 .tr-badge{
   height:30px;display:flex;align-items:center;padding:0 10px;
   background:rgba(0,212,255,.07);border:1px solid var(--bdm);
@@ -1223,7 +1224,7 @@ body::after{
 .tr-presets{
   position:fixed;background:var(--n850);border:1px solid var(--bdm);
   border-radius:var(--rmd);padding:5px;display:none;flex-direction:column;
-  gap:2px;z-index:9998;min-width:155px;box-shadow:0 8px 28px rgba(0,0,0,.5);
+  gap:2px;z-index:10001;min-width:155px;box-shadow:0 8px 28px rgba(0,0,0,.5);
 }
 .tr-presets.open{display:flex}
 .tr-pb{
@@ -5416,6 +5417,9 @@ function deepMerge(t, s) {
 function showLoader(msg) {
   $('ldTxt').textContent = msg||'Đang tải…';
   $('ld').classList.remove('hide');
+  // Ẩn AI chat bubble khi đang tải
+  var _ac = document.getElementById('aiChat');
+  if (_ac) { _ac.classList.add('loading-hide'); _ac.style.display='none'; }
 }
 function hideLoader() {
   $('ld').classList.add('hide');
@@ -7943,6 +7947,14 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 .ai-typing span:nth-child(2){ animation-delay:.2s }
 .ai-typing span:nth-child(3){ animation-delay:.4s }
 @keyframes aiDot { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* ── aiChat ẩn khi đang loading — áp dụng mọi màn hình ─────── */
+#aiChat.loading-hide {
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
 @media(max-width:767px){
   #aiChat{ bottom:64px; right:10px }
   #aiChat.loading-hide { display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
