@@ -84,15 +84,15 @@ body::after{
 
 .topbar{
   grid-column:1/-1;
-  display:flex;align-items:center;gap:16px;
-  padding:0 24px;
+  display:flex;align-items:center;gap:10px;
+  padding:0 16px;
   background:linear-gradient(180deg, rgba(4,14,37,.98), rgba(2,8,23,.95));
   border-bottom:1px solid var(--bdm);
   backdrop-filter:blur(20px);
   box-shadow:0 1px 0 rgba(250,204,21,.06), 0 4px 16px rgba(0,0,0,.4);
   position:relative;z-index:200;overflow:visible;
 }
-.tl-logo{display:flex;align-items:center;gap:10px}
+.tl-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;min-width:0}
 .tl-badge{
   width:32px;height:32px;border-radius:8px;
   background:transparent;
@@ -101,15 +101,15 @@ body::after{
   flex-shrink:0;
   filter:drop-shadow(0 0 8px rgba(250,204,21,.4));
 }
-.tl-title{font-size:12px;font-weight:700;line-height:1;color:var(--tp)}
-.tl-sub  {font-size:10px;color:var(--ts);line-height:1.5}
-.tl-space{flex:1}
-.tl-filters{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:visible}
+.tl-title{font-size:12px;font-weight:700;line-height:1;color:var(--tp);white-space:nowrap}
+.tl-sub  {font-size:10px;color:var(--ts);line-height:1.5;white-space:nowrap}
+.tl-space{flex:1;min-width:8px}
+.tl-filters{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:visible}
 .tl-filters select,.btn-refresh{
   height:30px;border-radius:var(--rsm);
   border:1px solid var(--bdm);
   background:var(--n800);color:var(--tp);
-  font-family:var(--fb);font-size:12px;padding:0 8px;
+  font-family:var(--fb);font-size:11px;padding:0 6px;
   cursor:pointer;transition:border-color .2s;
 }
 .tl-filters select:hover,.tl-filters select:focus{border-color:var(--cyan);outline:none}
@@ -135,7 +135,7 @@ body::after{
   background:linear-gradient(135deg, rgba(250,204,21,.2), rgba(250,204,21,.08));
   color:var(--gold);border-color:rgba(250,204,21,.4);
   display:flex;align-items:center;gap:6px;
-  font-weight:600;padding:0 14px;
+  font-weight:600;padding:0 10px;
   box-shadow:0 0 12px rgba(250,204,21,.08);
 }
 .btn-refresh:hover{
@@ -149,7 +149,7 @@ body::after{
   border:1px solid rgba(0,229,160,.25);
   background:rgba(0,229,160,.06);
   color:var(--ts); font-family:var(--fb); font-size:12px;
-  font-weight:600; padding:0 12px; cursor:pointer;
+  font-weight:600; padding:0 9px; cursor:pointer;
   display:flex; align-items:center; gap:5px;
   transition:all .2s; flex-shrink:0; white-space:nowrap;
   opacity:.45; pointer-events:none;   /* mờ khi chưa thay đổi */
@@ -1195,11 +1195,11 @@ body::after{
   background:rgba(0,212,255,.07);border:1px solid var(--bdm);
   border-radius:var(--rsm);font-size:11px;font-weight:700;
   color:var(--cyan);font-family:var(--fm);
-  white-space:nowrap;min-width:88px;justify-content:center;
+  white-space:nowrap;min-width:76px;justify-content:center;
   cursor:pointer;transition:border-color .2s,background .2s;flex-shrink:0;
 }
 .tr-badge:hover{border-color:var(--cyan);background:rgba(0,212,255,.12)}
-.tr-inner{position:relative;width:180px;height:30px;display:flex;align-items:center;flex-shrink:0}
+.tr-inner{position:relative;width:160px;height:30px;display:flex;align-items:center;flex-shrink:0}
 .tr-track{position:absolute;left:8px;right:8px;height:3px;background:rgba(0,212,255,.1);border-radius:99px}
 .tr-fill{position:absolute;height:3px;background:linear-gradient(90deg,var(--cyan),rgba(0,212,255,.55));border-radius:99px}
 .tr-thumb{
