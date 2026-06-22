@@ -2396,6 +2396,7 @@ body::after{
           <select id="fTmModel" style="height:32px;border-radius:var(--rsm);border:1px solid rgba(139,92,246,.3);background:var(--n800);color:#c4b5fd;font-size:11px;padding:0 10px;cursor:pointer" title="Chọn AI model">
             <option value="gemini">✦ Gemini</option>
             <option value="claude">◆ Claude</option>
+            <option value="deepseek">⚡ DeepSeek V4</option>
           </select>
         </div>
       </div>
@@ -7280,7 +7281,10 @@ function runThamMuuAI() {
     });
     var _cbtn = document.getElementById('btnTmCopy');
     if (_cbtn) _cbtn.style.display = 'flex';
-    document.getElementById('tmMeta').textContent = (model === 'claude' ? '◆ Claude' : '✦ Gemini') + ' | ' + new Date().toLocaleTimeString('vi-VN');
+    var _tmLabel = model === 'claude' ? '◆ Claude'
+                 : model === 'deepseek' ? '⚡ DeepSeek V4'
+                 : '✦ Gemini';
+    document.getElementById('tmMeta').textContent = _tmLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
 
     var el = document.getElementById('tmContent');
     // Render thẳng HTML (không dùng typewriter vì content dài, có table/heading)
@@ -7308,6 +7312,14 @@ function runThamMuuAI() {
 
   if (model === 'claude') {
     _callClaudeAnalyze(analyzePayload).then(onResult).catch(onError);
+
+  } else if (model === 'deepseek') {
+    // DeepSeek V4 — dùng _callDeepSeekAPI (giống flow chat, qua GAS)
+    var dsPayload = { messages: messages, contextParams: contextParams };
+    _callDeepSeekAPI(messages, contextParams)
+      .then(onResult)
+      .catch(onError);
+
   } else {
     // Gemini via GAS — dùng askAI với payload phân tích
     var geminiPayload = { messages: messages, contextParams: contextParams };
@@ -7562,40 +7574,56 @@ function _claudeGetModel() { try { return sessionStorage.getItem(_AI_CLAUDE_MDL_
 
 function aiSetProvider(p) {
   _aiProvider = p;
-  const btnG = document.getElementById('btnProvGemini');
-  const btnC = document.getElementById('btnProvClaude');
-  const icon = document.getElementById('aiProviderIcon');
-  const name = document.getElementById('aiProviderName');
+  const btnG  = document.getElementById('btnProvGemini');
+  const btnC  = document.getElementById('btnProvClaude');
+  const btnDS = document.getElementById('btnProvDeepseek');
+  const icon  = document.getElementById('aiProviderIcon');
+  const name  = document.getElementById('aiProviderName');
   const banner = document.getElementById('aiClaudeKeyBanner');
   const sendBtn = document.getElementById('aiSendBtn');
   const driveBtn = document.getElementById('aiDriveBtn');
-  const isGemini = (p === 'gemini');
+  const isGemini   = (p === 'gemini');
+  const isClaude   = (p === 'claude');
+  const isDeepseek = (p === 'deepseek');
 
-  if (btnG) {
-    btnG.style.background  = isGemini ? 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))' : 'var(--n800)';
-    btnG.style.color = isGemini ? 'var(--cyan)' : 'var(--ts)';
-    btnG.style.fontWeight = isGemini ? '700' : '600';
+  // Reset tất cả buttons về inactive
+  [btnG, btnC, btnDS].forEach(function(b) {
+    if (b) { b.style.background = 'var(--n800)'; b.style.color = 'var(--ts)'; b.style.fontWeight = '600'; }
+  });
+  if (btnG && isGemini) {
+    btnG.style.background = 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))';
+    btnG.style.color = 'var(--cyan)'; btnG.style.fontWeight = '700';
   }
-  if (btnC) {
-    btnC.style.background  = !isGemini ? 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))' : 'var(--n800)';
-    btnC.style.color = !isGemini ? '#c4b5fd' : 'var(--ts)';
-    btnC.style.fontWeight = !isGemini ? '700' : '600';
+  if (btnC && isClaude) {
+    btnC.style.background = 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))';
+    btnC.style.color = '#c4b5fd'; btnC.style.fontWeight = '700';
+  }
+  if (btnDS && isDeepseek) {
+    btnDS.style.background = 'linear-gradient(135deg,rgba(99,179,237,.25),rgba(99,179,237,.1))';
+    btnDS.style.color = '#63b3ed'; btnDS.style.fontWeight = '700';
   }
   if (icon) icon.innerHTML = isGemini ? '<img src="data:image/png;base64,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" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="AI">' : '◆';
   if (name) {
-    name.textContent = isGemini ? 'Trợ lý AI VKSND' : 'Claude — Trợ lý AI VKSND';
-    name.style.color = isGemini ? 'var(--cyan)' : '#c4b5fd';
+    name.textContent = isDeepseek ? 'DeepSeek — Trợ lý AI VKSND'
+                     : isClaude   ? 'Claude — Trợ lý AI VKSND'
+                     :              'Trợ lý AI VKSND';
+    name.style.color = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : 'var(--cyan)';
   }
-  if (sendBtn) sendBtn.style.background = isGemini
-    ? 'linear-gradient(135deg,#0066cc,#00d4ff)'
-    : 'linear-gradient(135deg,#6d28d9,#8b5cf6)';
+  if (sendBtn) sendBtn.style.background =
+    isDeepseek ? 'linear-gradient(135deg,#2b6cb0,#63b3ed)'
+    : isClaude ? 'linear-gradient(135deg,#6d28d9,#8b5cf6)'
+    :            'linear-gradient(135deg,#0066cc,#00d4ff)';
   if (driveBtn) {
     driveBtn.style.opacity = isGemini ? '1' : '.4';
     driveBtn.title = isGemini ? 'Tra cứu tài liệu Google Drive' : 'Google Drive chỉ hoạt động với Gemini';
     if (!isGemini) driveBtn.classList.remove('ai-src-active');
   }
-  if (banner) banner.style.display = 'none'; // Key luôn có sẵn ở GAS — không cần banner
-  _aiAddMsg(`<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:${isGemini?'var(--cyan)':'#c4b5fd'}">${isGemini?'Gemini (qua GAS)':'Claude '+_claudeGetModel()+' (API trực tiếp)'}</strong></span>`, 'bot');
+  if (banner) banner.style.display = 'none';
+  var provLabel = isDeepseek ? 'DeepSeek R1 (API trực tiếp)'
+                : isClaude   ? ('Claude ' + _claudeGetModel() + ' (API trực tiếp)')
+                :              'Gemini (qua GAS)';
+  var provColor = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : 'var(--cyan)';
+  _aiAddMsg('<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:' + provColor + '">' + provLabel + '</strong></span>', 'bot');
 }
 
 function aiShowKeyDialog() {
@@ -7735,11 +7763,94 @@ async function _callClaudeAPI(messages, contextParams) {
   });
 }
 
+// ── DeepSeek API (qua GAS — giữ API key an toàn ở server) ─────
+async function _callDeepSeekAPI(messages, contextParams) {
+  // DeepSeek R1 — gọi qua GAS action=askDeepSeek (tương tự Claude)
+  // API key lưu trong GAS Script Properties: DEEPSEEK_API_KEY
+  const model   = 'deepseek-v4-pro'; // DeepSeek V4 Pro
+  const payload = { messages, contextParams, model };
+
+  if (GAS) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(function(d) {
+          if (d && d.error) reject(new Error(d.error));
+          else resolve(d && d.reply ? d.reply : '[Không có phản hồi]');
+        })
+        .withFailureHandler(function(err) { reject(new Error(err && err.message ? err.message : String(err))); })
+        .askDeepSeek(payload);
+    });
+  }
+
+  // JSONP mode (Vercel)
+  return new Promise((resolve, reject) => {
+    const cbName = '_gcb_ds_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const recentMsgs = messages.slice(-8);
+    const url = new URL(GAS_API_URL);
+    url.searchParams.set('action',   'askDeepSeek');
+    url.searchParams.set('callback', cbName);
+    url.searchParams.set('payload',  JSON.stringify({ messages: recentMsgs, contextParams, model }));
+
+    const timer = setTimeout(function() { cleanup(); reject(new Error('DeepSeek timeout (90s)')); }, 90000);
+    window[cbName] = function(data) {
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data && data.reply ? data.reply : '[Không có phản hồi]');
+    };
+    function cleanup() {
+      clearTimeout(timer); delete window[cbName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    }
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = function() { cleanup(); reject(new Error('JSONP error: askDeepSeek')); };
+    document.head.appendChild(script);
+  });
+}
+
 // Override sendAiMsg để route đúng provider
 const _sendAiMsgGemini = sendAiMsg;
 
 sendAiMsg = async function() {
   if (_aiProvider === 'gemini') { _sendAiMsgGemini(); return; }
+  if (_aiProvider === 'deepseek') {
+    // Route sang DeepSeek — logic giống Claude
+    const input = document.getElementById('aiInput');
+    const q = (input && input.value || '').trim();
+    if (!q || _aiSending) return;
+    input.value = ''; _aiSending = true;
+    _aiAddMsg(q, 'user');
+    _aiHistory.push({ role:'user', content:q });
+    const skeleton = _aiSkeleton();
+    try {
+      const recentHistory = _aiHistory.slice(-16).filter(function(m) {
+        return m.role !== 'assistant' || (!m.content.startsWith('[Lỗi') && !m.content.startsWith('⚠️'));
+      });
+      const f2 = (typeof getFilterParams === 'function') ? getFilterParams() : {};
+      const dsCtxParams = {
+        namTu:f2.namTu||'2026', namDen:f2.namDen||'2026',
+        thangTu:f2.thangTu||'1', thangDen:f2.thangDen||'12',
+        kv:f2.kv||'', kyBaoCao:f2.kyBaoCao||'12thang',
+        dataSources: typeof aiGetSources === 'function' ? aiGetSources() : ['khuVuc']
+      };
+      const reply = await _callDeepSeekAPI(recentHistory, dsCtxParams);
+      skeleton.remove();
+      await _aiTypewriter(_aiFormatReply(reply));
+      _aiHistory.push({ role:'assistant', content:reply });
+      if (_aiHistory.length > 30) _aiHistory = _aiHistory.slice(-30);
+    } catch(err) {
+      skeleton.remove();
+      var errMsg = err && err.message ? err.message : String(err);
+      var display = errMsg;
+      if (errMsg.indexOf('401') >= 0 || errMsg.indexOf('authentication') >= 0)
+        display = '⚠️ DeepSeek API Key không hợp lệ. Vui lòng kiểm tra DEEPSEEK_API_KEY trong GAS Script Properties.';
+      else if (errMsg.indexOf('429') >= 0 || errMsg.indexOf('rate') >= 0)
+        display = '⚠️ Vượt giới hạn rate limit DeepSeek. Thử lại sau vài giây.';
+      _aiAddMsg(display, 'bot');
+    }
+    _aiSending = false;
+    return;
+  }
 
   const input = document.getElementById('aiInput');
   const q = (input && input.value || '').trim();
@@ -7852,6 +7963,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
       <div id="aiProviderSwitcher" style="display:flex;border:1px solid rgba(0,212,255,.25);border-radius:7px;overflow:hidden;flex-shrink:0">
         <button id="btnProvGemini" onclick="aiSetProvider('gemini')" style="height:26px;padding:0 9px;font-size:10px;font-weight:700;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1));color:var(--cyan);transition:all .18s" title="Dùng Gemini (qua GAS)">✦ Gemini</button>
         <button id="btnProvClaude" onclick="aiSetProvider('claude')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng Claude (Anthropic API trực tiếp)">◆ Claude</button>
+        <button id="btnProvDeepseek" onclick="aiSetProvider('deepseek')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng DeepSeek R1 (API trực tiếp)">⚡ DeepSeek</button>
       </div>
       <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0;border-radius:6px;cursor:pointer;font-size:11px;padding:3px 7px;font-family:var(--fb)">↻</button>
       <button onclick="toggleAiChat()" style="background:none;border:none;cursor:pointer;color:var(--ts);font-size:18px;line-height:1;padding:4px">×</button>
