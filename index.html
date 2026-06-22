@@ -6355,6 +6355,8 @@ function _renderAiSuggest(page) {
     btn.addEventListener('click', function() { _aiSuggestClick(label); });
     chips.appendChild(btn);
   });
+  // Re-init drag sau khi rebuild chips
+  if (typeof _initChipsDrag === 'function') _initChipsDrag();
 }
 
 function _aiSuggestClick(text) {
@@ -6379,7 +6381,53 @@ function _aiSuggestClick(text) {
 // Init lần đầu
 document.addEventListener('DOMContentLoaded', function() {
   _renderAiSuggest('overview');
+  _initChipsDrag();
 });
+
+// ── Mouse drag-to-scroll cho ai-suggest-chips (desktop) ──────────
+function _initChipsDrag() {
+  var el = document.getElementById('aiSuggestChips');
+  if (!el) return;
+  var isDown = false, startX = 0, scrollLeft = 0, moved = false;
+
+  el.addEventListener('mousedown', function(e) {
+    // Chỉ drag bằng chuột trái
+    if (e.button !== 0) return;
+    isDown = true; moved = false;
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', function(e) {
+    if (!isDown) return;
+    var x = e.pageX - el.offsetLeft;
+    var walk = x - startX;
+    if (Math.abs(walk) > 4) {
+      moved = true;
+      el.classList.add('is-dragging');
+      el.scrollLeft = scrollLeft - walk;
+    }
+  });
+
+  window.addEventListener('mouseup', function() {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('is-dragging');
+    // Delay ngắn để chip click không fire sau drag
+    if (moved) {
+      moved = false;
+    }
+  });
+
+  // Scroll wheel ngang (Shift+scroll hoặc trackpad ngang)
+  el.addEventListener('wheel', function(e) {
+    if (e.deltaY !== 0 && e.deltaX === 0) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY * 1.2;
+    }
+  }, { passive: false });
+}
 // ══════════════════════════════════════════════════════════════════
 
 
@@ -8055,6 +8103,13 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   max-width:220px;overflow:hidden;text-overflow:ellipsis;
   pointer-events:auto;user-select:none;
   -webkit-tap-highlight-color:rgba(0,212,255,.2);
+}
+/* Khi container đang drag thì chip không nhận click */
+.ai-suggest-chips.is-dragging .ai-sq{
+  pointer-events:none;
+}
+.ai-suggest-chips.is-dragging{
+  cursor:grabbing;
 }
 .ai-sq:hover{
   background:rgba(0,212,255,.15);color:var(--cyan);
