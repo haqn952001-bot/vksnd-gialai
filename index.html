@@ -8122,6 +8122,21 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 .ai-typing span:nth-child(3){ animation-delay:.4s }
 @keyframes aiDot { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
 
+/* ── Bubble snap transition ─────────────────────────────────── */
+#aiChat {
+  transition: none;
+}
+#aiChat.snapping {
+  transition: left .25s cubic-bezier(.25,.46,.45,.94),
+              top  .25s cubic-bezier(.25,.46,.45,.94),
+              bottom .25s cubic-bezier(.25,.46,.45,.94),
+              right  .25s cubic-bezier(.25,.46,.45,.94);
+}
+#aiBubble {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 /* ── aiChat ẩn khi đang loading — áp dụng mọi màn hình ─────── */
 #aiChat.loading-hide {
   display:none !important;
@@ -8264,135 +8279,166 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 <script>
 // ══ DRAG-TO-MOVE cho #aiChat ═══════════════════════════════════
 (function() {
-  const STORE_KEY = 'aiChat_pos';
+  const STORE_KEY = 'aiChat_pos_v2';
 
+  // ── Assistive Touch drag — desktop + mobile ──────────────────
+  // - Kéo tự do toàn viewport
+  // - Thả ra → snap về cạnh trái/phải gần nhất (iOS style)
+  // - Lưu vị trí vào localStorage
+  // ─────────────────────────────────────────────────────────────
   function initDrag() {
     const wrap   = document.getElementById('aiChat');
     const bubble = document.getElementById('aiBubble');
     if (!wrap || !bubble) return;
 
-    // Trên mobile: bỏ qua drag, xóa vị trí cũ, để CSS media query căn chỉnh
-    const isMobile = window.innerWidth <= 767;
-    if (isMobile) {
-      try { localStorage.removeItem(STORE_KEY); } catch(e) {}
-      // Đặt lại về default (CSS sẽ xử lý qua media query)
-      wrap.style.removeProperty('top');
-      wrap.style.removeProperty('left');
-      wrap.style.removeProperty('bottom');
-      wrap.style.removeProperty('right');
-      return; // Không cài drag trên mobile
-    }
+    const MARGIN  = 8;   // khoảng cách với cạnh màn hình khi snap
+    const THRESH  = 5;   // px tối thiểu để tính là drag (không phải tap)
+    let isDragging = false;
+    let startCX, startCY;    // clientX/Y lúc pointerdown
+    let startLeft, startTop; // vị trí wrap lúc bắt đầu drag
 
-    // Khôi phục vị trí đã lưu — chỉ áp dụng nếu vị trí hợp lệ (trong viewport)
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-      if (saved && saved.top > 0 && saved.left > 0
-          && saved.top < window.innerHeight - 60
-          && saved.left < window.innerWidth - 60) {
-        wrap.style.bottom = 'auto';
-        wrap.style.right  = 'auto';
-        wrap.style.top    = saved.top  + 'px';
-        wrap.style.left   = saved.left + 'px';
-      } else {
-        localStorage.removeItem(STORE_KEY);
-      }
-    } catch(e) {}
-
-    let dragging = false;
-    let startX, startY, startLeft, startTop;
-
-    function getWrapRect() {
+    // ── Khôi phục vị trí đã lưu ──────────────────────────────
+    function restorePos() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORE_KEY));
+        if (s && s.top >= 0 && s.left >= 0
+            && s.top < window.innerHeight - 40
+            && s.left < window.innerWidth - 40) {
+          _applyPos(s.left, s.top, false);
+          return;
+        }
+      } catch(e) {}
+      // Vị trí mặc định: góc dưới phải
       const r = wrap.getBoundingClientRect();
-      return { left: r.left, top: r.top, width: r.width, height: r.height };
+      _applyPos(window.innerWidth - r.width - MARGIN,
+                window.innerHeight - r.height - 80, false);
     }
 
-    function onPointerDown(e) {
-      // Chỉ drag khi click vào bubble (không phải panel)
-      if (e.target.closest('#aiPanel')) return;
-      dragging = false;
-      startX = e.clientX;
-      startY = e.clientY;
-      const r = getWrapRect();
+    // ── Áp dụng vị trí top/left ──────────────────────────────
+    function _applyPos(left, top, animate) {
+      wrap.style.removeProperty('right');
+      wrap.style.removeProperty('bottom');
+      wrap.style.position = 'fixed';
+      if (animate) {
+        wrap.classList.add('snapping');
+        setTimeout(function(){ wrap.classList.remove('snapping'); }, 280);
+      }
+      wrap.style.left = left + 'px';
+      wrap.style.top  = top  + 'px';
+    }
+
+    // ── Snap về cạnh trái hoặc phải ──────────────────────────
+    function snapToEdge() {
+      const r    = wrap.getBoundingClientRect();
+      const vW   = window.innerWidth;
+      const vH   = window.innerHeight;
+      const midX = r.left + r.width / 2;
+
+      // Top/bottom clamp
+      let newTop = r.top;
+      newTop = Math.max(MARGIN, Math.min(newTop, vH - r.height - MARGIN));
+
+      // Snap: trái hay phải?
+      let newLeft;
+      if (midX < vW / 2) {
+        newLeft = MARGIN;                          // snap cạnh trái
+      } else {
+        newLeft = vW - r.width - MARGIN;           // snap cạnh phải
+      }
+
+      _applyPos(newLeft, newTop, true);
+
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({
+          left: newLeft, top: newTop
+        }));
+      } catch(e) {}
+    }
+
+    // ── Pointer events (desktop + mobile unify) ───────────────
+    function onDown(e) {
+      if (e.target.closest('#aiPanel')) return;  // click vào panel: bỏ qua
+      if (e.button !== undefined && e.button !== 0) return; // chỉ chuột trái
+
+      isDragging = false;
+      startCX = e.clientX;
+      startCY = e.clientY;
+      const r = wrap.getBoundingClientRect();
       startLeft = r.left;
       startTop  = r.top;
-      // Chuyển sang top/left tuyệt đối
-      wrap.style.bottom = 'auto';
-      wrap.style.right  = 'auto';
-      wrap.style.top    = startTop  + 'px';
-      wrap.style.left   = startLeft + 'px';
 
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup',   onPointerUp);
+      wrap.style.removeProperty('right');
+      wrap.style.removeProperty('bottom');
+      wrap.style.left = startLeft + 'px';
+      wrap.style.top  = startTop  + 'px';
+      wrap.classList.remove('snapping');
+
+      bubble.style.transform = 'scale(0.92)';
+      bubble.style.transition = 'transform .1s';
+
+      window.addEventListener('pointermove', onMove, { passive: false });
+      window.addEventListener('pointerup',   onUp);
+      window.addEventListener('pointercancel', onUp);
       e.preventDefault();
     }
 
-    function onPointerMove(e) {
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      // Ngưỡng 4px để phân biệt drag vs click
-      if (!dragging && Math.hypot(dx, dy) < 4) return;
-      dragging = true;
-      bubble.style.cursor = 'grabbing';
+    function onMove(e) {
+      const dx = e.clientX - startCX;
+      const dy = e.clientY - startCY;
+      if (!isDragging && Math.hypot(dx, dy) < THRESH) return;
+      isDragging = true;
 
+      const r   = wrap.getBoundingClientRect();
+      const vW  = window.innerWidth;
+      const vH  = window.innerHeight;
       let newLeft = startLeft + dx;
       let newTop  = startTop  + dy;
-      // Giới hạn trong viewport
-      const r = getWrapRect();
-      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth  - r.width));
-      newTop  = Math.max(0, Math.min(newTop,  window.innerHeight - r.height));
+
+      // Clamp trong viewport
+      newLeft = Math.max(0, Math.min(newLeft, vW - r.width));
+      newTop  = Math.max(0, Math.min(newTop,  vH - r.height));
+
       wrap.style.left = newLeft + 'px';
       wrap.style.top  = newTop  + 'px';
+      e.preventDefault();
     }
 
-    function onPointerUp(e) {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup',   onPointerUp);
-      bubble.style.cursor = 'grab';
+    function onUp(e) {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup',   onUp);
+      window.removeEventListener('pointercancel', onUp);
 
-      if (dragging) {
-        // Lưu vị trí
-        try {
-          localStorage.setItem(STORE_KEY, JSON.stringify({
-            top:  parseFloat(wrap.style.top),
-            left: parseFloat(wrap.style.left)
-          }));
-        } catch(e) {}
-        // Chặn click sau khi drag
+      bubble.style.transform = '';
+      bubble.style.transition = '';
+
+      if (isDragging) {
+        snapToEdge();
+        // Chặn click ngay sau drag
         bubble.addEventListener('click', function noClick(ev) {
           ev.stopImmediatePropagation();
-          bubble.removeEventListener('click', noClick, true);
         }, { capture: true, once: true });
       }
-      dragging = false;
+      isDragging = false;
     }
 
-    bubble.addEventListener('pointerdown', onPointerDown);
+    bubble.addEventListener('pointerdown', onDown);
+    bubble.style.touchAction = 'none';  // tắt scroll mặc định khi drag trên mobile
+
+    // ── Resize: re-snap về vị trí hợp lệ ────────────────────
+    window.addEventListener('resize', function() {
+      const r  = wrap.getBoundingClientRect();
+      const vW = window.innerWidth;
+      const vH = window.innerHeight;
+      if (r.right > vW || r.bottom > vH) {
+        snapToEdge();
+      }
+    });
+
+    // Khôi phục vị trí sau 120ms (chờ layout ổn định)
+    setTimeout(restorePos, 120);
   }
 
-  // Reset vị trí cũ nếu nằm ngoài viewport
-  try {
-    var _pos = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (_pos && (_pos.top <= 0 || _pos.left <= 0
-        || _pos.top >= window.innerHeight - 60
-        || _pos.left >= window.innerWidth - 60)) {
-      localStorage.removeItem(STORE_KEY);
-    }
-  } catch(e) { localStorage.removeItem('aiChat_pos'); }
-
-  // Resize: nếu thu nhỏ về mobile, reset inline position về default
-  window.addEventListener('resize', function() {
-    var wrap = document.getElementById('aiChat');
-    if (!wrap) return;
-    if (window.innerWidth <= 767) {
-      wrap.style.removeProperty('top');
-      wrap.style.removeProperty('left');
-      wrap.style.removeProperty('bottom');
-      wrap.style.removeProperty('right');
-      try { localStorage.removeItem(STORE_KEY); } catch(e) {}
-    }
-  });
-
-  // Chạy sau khi DOM sẵn sàng
+  // Chạy sau DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initDrag);
   } else {
