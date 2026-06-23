@@ -4164,6 +4164,7 @@ function _renderCtDetailPage() {
 }
 
 function renderCtTable(rows) {
+  if (!$('ctBody')) return; // tab chưa active, bỏ qua
   _renderSummaryRows('ctBody', rows);
 }
 
@@ -4566,7 +4567,9 @@ function _renderDetailRowsVS(elId, rows, scrollContId) {
 
 
 function _renderSummaryRows(elId, rows) {
-  $(elId).innerHTML = rows.map(r => {
+  var _el = $(elId);
+  if (!_el) { console.warn('[_renderSummaryRows] element not found:', elId); return; }
+  _el.innerHTML = rows.map(r => {
     const pct = r.total > 0 ? Math.round(((r.dat + r.vuot) / r.total) * 100) : 0;
     const pctColor = pct >= 90 ? 'var(--emerald)' : pct >= 70 ? 'var(--cyan)' : 'var(--coral)';
     return `<tr>
@@ -6599,7 +6602,9 @@ function filterCtTable() {
   var dvDet = typeof v === 'function' ? v('fCtDVDet') : '';
   var ten   = typeof v === 'function' ? v('fCtTen')   : '';
   var q     = _ctGetSearch('ct12');
-  var allRows = (window.DATA12 && window.DATA12._ctDetailAll) ? window.DATA12._ctDetailAll : [];
+  var allRows = (typeof DATA12 !== 'undefined' && DATA12 && DATA12._ctDetailAll)
+    ? DATA12._ctDetailAll
+    : (window.DATA12 && window.DATA12._ctDetailAll) ? window.DATA12._ctDetailAll : [];
   var total = allRows.length;
 
   var rows = allRows;
@@ -6626,7 +6631,9 @@ function filterCtTable() {
   window._ctDetailPage = 0;
   if (typeof _renderCtDetailPage === 'function') _renderCtDetailPage();
   if (typeof renderCtTable === 'function') {
-    var _dvSummaryAll = window.DATA12?._dvSummaryAll || window.DATA12?.chiTieu?.dvSummary || [];
+    var _dvSummaryAll = (typeof DATA12 !== 'undefined' && DATA12)
+      ? (DATA12._dvSummaryAll || DATA12.chiTieu?.dvSummary || [])
+      : (window.DATA12?._dvSummaryAll || window.DATA12?.chiTieu?.dvSummary || []);
     var fCtKV = typeof v === 'function' ? v('fCtKV') : '';
     var summaryRows = fCtKV ? _dvSummaryAll.filter(function(r){ return r.donVi === fCtKV; }) : _dvSummaryAll;
     renderCtTable(summaryRows);
@@ -6642,7 +6649,9 @@ function filterCt6Table() {
   var dvDet = typeof v === 'function' ? v('fCt6DVDet') : '';
   var ten   = typeof v === 'function' ? v('fCt6Ten')   : '';
   var q     = _ctGetSearch('ct6');
-  var allRows = (window.DATA6 && window.DATA6._ctDetailAll) ? window.DATA6._ctDetailAll : [];
+  var allRows = (typeof DATA6 !== 'undefined' && DATA6 && DATA6._ctDetailAll)
+    ? DATA6._ctDetailAll
+    : (window.DATA6 && window.DATA6._ctDetailAll) ? window.DATA6._ctDetailAll : [];
   var total = allRows.length;
 
   var rows = allRows;
