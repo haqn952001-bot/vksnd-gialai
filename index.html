@@ -3051,7 +3051,14 @@ function destroyCharts(pg) {
 function renderPage(pg) {
   destroyCharts(pg);
   // Tab chỉ tiêu — dùng reload (tự fetch nếu chưa có data)
-  if (pg === 'chitieu12') { reloadChiTieu12(); return; }
+  if (pg === 'chitieu12') {
+    reloadChiTieu12();
+    // Nếu có chart pending từ lần gọi trước khi tab chưa active
+    if (typeof _ctChartsPending !== 'undefined' && _ctChartsPending !== null) {
+      setTimeout(function() { _buildCtCharts(_ctChartsPending); }, 300);
+    }
+    return;
+  }
   if (pg === 'chitieu6')  { reloadChiTieu6();  return; }
   // Tab lazy load — tự fetch khi click
   if (pg === 'shhsva')  { _loadTabAndRender('shhsva',  renderShHsva);  return; }
@@ -3390,6 +3397,12 @@ function renderChiTieu12() {
     idDVDet:'fCtDVDet', idTen:'fCtTen', idDetail:'ctDetail',
     storeKey12: true
   });
+  // Đảm bảo chart được build sau khi DOM đã sẵn sàng
+  setTimeout(function() {
+    if (document.getElementById('cCtDV') && DATA12?._ctDetailAll?.length) {
+      _buildCtCharts(null);
+    }
+  }, 100);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3978,12 +3991,7 @@ window._debugState = function() {
  */
 function _countAndSetKPI(rows, idDat, idVuot, idKdat, idKps) {
   let dat=0, vuot=0, kdat=0, kps=0;
-  console.log('[_countAndSetKPI] rows.length:', (rows||[]).length, '| idDat:', idDat);
-  if ((rows||[]).length > 0) {
-    console.log('[_countAndSetKPI] rows[0].trangThai:', rows[0].trangThai, '| rows[0].donVi:', rows[0].donVi);
-    const tsList = [...new Set((rows||[]).map(r=>(r.trangThai||'').trim()).filter(Boolean))];
-    console.log('[_countAndSetKPI] unique trangThai values:', JSON.stringify(tsList));
-  }
+
   (rows || []).forEach(r => {
     const ts = (r.trangThai || '').trim();
     if      (ts === 'Đạt')             dat++;
@@ -4281,28 +4289,44 @@ function filterCtTable() {
 
   const ten     = v('fCtTen') || '';
   const allRows = DATA12._ctDetailAll;
-
-  // Xác định filter đơn vị:
-  // 1. Nếu _ctDV có chọn cụ thể → dùng _ctDV (multi-select)
-  // 2. Nếu _ctDV rỗng (tất cả checked) → xem topbar fKV
-  // 3. Nếu topbar fKV cũng rỗng → hiện tất cả
-  let activeDVs = null; // null = tất cả
-  if (_ctDV.size > 0) {
-    activeDVs = new Set(_ctDV); // multi-select đang chọn cụ thể
-  } else {
-    const topKV = (v('fKV') || '').trim();
-    if (topKV) activeDVs = new Set([topKV]); // topbar đang chọn 1 KV
+  // Search box (Feature 2.2 — integrated)
+  const q = (typeof _ctGetSearch === 'function') ? _ctGetSearch('ct12') : '';
+  if (typeof _ctSetSearchInfo === 'function') {
+    _ctSetSearchInfo('ct12', allRows.length, allRows.length);
   }
 
-  // Filter bảng chi tiết
+  // Xác định filter đơn vị (multi-select + topbar KV)
+  let activeDVs = null;
+  if (typeof _ctDV !== 'undefined' && _ctDV.size > 0) {
+    activeDVs = new Set(_ctDV);
+  } else {
+    const topKV = (v('fKV') || '').trim();
+    if (topKV) activeDVs = new Set([topKV]);
+  }
+
+  // Filter bảng chi tiết — search + đơn vị + tên chỉ tiêu
   let detailRows = allRows;
   if (activeDVs) detailRows = detailRows.filter(r => activeDVs.has((r.donVi||'').trim()));
   if (ten)       detailRows = detailRows.filter(r => r.tenChiTieu === ten);
+  if (q) {
+    detailRows = detailRows.filter(function(r) {
+      const hay = (typeof _normVI === 'function')
+        ? _normVI((r.tenChiTieu||'')+' '+(r.donVi||'')+' '+(r.trangThai||'')+' '+(r.chiTieuDatRa||''))
+        : ((r.tenChiTieu||'')+' '+(r.donVi||'')).toLowerCase();
+      return hay.indexOf(q) >= 0;
+    });
+  }
+
+  // Search info
+  if (typeof _ctSetSearchInfo === 'function') {
+    _ctSetSearchInfo('ct12', detailRows.length, allRows.length);
+  }
+
   _ctDetailRows = detailRows;
   _ctDetailPage = 0;
   _renderCtDetailPage();
 
-  // KPI: đếm từ các KV đang chọn
+  // KPI — đếm từ các KV đang chọn (không bị ảnh hưởng bởi search/ten filter)
   const kpiRows = activeDVs ? allRows.filter(r => activeDVs.has((r.donVi||'').trim())) : allRows;
   _countAndSetKPI(kpiRows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
 
@@ -4311,7 +4335,15 @@ function filterCtTable() {
 }
 
 /** Build/update biểu đồ CT12T theo đơn vị đang chọn */
+var _ctChartsPending = null; // lưu filterDVs để build lại khi tab active
+
 function _buildCtCharts(filterDVs) {
+  // Guard: nếu canvas chưa tồn tại → defer đến khi tab active
+  if (!document.getElementById('cCtDV')) {
+    _ctChartsPending = filterDVs;
+    return;
+  }
+  _ctChartsPending = null;
   const allRows = DATA12?._ctDetailAll || [];
   // filterDVs: null = tất cả, string = 1 KV (backward compat), array = nhiều KV
   const dvSet = !filterDVs ? null
@@ -4457,7 +4489,41 @@ function renderCt6Detail() {
 }
 
 function filterCt6Table() {
-  renderCt6Detail();
+  if (!DATA6?._ctDetailAll?.length) { renderCt6Detail(); return; }
+
+  const allRows = DATA6._ctDetailAll;
+  // Search
+  const _q6 = (typeof _ctGetSearch === 'function') ? _ctGetSearch('ct6') : '';
+
+  // Filter đơn vị + tên chỉ tiêu
+  const dvDet = v('fCt6DVDet') || '';
+  const ten   = v('fCt6Ten')   || '';
+  let detailRows = allRows;
+  if (dvDet) detailRows = detailRows.filter(r => r.donVi === dvDet);
+  if (ten)   detailRows = detailRows.filter(r => r.tenChiTieu === ten);
+  if (_q6) {
+    detailRows = detailRows.filter(function(r) {
+      const hay = (typeof _normVI === 'function')
+        ? _normVI((r.tenChiTieu||'')+' '+(r.donVi||'')+' '+(r.trangThai||'')+' '+(r.chiTieuDatRa||''))
+        : ((r.tenChiTieu||'')+' '+(r.donVi||'')).toLowerCase();
+      return hay.indexOf(_q6) >= 0;
+    });
+  }
+  if (typeof _ctSetSearchInfo === 'function') _ctSetSearchInfo('ct6', detailRows.length, allRows.length);
+
+  _ct6DetailRows = detailRows;
+  _ct6Page = 0;
+  _renderCt6Page();
+
+  // KPI (dùng dvDet để đếm — không ảnh hưởng bởi search/ten)
+  const kpiRows = dvDet ? allRows.filter(r => r.donVi === dvDet) : allRows;
+  if (typeof _countAndSetKPI === 'function') {
+    // CT6 dùng cùng IDs với CT12 (ct-dat etc chỉ hiện 1 tab tại 1 thời điểm)
+    _countAndSetKPI(kpiRows, 'ct6-dat', 'ct6-vuot', 'ct6-kdat', 'ct6-kps');
+  }
+
+  // Charts CT6
+  if (typeof _buildCt6Charts === 'function') _buildCt6Charts(dvDet || null);
 }
 function filterCtDetail() { filterCtTable(); }
 function filterCt6Detail() { renderCt6Detail(); }
@@ -6594,87 +6660,10 @@ function _ctSetSearchInfo(tab, matched, total) {
     : '';
 }
 
-// ── PATCH filterCtTable (CT12) ───────────────────────────────────
-// Lưu original
-var _filterCtTable_orig = (typeof filterCtTable === 'function') ? filterCtTable : null;
-
-function filterCtTable() {
-  var dvDet = typeof v === 'function' ? v('fCtDVDet') : '';
-  var ten   = typeof v === 'function' ? v('fCtTen')   : '';
-  var q     = _ctGetSearch('ct12');
-  var allRows = (typeof DATA12 !== 'undefined' && DATA12 && DATA12._ctDetailAll)
-    ? DATA12._ctDetailAll
-    : (window.DATA12 && window.DATA12._ctDetailAll) ? window.DATA12._ctDetailAll : [];
-  var total = allRows.length;
-
-  var rows = allRows;
-  if (dvDet) rows = rows.filter(function(r){ return r.donVi === dvDet; });
-  if (ten)   rows = rows.filter(function(r){ return r.tenChiTieu === ten; });
-  if (q) {
-    rows = rows.filter(function(r) {
-      var haystack = _normVI((r.tenChiTieu||'') + ' ' + (r.donVi||'') + ' ' + (r.trangThai||'') + ' ' + (r.chiTieuDatRa||''));
-      return haystack.indexOf(q) >= 0;
-    });
-  }
-
-  _ctSearchInfo_ct12_matched = rows.length;
-  _ctSearchInfo_ct12_total   = total;
-  _ctSetSearchInfo('ct12', rows.length, total);
-
-  // ── Cập nhật KPI cards (đây là phần bị thiếu gây ra bug) ──
-  if (typeof _countAndSetKPI === 'function') {
-    _countAndSetKPI(rows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
-  }
-
-  // Dùng biến global _ctDetailRows cho pagination
-  window._ctDetailRows = rows;
-  window._ctDetailPage = 0;
-  if (typeof _renderCtDetailPage === 'function') _renderCtDetailPage();
-  if (typeof renderCtTable === 'function') {
-    var _dvSummaryAll = (typeof DATA12 !== 'undefined' && DATA12)
-      ? (DATA12._dvSummaryAll || DATA12.chiTieu?.dvSummary || [])
-      : (window.DATA12?._dvSummaryAll || window.DATA12?.chiTieu?.dvSummary || []);
-    var fCtKV = typeof v === 'function' ? v('fCtKV') : '';
-    var summaryRows = fCtKV ? _dvSummaryAll.filter(function(r){ return r.donVi === fCtKV; }) : _dvSummaryAll;
-    renderCtTable(summaryRows);
-  }
-  if (typeof syncCtKV === 'function') syncCtKV();
-}
+// filterCtTable override removed — search integrated into original function
 var _ctSearchInfo_ct12_matched = 0, _ctSearchInfo_ct12_total = 0;
 
-// ── PATCH filterCt6Table (CT6) ──────────────────────────────────
-var _filterCt6Table_orig = (typeof filterCt6Table === 'function') ? filterCt6Table : null;
-
-function filterCt6Table() {
-  var dvDet = typeof v === 'function' ? v('fCt6DVDet') : '';
-  var ten   = typeof v === 'function' ? v('fCt6Ten')   : '';
-  var q     = _ctGetSearch('ct6');
-  var allRows = (typeof DATA6 !== 'undefined' && DATA6 && DATA6._ctDetailAll)
-    ? DATA6._ctDetailAll
-    : (window.DATA6 && window.DATA6._ctDetailAll) ? window.DATA6._ctDetailAll : [];
-  var total = allRows.length;
-
-  var rows = allRows;
-  if (dvDet) rows = rows.filter(function(r){ return r.donVi === dvDet; });
-  if (ten)   rows = rows.filter(function(r){ return r.tenChiTieu === ten; });
-  if (q) {
-    rows = rows.filter(function(r) {
-      var haystack = _normVI((r.tenChiTieu||'') + ' ' + (r.donVi||'') + ' ' + (r.trangThai||'') + ' ' + (r.chiTieuDatRa||''));
-      return haystack.indexOf(q) >= 0;
-    });
-  }
-
-  _ctSetSearchInfo('ct6', rows.length, total);
-
-  // ── Cập nhật KPI cards CT6 ──
-  if (typeof _countAndSetKPI === 'function') {
-    _countAndSetKPI(rows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
-  }
-
-  // Dùng các biến CT6 pagination
-  if (typeof window._ct6Rows !== 'undefined') window._ct6Rows = rows;
-  window._ct6DetailRows = rows;
-  window._ct6DetailPage = 0;
+// filterCt6Table override removed — search integrated into original function
   if (typeof _render6DetailPage === 'function') _render6DetailPage();
   else if (typeof renderCt6Detail === 'function') renderCt6Detail(rows);
 }
