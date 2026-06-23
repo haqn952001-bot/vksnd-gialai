@@ -84,7 +84,7 @@ body::after{
 
 .topbar{
   grid-column:1/-1;
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:8px;
   padding:0 16px;
   background:linear-gradient(180deg, rgba(4,14,37,.98), rgba(2,8,23,.95));
   border-bottom:1px solid var(--bdm);
@@ -92,6 +92,38 @@ body::after{
   box-shadow:0 1px 0 rgba(250,204,21,.06), 0 4px 16px rgba(0,0,0,.4);
   position:relative;z-index:200;overflow:visible;
 }
+/* ── Nhóm divider giữa các group control ── */
+.tl-divider{
+  width:1px;height:20px;
+  background:rgba(0,212,255,.12);
+  flex-shrink:0;margin:0 2px;
+}
+/* ── Tất cả button topbar: cùng height, cùng style cơ bản ── */
+.tb-btn{
+  height:28px;display:inline-flex;align-items:center;gap:5px;
+  padding:0 10px;border-radius:var(--rsm);
+  border:1px solid var(--bdm);
+  background:rgba(255,255,255,.04);
+  color:var(--ts);font-size:11px;font-weight:600;
+  font-family:var(--fb);cursor:pointer;white-space:nowrap;
+  transition:all .18s;flex-shrink:0;
+}
+.tb-btn:hover{background:rgba(255,255,255,.09);color:var(--tp);border-color:rgba(255,255,255,.18)}
+.tb-btn svg{flex-shrink:0;opacity:.7}
+.tb-btn:hover svg{opacity:1}
+/* Variant: primary action (Xác nhận) */
+.tb-btn-primary{
+  border-color:rgba(0,212,255,.35);
+  background:rgba(0,212,255,.08);color:var(--cyan);
+}
+.tb-btn-primary:hover{background:rgba(0,212,255,.16);border-color:var(--cyan);color:var(--cyan)}
+.tb-btn-primary.dirty{
+  animation:confirmPulse 1.5s ease-in-out infinite;
+  border-color:var(--cyan);background:rgba(0,212,255,.18);color:var(--cyan);
+}
+/* Variant: Tải lại */
+.tb-btn-reload{border-color:rgba(0,212,255,.2);color:var(--ts)}
+.tb-btn-reload:hover{border-color:rgba(0,212,255,.4);color:var(--cyan)}
 .tl-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;min-width:0}
 .tl-badge{
   width:32px;height:32px;border-radius:8px;
@@ -105,8 +137,8 @@ body::after{
 .tl-sub  {font-size:10px;color:var(--ts);line-height:1.5;white-space:nowrap}
 .tl-space{flex:1;min-width:8px}
 .tl-filters{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:visible}
-.tl-filters select,.btn-refresh{
-  height:30px;border-radius:var(--rsm);
+.tl-filters select{
+  height:28px;border-radius:var(--rsm);
   border:1px solid var(--bdm);
   background:var(--n800);color:var(--tp);
   font-family:var(--fb);font-size:11px;padding:0 6px;
@@ -1191,7 +1223,7 @@ body::after{
 /* ═══ TIME RANGE SLIDER ══════════════════════════════════════════ */
 .tr-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative;overflow:visible}
 .tr-badge{
-  height:30px;display:flex;align-items:center;padding:0 10px;
+  height:28px;display:flex;align-items:center;padding:0 10px;
   background:rgba(0,212,255,.07);border:1px solid var(--bdm);
   border-radius:var(--rsm);font-size:11px;font-weight:700;
   color:var(--cyan);font-family:var(--fm);
@@ -1498,7 +1530,7 @@ body::after{
       <input type="hidden" id="fNamDen" value="2026"/>
       <!-- Select năm — đồng bộ fNamTu + fNamDen -->
       <select id="fNamSel" class="hide-on-chitieu" onchange="_trSyncYear(this.value)"
-              style="height:30px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-family:var(--fb);font-size:12px;padding:0 8px;cursor:pointer;width:60px">
+              style="height:28px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-family:var(--fb);font-size:11px;padding:0 7px;cursor:pointer;width:58px">
         <option value="2026">2026</option>
         <option value="2025">2025</option>
       </select>
@@ -1533,42 +1565,46 @@ body::after{
       </div>
       <!-- ═ END SLIDER ══════════════════════════════════════════════ -->
       <!-- Đơn vị -->
-      <select id="fKV" onchange="markFilterDirty(); onTopbarKVChange()" class="fl-sel-kv">
+      <select id="fKV" onchange="markFilterDirty(); onTopbarKVChange()" class="fl-sel-kv" style="height:28px;font-size:11px;min-width:100px;max-width:130px">
         <option value="">Tất cả đơn vị</option>
       </select>
-      <!-- Nút Xác nhận — chỉ sáng khi filter bị thay đổi -->
-      <button class="btn-confirm" id="btnConfirm" onclick="confirmFilter()" title="Áp dụng bộ lọc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        <span class="btn-txt">Xác nhận</span>
+      <!-- ── NHÓM 2: ACTIONS ───────────────────── -->
+      <div class="tl-divider"></div>
+      <!-- Xác nhận filter -->
+      <button class="tb-btn tb-btn-primary" id="btnConfirm" onclick="confirmFilter()" title="Áp dụng bộ lọc đã chọn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+        Xác nhận
       </button>
-      <button id="btnPresent" onclick="_togglePresentation()" title="Chế độ trình chiếu — nhấn Esc để thoát">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        Trình chiếu
+      <!-- Tải lại -->
+      <button class="tb-btn tb-btn-reload" onclick="reload(true)" title="Tải lại dữ liệu từ Sheets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Tải lại
       </button>
-      <button id="btnExportPdf" onclick="_exportPDF()" title="Xuất PDF trang hiện tại">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        Xuất PDF
-      </button>
-      <button class="btn-refresh" onclick="reload(true)" title="Cập nhật dữ liệu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M1 4v6h6M23 20v-6h-6"/>
-          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
-        </svg>
-        <span class="btn-txt">Tải lại</span>
-      </button>
-      <select id="fCompare" class="compare-sel" onchange="renderPage('overview')" title="So sánh với kỳ">
-        <option value="month">▲▼ Tháng trước</option>
-        <option value="year">▲▼ Năm trước</option>
-        <option value="qtr">▲▼ Quý trước</option>
-        <option value="none">Ẩn so sánh</option>
+
+      <!-- ── NHÓM 3: VIEW OPTIONS ───────────────── -->
+      <div class="tl-divider"></div>
+      <!-- So sánh -->
+      <select id="fCompare" class="compare-sel" onchange="renderPage('overview')" title="So sánh KPI với kỳ trước">
+        <option value="month">▲▼ T.trước</option>
+        <option value="year">▲▼ N.trước</option>
+        <option value="qtr">▲▼ Q.trước</option>
+        <option value="none">Ẩn ▲▼</option>
       </select>
-      <button class="btn-refresh" onclick="showWelcomeAgain()" title="Chọn lại kỳ báo cáo" style="background:rgba(168,85,247,.12);color:var(--violet);border-color:rgba(168,85,247,.3);padding:0 10px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px">
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-        </svg>
-        <span class="btn-txt">Đổi kỳ</span>
+      <!-- Đổi kỳ -->
+      <button class="tb-btn" onclick="showWelcomeAgain()" title="Chọn lại kỳ báo cáo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Đổi kỳ
+      </button>
+
+      <!-- ── NHÓM 4: TOOLS (icon-only) ─────────── -->
+      <div class="tl-divider"></div>
+      <!-- Trình chiếu -->
+      <button id="btnPresent" class="tb-btn" onclick="_togglePresentation()" title="Trình chiếu (Esc để thoát)" style="padding:0 8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+      <!-- Xuất PDF -->
+      <button id="btnExportPdf" class="tb-btn" onclick="_exportPDF()" title="Xuất PDF trang hiện tại" style="padding:0 8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       </button>
     </div>
     <button id="btnInstallApp" onclick="_installPWA()" style="
@@ -8592,15 +8628,7 @@ body.presentation-mode .main {
 body.presentation-mode .ph h1 { font-size:34px; }
 body.presentation-mode .kc    { padding:24px 28px; }
 body.presentation-mode .kc-val { font-size:36px; }
-#btnPresent {
-  height:30px;padding:0 10px;border-radius:var(--rsm);
-  border:1px solid rgba(255,184,0,.3);
-  background:rgba(255,184,0,.07);
-  color:var(--amber);font-size:11px;font-weight:600;
-  cursor:pointer;display:flex;align-items:center;gap:5px;
-  transition:all .2s;white-space:nowrap;
-}
-#btnPresent:hover { background:rgba(255,184,0,.15); }
+/* #btnPresent → unified .tb-btn */
 body.presentation-mode #btnPresent {
   position:fixed;bottom:16px;right:16px;z-index:9998;
   background:rgba(255,184,0,.15);border-color:var(--amber);
@@ -8643,15 +8671,7 @@ body.presentation-mode #btnPresent {
     border-bottom:2px solid #1a56db;margin-bottom:16px;
   }
 }
-#btnExportPdf {
-  height:30px;padding:0 10px;border-radius:var(--rsm);
-  border:1px solid rgba(0,229,160,.3);
-  background:rgba(0,229,160,.07);
-  color:var(--emerald);font-size:11px;font-weight:600;
-  cursor:pointer;display:flex;align-items:center;gap:5px;
-  transition:all .2s;white-space:nowrap;
-}
-#btnExportPdf:hover { background:rgba(0,229,160,.15); }
+/* #btnExportPdf → unified .tb-btn */
 /* ═══ END PRINT ════════════════════════════════════════════════ */
 
 /* ═══ CHAT HISTORY ══════════════════════════════════════════════ */
