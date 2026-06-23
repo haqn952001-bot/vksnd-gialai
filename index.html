@@ -3408,14 +3408,27 @@ function reloadChiTieu12() {
       // Vercel mode: gọi GAS qua JSONP với forceRefresh
       gasAPI('getChiTieu', { nam, kyBaoCao:'12thang', forceRefresh:'1' })
         .then(d => {
+          // DEBUG: log response từ GAS
+          console.log('[CT12] GAS response keys:', d ? Object.keys(d) : 'null');
+          console.log('[CT12] chiTieu:', d?.chiTieu ? Object.keys(d.chiTieu) : 'null');
+          console.log('[CT12] dvSummary.length:', d?.chiTieu?.dvSummary?.length);
+          console.log('[CT12] chiTietRows.length:', d?.chiTieu?.chiTietRows?.length);
+          if (d?.chiTieu?.chiTietRows?.length > 0) {
+            const s = d.chiTieu.chiTietRows[0];
+            console.log('[CT12] chiTietRows[0]:', JSON.stringify(s));
+            const withTS = d.chiTieu.chiTietRows.filter(r => r.trangThai).length;
+            console.log('[CT12] rows with trangThai:', withTS, '/', d.chiTieu.chiTietRows.length);
+          }
           DATA12 = { chiTieu: d?.chiTieu || null };
           if (!DATA12.chiTieu?.dvSummary?.length) {
+            console.warn('[CT12] dvSummary rỗng → dùng demo data');
             DATA12.chiTieu         = _makeDemoChiTieu();
             DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows;
             DATA12._ctDetailIsReal = false;
           } else {
             DATA12._ctDetailAll    = DATA12.chiTieu.chiTietRows || [];
             DATA12._ctDetailIsReal = DATA12._ctDetailAll.length > 0;
+            console.log('[CT12] _ctDetailAll.length:', DATA12._ctDetailAll.length);
           }
           hideLoader();
           renderChiTieu12();
@@ -3965,6 +3978,12 @@ window._debugState = function() {
  */
 function _countAndSetKPI(rows, idDat, idVuot, idKdat, idKps) {
   let dat=0, vuot=0, kdat=0, kps=0;
+  console.log('[_countAndSetKPI] rows.length:', (rows||[]).length, '| idDat:', idDat);
+  if ((rows||[]).length > 0) {
+    console.log('[_countAndSetKPI] rows[0].trangThai:', rows[0].trangThai, '| rows[0].donVi:', rows[0].donVi);
+    const tsList = [...new Set((rows||[]).map(r=>(r.trangThai||'').trim()).filter(Boolean))];
+    console.log('[_countAndSetKPI] unique trangThai values:', JSON.stringify(tsList));
+  }
   (rows || []).forEach(r => {
     const ts = (r.trangThai || '').trim();
     if      (ts === 'Đạt')             dat++;
