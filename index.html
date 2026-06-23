@@ -4674,7 +4674,7 @@ function renderKhuVuc() {
   if (!d) return;
   const kv = d.kvList || [];
 
-  rbars('rbTinBao', kv, 'Tin báo mới', '#00d4ff');
+  rbars('rbTinBao', kv, 'Tin báo mới', '#00d4ff', null, 'tin');
   rbars('rbKhoiTo', kv, 'khoiToVu', '#ffb800', 'khoiToCan');
 
   // Bar chart Truy tố — sắp xếp theo số vụ giảm dần
@@ -4770,7 +4770,7 @@ function renderKhuVuc() {
   });
 }
 
-function rbars(elId, rows, col, color, subCol) {
+function rbars(elId, rows, col, color, subCol, suffix) {
   // Sắp xếp theo col (số vụ) giảm dần
   const sorted = [...rows].sort((a,b)=>(b[col]||0)-(a[col]||0));
   const max = sorted[0]?.[col]||1;
@@ -4778,8 +4778,8 @@ function rbars(elId, rows, col, color, subCol) {
     const vu  = r[col]    || 0;
     const sub = subCol ? (r[subCol] || 0) : null;
     const label = sub !== null
-      ? `${F(vu)} vụ <span style="color:var(--ts);font-size:10px">/ ${F(sub)} ${subCol.includes('Cao')||subCol.includes('cao') ? 'bị cáo' : 'bị can'}</span>`
-      : `${F(vu)} vụ`;
+      ? `${F(vu)} ${suffix || 'vụ'} <span style="color:var(--ts);font-size:10px">/ ${F(sub)} ${subCol.includes('Cao')||subCol.includes('cao') ? 'bị cáo' : 'bị can'}</span>`
+      : `${F(vu)} ${suffix || 'vụ'}`;
     return `<div class="rb-row">
       <div class="rb-lbl">${r.donVi}</div>
       <div class="rb-track"><div class="rb-fill" style="width:${Math.round((vu/max)*100)}%;background:${color}"></div></div>
