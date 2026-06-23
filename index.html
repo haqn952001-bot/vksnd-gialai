@@ -2751,6 +2751,11 @@ function gasAskAI(params) {
 let DATA  = null;   // dữ liệu tổng quan / khu vực / án hủy
 let DATA12= null;   // dữ liệu riêng cho trang chỉ tiêu 12 tháng
 let DATA6 = null;   // dữ liệu riêng cho trang chỉ tiêu 6 tháng
+// Export ra window scope để các script block riêng có thể truy cập
+// (let/const không tự động gán vào window như var)
+Object.defineProperty(window, 'DATA',   { get: ()=>DATA,   set: v=>{DATA=v;}   });
+Object.defineProperty(window, 'DATA12', { get: ()=>DATA12, set: v=>{DATA12=v;} });
+Object.defineProperty(window, 'DATA6',  { get: ()=>DATA6,  set: v=>{DATA6=v;}  });
 let CHS   = {};     // chart instances
 let lastTs = '0';
 const POLL = 60000;
@@ -2833,6 +2838,7 @@ function confirmFilter() {
   if (btn) btn.classList.remove('dirty');
   reload(true);
 }
+window.confirmFilter = confirmFilter;
 
 function reload(immediate) {
   // Debounce 600ms — tránh gọi GAS nhiều lần khi thay đổi nhiều filter liên tiếp
@@ -2844,6 +2850,7 @@ function reload(immediate) {
     _reloadTimer = setTimeout(_doReload, 600);
   }
 }
+window.reload = reload;
 
 function _doReload() {
   _reloadTimer = null;
@@ -4333,6 +4340,7 @@ function filterCtTable() {
   // Biểu đồ
   _buildCtCharts(activeDVs ? [...activeDVs] : null);
 }
+window.filterCtTable = filterCtTable;
 
 /** Build/update biểu đồ CT12T theo đơn vị đang chọn */
 var _ctChartsPending = null; // lưu filterDVs để build lại khi tab active
@@ -4969,6 +4977,7 @@ function wsSelectPreset(btn) {
   $('wsConfirmBtn').disabled = false;
   wsUpdateNote();
 }
+window.wsSelectPreset = wsSelectPreset;
 
 function _wsUpdateQuyRange() {
   var selNam = document.getElementById('wsNamTu');
@@ -5086,6 +5095,7 @@ function wsConfirm() {
     reload(true);
   }
 }
+window.wsConfirm = wsConfirm;
 
 
 function wsCheckAndInit() {
@@ -5104,6 +5114,7 @@ function wsCheckAndInit() {
     _wsCenter();
   }
 }
+window.wsCheckAndInit = wsCheckAndInit;
 
 /** Căn giữa dọc ws-card khi nội dung ngắn hơn màn hình */
 function _wsCenter() {
@@ -6255,6 +6266,7 @@ function mobileNav(el) {
     nav(sidebarItem);
   }
 }
+window.mobileNav = mobileNav;
 
 function toggleMobileMenu() {
   const sidebar = document.querySelector('.sidebar');
@@ -6759,6 +6771,7 @@ function _togglePresentation() {
     } catch(e) {}
   }
 }
+window._togglePresentation = _togglePresentation;
 
 // ── Đồng bộ khi trình duyệt thoát fullscreen bằng Esc ───────
 (function() {
@@ -6787,6 +6800,7 @@ function _exportPDF() {
     document.title = 'VKSND Gia Lai — Dashboard 2026';
   }, 2000);
 }
+window._exportPDF = _exportPDF;
 
 // ══════════════════════════════════════════════════════════════
 // 2.2 — CHAT HISTORY (sessionStorage, 5 session gần nhất)
@@ -7174,6 +7188,7 @@ function toggleAiChat() {
     bubble.style.transform = 'scale(1)';
   }
 }
+window.toggleAiChat = toggleAiChat;
 
 /** Xóa lịch sử — AI đọc data mới */
 function refreshAiData() {
@@ -8090,6 +8105,7 @@ function aiSetProvider(p) {
   var provColor = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : 'var(--cyan)';
   _aiAddMsg('<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:' + provColor + '">' + provLabel + '</strong></span>', 'bot');
 }
+window.aiSetProvider = aiSetProvider;
 
 function aiShowKeyDialog() {
   const dlg = document.getElementById('aiKeyDialog');
@@ -9148,7 +9164,7 @@ async function doLogin() {
         _hideLogin();
         _updateProfileCard();
         // Nếu data chưa load thì load ngay
-        if (!DATA) reload();
+        if (typeof DATA === 'undefined' || !DATA) reload();
       }, 500);
     } else {
       errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không đúng';
