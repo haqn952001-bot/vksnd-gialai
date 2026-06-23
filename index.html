@@ -337,6 +337,7 @@ body::after{
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .kpi-grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.kpi-grid5 .kc{ min-height:130px; display:flex; flex-direction:column; justify-content:space-between; }
 .kpi-grid1{display:grid;grid-template-columns:1fr;gap:12px}
 
 /* ═══ KPI CARD — Cyber Luxury Glassmorphism ═══ */
@@ -393,14 +394,26 @@ body::after{
 }
 .kc-lbl{font-size:9.5px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--ts);margin-bottom:8px;position:relative;z-index:2;line-height:1.3}
 .kc-val{
-  font-size:23px;font-weight:800;font-family:var(--fm);
-  color:var(--ac,var(--gold));line-height:1;position:relative;z-index:2;
+  /* font-size tự co theo độ dài nội dung — đồng nhất giữa tất cả cards */
+  font-size:clamp(14px, 2.2vw, 24px);
+  font-weight:800;font-family:var(--fm);
+  color:var(--ac,var(--gold));line-height:1.25;
+  position:relative;z-index:2;
+  overflow-wrap:break-word;word-break:break-word;
   text-shadow:0 0 24px rgba(250,204,21,.5), 0 0 8px rgba(250,204,21,.4);
+  min-height:2.6em; /* chiều cao tối thiểu đồng đều */
+  display:flex;align-items:center;
 }
+/* kc-val-sm giờ chỉ là alias — cùng style với kc-val */
 .kc-val-sm{
-  font-size:17px;font-weight:800;font-family:var(--fm);
-  color:var(--ac,var(--gold));line-height:1.2;word-break:break-word;position:relative;z-index:2;
+  font-size:clamp(14px, 2.2vw, 24px);
+  font-weight:800;font-family:var(--fm);
+  color:var(--ac,var(--gold));line-height:1.25;
+  position:relative;z-index:2;
+  overflow-wrap:break-word;word-break:break-word;
   text-shadow:0 0 16px rgba(250,204,21,.4);
+  min-height:2.6em;
+  display:flex;align-items:center;
 }
 .kc-sub{display:none}
 
@@ -943,7 +956,7 @@ body::after{
   .nav-item{ font-size:11.5px; padding:8px 10px }
   .kpi-grid5{ grid-template-columns:repeat(3,1fr) }
   .kpi-grid{ grid-template-columns:repeat(2,1fr) }
-  .kc-val{ font-size:22px }
+  .kc-val,.kc-val-sm{ font-size:clamp(13px,4.5vw,20px);min-height:2.2em }
   .main{ padding:16px }
   .fl-sel-thang{ width:48px }
   .fl-sel-nam{ width:54px }
