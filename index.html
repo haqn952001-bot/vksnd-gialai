@@ -1543,6 +1543,14 @@ body::after{
         </svg>
         <span class="btn-txt">Xác nhận</span>
       </button>
+      <button id="btnPresent" onclick="_togglePresentation()" title="Chế độ trình chiếu — nhấn Esc để thoát">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Trình chiếu
+      </button>
+      <button id="btnExportPdf" onclick="_exportPDF()" title="Xuất PDF trang hiện tại">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Xuất PDF
+      </button>
       <button class="btn-refresh" onclick="reload(true)" title="Cập nhật dữ liệu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M1 4v6h6M23 20v-6h-6"/>
@@ -6591,6 +6599,294 @@ function filterCt6Table() {
 }
 // ══════════════════════════════════════════════════════════════════
 
+
+// ══════════════════════════════════════════════════════════════
+// 1.2 — PRESENTATION MODE
+// ══════════════════════════════════════════════════════════════
+function _togglePresentation() {
+  var body = document.body;
+  var isOn = body.classList.toggle('presentation-mode');
+  var btn  = document.getElementById('btnPresent');
+  if (btn) {
+    btn.innerHTML = isOn
+      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Thoát TC'
+      : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Trình chiếu';
+  }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.body.classList.contains('presentation-mode')) {
+    _togglePresentation();
+  }
+  if (e.key === 'F5' && document.body.classList.contains('presentation-mode')) {
+    e.preventDefault();
+    _togglePresentation();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// 1.3 — EXPORT PDF
+// ══════════════════════════════════════════════════════════════
+function _exportPDF() {
+  var activePage = document.querySelector('.nav-item.active');
+  var pageName   = activePage ? activePage.textContent.trim() : 'Dashboard';
+  document.title = 'VKSND Gia Lai — ' + pageName + ' — ' + new Date().toLocaleDateString('vi-VN');
+  window.print();
+  setTimeout(function() {
+    document.title = 'VKSND Gia Lai — Dashboard 2026';
+  }, 2000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 2.2 — CHAT HISTORY (sessionStorage, 5 session gần nhất)
+// ══════════════════════════════════════════════════════════════
+var _CHAT_HIST_KEY = 'vksnd_ai_chat_hist';
+var _MAX_SESSIONS  = 5;
+
+function _saveChatSession() {
+  if (!_aiHistory || _aiHistory.length < 2) return;
+  try {
+    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
+    var firstQ = '';
+    for (var i = 0; i < _aiHistory.length; i++) {
+      if (_aiHistory[i].role === 'user') { firstQ = _aiHistory[i].content; break; }
+    }
+    sessions.unshift({
+      id       : Date.now(),
+      ts       : new Date().toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'}),
+      firstQ   : firstQ.slice(0, 80),
+      messages : _aiHistory.slice(-20)
+    });
+    if (sessions.length > _MAX_SESSIONS) sessions = sessions.slice(0, _MAX_SESSIONS);
+    sessionStorage.setItem(_CHAT_HIST_KEY, JSON.stringify(sessions));
+  } catch(e) {}
+}
+
+function _loadChatSession(id) {
+  try {
+    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
+    var s = sessions.find(function(x) { return x.id === id; });
+    if (!s) return;
+    _aiHistory = s.messages || [];
+    var box = document.getElementById('aiMessages');
+    if (!box) return;
+    box.innerHTML = '';
+    _aiHistory.forEach(function(m) {
+      var cls = m.role === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
+      var el = document.createElement('div');
+      el.className = 'ai-msg ' + cls;
+      el.innerHTML = _aiFormatReply(m.content);
+      box.appendChild(el);
+    });
+    box.scrollTop = box.scrollHeight;
+    _closeChatHistory();
+  } catch(e) {}
+}
+
+function _toggleChatHistory(e) {
+  if (e) e.stopPropagation();
+  var panel = document.getElementById('aiHistoryPanel');
+  if (!panel) return;
+  var isOpen = panel.style.display === 'block';
+  if (isOpen) { panel.style.display = 'none'; return; }
+
+  try {
+    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
+    if (sessions.length === 0) {
+      panel.innerHTML = '<div style="padding:16px;font-size:11px;color:var(--tm);text-align:center">Chưa có lịch sử hội thoại</div>';
+    } else {
+      panel.innerHTML = '<div style="padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--tm);text-transform:uppercase;border-bottom:1px solid var(--bd)">Lịch sử gần đây</div>' +
+        sessions.map(function(s) {
+          return '<div onclick="_loadChatSession(' + s.id + ')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.05);transition:background .15s" onmouseover="this.style.background=\'rgba(0,212,255,.07)\'" onmouseout="this.style.background=\'\'">' +
+            '<div style="font-size:11.5px;color:var(--tp);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + (s.firstQ || '(Cuộc hội thoại)') + '</div>' +
+            '<div style="font-size:9px;color:var(--tm);font-family:var(--fm);margin-top:2px">⏱ ' + s.ts + ' — ' + s.messages.length + ' tin nhắn</div>' +
+            '</div>';
+        }).join('') +
+        '<div onclick="_clearChatHistory()" style="padding:7px 12px;font-size:10px;color:var(--coral);cursor:pointer;text-align:center;border-top:1px solid var(--bd)" onmouseover="this.style.background=\'rgba(255,90,90,.07)\'" onmouseout="this.style.background=\'\'">🗑 Xóa lịch sử</div>';
+    }
+  } catch(e) {
+    panel.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--coral)">Lỗi tải lịch sử</div>';
+  }
+  panel.style.display = 'block';
+  document.addEventListener('click', _closeChatHistory, { once: true });
+}
+
+function _closeChatHistory() {
+  var panel = document.getElementById('aiHistoryPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function _clearChatHistory() {
+  try { sessionStorage.removeItem(_CHAT_HIST_KEY); } catch(e) {}
+  _closeChatHistory();
+}
+
+// Auto-save khi bắt đầu cuộc hội thoại mới (hook vào sendAiMsg)
+(function() {
+  var _origSend = window.sendAiMsg;
+  if (typeof _origSend !== 'function') return;
+  var _hooked = false;
+  window.sendAiMsg = function() {
+    if (!_hooked && _aiHistory && _aiHistory.length >= 2) {
+      _saveChatSession();
+      _hooked = false;
+    }
+    return _origSend.apply(this, arguments);
+  };
+})();
+
+
+// ══════════════════════════════════════════════════════════════
+// 4.1 — PHÂN QUYỀN THEO USER (Role-Based Access Control)
+// ══════════════════════════════════════════════════════════════
+var _USER_ROLES = {
+  // ADMIN tier: full access
+  'admin'         : 'admin',
+  'vientruong'    : 'admin',
+  'phovientruong' : 'admin',
+  // MANAGER tier: full trừ admin tools
+  'chanhvanphong' : 'manager',
+  'chanhthanhtra' : 'manager',
+  'truongphong15' : 'manager',
+  // STAFF tier: chỉ overview + chitieu + tab phòng mình
+  'truongphong1'  : 'phong1',
+  'truongphong2'  : 'phong2',
+  'truongphong7'  : 'phong7',
+  'truongphong8'  : 'phong8',
+  'truongphong9'  : 'phong9',
+  'truongphong10' : 'phong10',
+  'truongphong11' : 'phong11',
+};
+
+// Tab nào mỗi role được xem
+var _ROLE_TABS = {
+  'admin'   : null,   // null = tất cả
+  'manager' : null,   // null = tất cả
+  'phong1'  : ['overview','chitieu12','chitieu6','phong1','thammuuai'],
+  'phong2'  : ['overview','chitieu12','chitieu6','phong2','thammuuai'],
+  'phong7'  : ['overview','chitieu12','chitieu6','khuvuc','phong7','thammuuai'],
+  'phong8'  : ['overview','chitieu12','chitieu6','anhuy','phong8','thammuuai'],
+  'phong9'  : ['overview','chitieu12','chitieu6','phong9','thammuuai'],
+  'phong10' : ['overview','chitieu12','chitieu6','phong10','thammuuai'],
+  'phong11' : ['overview','chitieu12','chitieu6','shhsva','thnq205','phong11','thammuuai'],
+};
+
+function _applyPermissions() {
+  try {
+    var raw  = sessionStorage.getItem(_SESSION_KEY);
+    if (!raw) return;
+    var sess = JSON.parse(raw);
+    var user = sess && sess.user ? sess.user : '';
+    var role = _USER_ROLES[user] || 'manager';
+    var allowedTabs = _ROLE_TABS[role] || null;  // null = tất cả
+
+    if (allowedTabs === null) return; // full access — không ẩn gì
+
+    // Ẩn nav-item sidebar không có quyền
+    document.querySelectorAll('.nav-item[data-page]').forEach(function(el) {
+      var pg = el.dataset.page;
+      var ok = allowedTabs.indexOf(pg) >= 0;
+      el.classList.toggle('perm-hidden', !ok);
+    });
+    // Ẩn mobile nav buttons tương ứng
+    document.querySelectorAll('.mobile-nav-btn[data-page]').forEach(function(el) {
+      var pg = el.dataset.page;
+      var ok = allowedTabs.indexOf(pg) >= 0;
+      el.style.display = ok ? '' : 'none';
+    });
+    // Nếu tab đang active bị ẩn → chuyển về overview
+    var activePg = document.querySelector('.nav-item.active');
+    if (activePg && activePg.classList.contains('perm-hidden')) {
+      var overviewNav = document.querySelector('.nav-item[data-page="overview"]');
+      if (overviewNav) nav(overviewNav);
+    }
+  } catch(e) {}
+}
+
+// Hook vào _hideLogin (gọi sau đăng nhập)
+(function() {
+  var _origHideLogin = window._hideLogin;
+  if (typeof _origHideLogin !== 'function') return;
+  window._hideLogin = function() {
+    _origHideLogin.apply(this, arguments);
+    setTimeout(_applyPermissions, 300);
+  };
+})();
+
+// Áp dụng ngay nếu đã có session
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(_applyPermissions, 400); });
+} else {
+  setTimeout(_applyPermissions, 400);
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// 5.2 — SWIPE NAVIGATION (mobile — vuốt trái/phải đổi tab)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  var _PAGES = [
+    'overview','chitieu12','chitieu6','khuvuc','anhuy',
+    'shhsva','thnq205','phong1','phong2','phong7','phong8',
+    'phong9','phong10','phong11','ttra','thammuuai'
+  ];
+  var startX = 0, startY = 0, swiping = false;
+  var SWIPE_MIN = 60;   // px tối thiểu để tính là swipe
+  var SWIPE_RATIO = 2;  // ratio ngang/dọc để phân biệt swipe vs scroll
+
+  function _getVisiblePages() {
+    // Chỉ swipe qua tab có quyền xem và không bị ẩn
+    return _PAGES.filter(function(pg) {
+      var el = document.querySelector('.nav-item[data-page="' + pg + '"]');
+      return el && !el.classList.contains('perm-hidden');
+    });
+  }
+
+  function _getCurrentIdx(pages) {
+    var active = document.querySelector('.nav-item.active');
+    if (!active) return 0;
+    return pages.indexOf(active.dataset.page);
+  }
+
+  function _navToPage(pg) {
+    var el = document.querySelector('.nav-item[data-page="' + pg + '"]');
+    if (el) nav(el);
+    // Sync mobile nav
+    var mEl = document.querySelector('.mobile-nav-btn[data-page="' + pg + '"]');
+    if (mEl) mobileNav(mEl);
+  }
+
+  var main = document.getElementById('main');
+  if (!main) return;
+
+  main.addEventListener('touchstart', function(e) {
+    if (window.innerWidth > 767) return;  // chỉ mobile
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true;
+  }, { passive: true });
+
+  main.addEventListener('touchend', function(e) {
+    if (!swiping || window.innerWidth > 767) return;
+    swiping = false;
+    if (!e.changedTouches || !e.changedTouches[0]) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    // Bỏ qua nếu chủ yếu là scroll dọc
+    if (Math.abs(dy) * SWIPE_RATIO > Math.abs(dx)) return;
+    if (Math.abs(dx) < SWIPE_MIN) return;
+
+    var pages = _getVisiblePages();
+    var idx   = _getCurrentIdx(pages);
+    if (dx < 0 && idx < pages.length - 1) {
+      _navToPage(pages[idx + 1]);  // vuốt trái → tab tiếp theo
+    } else if (dx > 0 && idx > 0) {
+      _navToPage(pages[idx - 1]);  // vuốt phải → tab trước
+    }
+  }, { passive: true });
+})();
+// ══════════════════════════════════════════════════════════════
+
 window.addEventListener('load', () => {
   _checkLoginSession();
   wsCheckAndInit();
@@ -7947,7 +8243,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   box-shadow:0 16px 48px rgba(0,0,0,.6);
 ">
   <!-- Header -->
-  <div style="
+  <div style="position:relative;
     padding:10px 14px; background:rgba(0,212,255,.08);
     border-bottom:1px solid rgba(0,212,255,.15);
     display:flex; align-items:center; justify-content:space-between;
@@ -7965,6 +8261,9 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
         <button id="btnProvClaude" onclick="aiSetProvider('claude')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng Claude (Anthropic API trực tiếp)">◆ Claude</button>
         <button id="btnProvDeepseek" onclick="aiSetProvider('deepseek')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng DeepSeek R1 (API trực tiếp)">⚡ DeepSeek</button>
       </div>
+      <button id="aiHistoryBtn" onclick="_toggleChatHistory(event)" title="Lịch sử hội thoại" style="background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);color:var(--ts);border-radius:6px;cursor:pointer;font-size:12px;padding:3px 8px;font-family:var(--fb);transition:all .18s">⏱</button>
+      <!-- History dropdown -->
+      <div id="aiHistoryPanel" style="display:none;position:absolute;top:52px;right:8px;width:280px;background:var(--n850);border:1px solid var(--bdm);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.5);z-index:10;overflow:hidden;max-height:240px;overflow-y:auto"></div>
       <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0;border-radius:6px;cursor:pointer;font-size:11px;padding:3px 7px;font-family:var(--fb)">↻</button>
       <button onclick="toggleAiChat()" style="background:none;border:none;cursor:pointer;color:var(--ts);font-size:18px;line-height:1;padding:4px">×</button>
     </div>
@@ -8274,6 +8573,121 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
   flex-shrink:0;white-space:nowrap;
 }
 /* ═══ END SEARCH CSS ══════════════════════════════════════════ */
+
+/* ═══ PRESENTATION MODE ════════════════════════════════════════ */
+body.presentation-mode .sidebar,
+body.presentation-mode .topbar,
+body.presentation-mode .mobile-bottom-nav,
+body.presentation-mode #aiBubble,
+body.presentation-mode #aiPanel { display:none !important; }
+body.presentation-mode .app {
+  grid-template-columns: 0 1fr;
+  grid-template-rows: 0 1fr;
+}
+body.presentation-mode .main {
+  padding: 32px 40px;
+  grid-column: 1/-1;
+  grid-row: 1/-1;
+}
+body.presentation-mode .ph h1 { font-size:34px; }
+body.presentation-mode .kc    { padding:24px 28px; }
+body.presentation-mode .kc-val { font-size:36px; }
+#btnPresent {
+  height:30px;padding:0 10px;border-radius:var(--rsm);
+  border:1px solid rgba(255,184,0,.3);
+  background:rgba(255,184,0,.07);
+  color:var(--amber);font-size:11px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:all .2s;white-space:nowrap;
+}
+#btnPresent:hover { background:rgba(255,184,0,.15); }
+body.presentation-mode #btnPresent {
+  position:fixed;bottom:16px;right:16px;z-index:9998;
+  background:rgba(255,184,0,.15);border-color:var(--amber);
+  color:var(--amber);
+}
+/* ═══ END PRESENTATION ════════════════════════════════════════ */
+
+/* ═══ PRINT / PDF EXPORT ════════════════════════════════════════ */
+@media print {
+  body { background:#fff !important; color:#111 !important; overflow:auto !important; }
+  .sidebar, .topbar, .mobile-bottom-nav,
+  #aiBubble, #aiChat, #aiPanel,
+  .btn-refresh, #btnPresent, #btnExportPdf,
+  .tl-filters, .loading, #btnConfirm { display:none !important; }
+  .app {
+    display:block !important;
+    height:auto !important;
+  }
+  .main {
+    overflow:visible !important;
+    padding:12px !important;
+    display:block !important;
+  }
+  .page { display:none !important; }
+  .page.active { display:block !important; }
+  .kc { background:#f5f7fa !important; border:1px solid #dde !important;
+        break-inside:avoid; }
+  .kc-val { color:#1a56db !important; }
+  .cc { background:#f5f7fa !important; border:1px solid #dde !important;
+        break-inside:avoid; }
+  .tw { background:#f5f7fa !important; border:1px solid #dde !important; }
+  .tw th { background:#e8edf5 !important; color:#333 !important; }
+  .tw td { color:#222 !important; border-color:#dde !important; }
+  canvas { max-width:100% !important; height:auto !important; }
+  /* Header in PDF */
+  body::before {
+    content: "VKSND TỈNH GIA LAI — DASHBOARD SỐ LIỆU CÔNG TÁC";
+    display:block;font-size:13px;font-weight:700;
+    text-align:center;padding:8px 0 16px;color:#1a56db;
+    border-bottom:2px solid #1a56db;margin-bottom:16px;
+  }
+}
+#btnExportPdf {
+  height:30px;padding:0 10px;border-radius:var(--rsm);
+  border:1px solid rgba(0,229,160,.3);
+  background:rgba(0,229,160,.07);
+  color:var(--emerald);font-size:11px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:all .2s;white-space:nowrap;
+}
+#btnExportPdf:hover { background:rgba(0,229,160,.15); }
+/* ═══ END PRINT ════════════════════════════════════════════════ */
+
+/* ═══ CHAT HISTORY ══════════════════════════════════════════════ */
+#aiHistoryBtn {
+  height:28px;width:28px;border-radius:6px;border:1px solid var(--bdm);
+  background:rgba(0,212,255,.06);color:var(--ts);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;
+}
+#aiHistoryBtn:hover { background:rgba(0,212,255,.15);color:var(--cyan); }
+#aiHistoryPanel {
+  display:none;flex-direction:column;gap:0;
+  position:absolute;top:52px;left:0;right:0;
+  background:var(--n850);border-bottom:1px solid var(--bdm);
+  max-height:220px;overflow-y:auto;z-index:10;
+}
+#aiHistoryPanel.open { display:flex; }
+.ahi-item {
+  padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.06);
+  transition:background .15s;
+}
+.ahi-item:hover { background:rgba(0,212,255,.08); }
+.ahi-item-q { font-size:11.5px;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ahi-item-t { font-size:9px;color:var(--tm);font-family:var(--fm);margin-top:2px; }
+.ahi-empty  { padding:16px 14px;font-size:11px;color:var(--tm);text-align:center; }
+/* ═══ END CHAT HISTORY ══════════════════════════════════════════ */
+
+/* ═══ PHÂN QUYỀN — ẩn nav-item chưa có quyền ═══════════════════ */
+.nav-item.perm-hidden { display:none !important; }
+.kc.perm-hidden       { display:none !important; }
+/* ═══ END PHÂN QUYỀN ═══════════════════════════════════════════ */
+
+/* ═══ SWIPE NAV FEEDBACK ════════════════════════════════════════ */
+.page { transition: opacity .18s ease; }
+.page.swipe-out { opacity:0; pointer-events:none; }
+/* ═══ END SWIPE ══════════════════════════════════════════════════ */
 </style>
 
 <script>
