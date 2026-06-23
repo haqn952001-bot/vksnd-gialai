@@ -337,7 +337,6 @@ body::after{
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .kpi-grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.kpi-grid5 .kc{ min-height:130px; display:flex; flex-direction:column; justify-content:space-between; }
 .kpi-grid1{display:grid;grid-template-columns:1fr;gap:12px}
 
 /* ═══ KPI CARD — Cyber Luxury Glassmorphism ═══ */
@@ -345,7 +344,7 @@ body::after{
   background:
     linear-gradient(135deg, rgba(7,27,51,.88) 0%, rgba(10,35,66,.78) 50%, rgba(6,21,48,.92) 100%);
   border:1px solid var(--bd);border-radius:var(--rlg);
-  padding:14px 60px 14px 16px; /* chừa chỗ cho huy hiệu bên phải */
+  padding:14px 60px 14px 16px;
   position:relative;overflow:hidden;
   transition:all .35s cubic-bezier(.4,0,.2,1);
   backdrop-filter:blur(14px);
@@ -353,6 +352,9 @@ body::after{
     0 4px 20px rgba(0,0,0,.35),
     inset 0 1px 0 rgba(250,204,21,.08),
     inset 0 -1px 0 rgba(0,0,0,.2);
+  /* Layout dọc rõ ràng: label → value zone → delta */
+  display:flex;flex-direction:column;
+  min-height:130px;
 }
 /* Viền top neon động */
 .kc::before{
@@ -392,28 +394,21 @@ body::after{
     inset 0 -2px 6px rgba(217,119,6,.4),
     inset 0 0 24px rgba(250,204,21,.18);
 }
-.kc-lbl{font-size:9.5px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--ts);margin-bottom:8px;position:relative;z-index:2;line-height:1.3}
-.kc-val{
-  /* font-size tự co theo độ dài nội dung — đồng nhất giữa tất cả cards */
-  font-size:clamp(14px, 2.2vw, 24px);
+.kc-lbl{font-size:9.5px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--ts);margin-bottom:6px;position:relative;z-index:2;line-height:1.3;flex-shrink:0;height:2.6em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.kc-val,.kc-val-sm{
+  /* font-size do JS _setKV() tự động tính theo độ dài text */
+  font-size:22px;
   font-weight:800;font-family:var(--fm);
-  color:var(--ac,var(--gold));line-height:1.25;
+  color:var(--ac,var(--gold));
+  line-height:1.3;
   position:relative;z-index:2;
-  overflow-wrap:break-word;word-break:break-word;
-  text-shadow:0 0 24px rgba(250,204,21,.5), 0 0 8px rgba(250,204,21,.4);
-  min-height:2.6em; /* chiều cao tối thiểu đồng đều */
-  display:flex;align-items:center;
-}
-/* kc-val-sm giờ chỉ là alias — cùng style với kc-val */
-.kc-val-sm{
-  font-size:clamp(14px, 2.2vw, 24px);
-  font-weight:800;font-family:var(--fm);
-  color:var(--ac,var(--gold));line-height:1.25;
-  position:relative;z-index:2;
-  overflow-wrap:break-word;word-break:break-word;
-  text-shadow:0 0 16px rgba(250,204,21,.4);
-  min-height:2.6em;
-  display:flex;align-items:center;
+  word-break:keep-all;
+  text-shadow:0 0 20px rgba(250,204,21,.45), 0 0 7px rgba(250,204,21,.35);
+  flex:1;
+  display:flex;
+  align-items:flex-start;
+  padding-top:2px;
+  transition:font-size .2s ease;
 }
 .kc-sub{display:none}
 
@@ -428,7 +423,7 @@ body::after{
 .kc-delta.down{background:rgba(255,90,90,.14); color:var(--coral);  border:1px solid rgba(255,90,90,.25)}
 .kc-delta.flat{background:rgba(122,138,181,.12);color:var(--ts);    border:1px solid rgba(122,138,181,.2)}
 .kc-delta svg{width:10px;height:10px}
-.delta-wrap{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.delta-wrap{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
 .delta-period{font-size:9px;color:var(--tm);margin-top:2px;font-family:var(--fm)}
 
 /* Selector so sánh kỳ */
@@ -956,7 +951,8 @@ body::after{
   .nav-item{ font-size:11.5px; padding:8px 10px }
   .kpi-grid5{ grid-template-columns:repeat(3,1fr) }
   .kpi-grid{ grid-template-columns:repeat(2,1fr) }
-  .kc-val,.kc-val-sm{ font-size:clamp(13px,4.5vw,20px);min-height:2.2em }
+  .kc-val,.kc-val-sm{ font-size:18px }
+  .kc{ min-height:110px;padding:12px 52px 12px 14px }
   .main{ padding:16px }
   .fl-sel-thang{ width:48px }
   .fl-sel-nam{ width:54px }
@@ -3093,10 +3089,10 @@ function renderOverview() {
   if (d.donViList) populateKVFilter(d.donViList);
 
   // ── KPIs row 1 & 2: số liệu khu vực (theo range tháng) ─────────
-  $('k-tinbao').textContent  = F(d.kpi.tinBaoMoi);  // Tin báo: hiện ngay
-  $('k-khoito').textContent  = d.kpi.khoidToMoiRaw || F(d.kpi.khoidToMoi);
-  $('k-truyto').textContent  = d.kpi.truyToRaw     || F(d.kpi.truyTo);
-  $('k-xetxu').textContent   = d.kpi.xetXuRaw      || F(d.kpi.xetXu);
+  _setKV('k-tinbao', F(d.kpi.tinBaoMoi));  // Tin báo: hiện ngay
+  _setKV('k-khoito', d.kpi.khoidToMoiRaw || F(d.kpi.khoidToMoi));
+  _setKV('k-truyto', d.kpi.truyToRaw || F(d.kpi.truyTo));
+  _setKV('k-xetxu', d.kpi.xetXuRaw || F(d.kpi.xetXu));
   animateCount('k-tamgiam',  d.kpi.tamGiam);
   animateCount('k-tamgiu',   d.kpi.tamGiu);
   animateCount('k-dontl',    d.kpi.donThuLyMoi);
@@ -3149,16 +3145,16 @@ function renderOverview() {
   // YC1: HC,KDTM,LĐ — hiển thị "X vụ / Y việc" hoặc "X vụ"
   const hcVu   = d.kpi.thuLyMoiHC      || 0;
   const hcViec = d.kpi.thuLyMoiHC_viec || 0;
-  $('k-thhc').textContent = hcViec > 0
+  _setKV('k-thhc', hcViec > 0
     ? `${F(hcVu)} vụ / ${F(hcViec)} việc`
-    : `${F(hcVu)} vụ`;
+    : `${F(hcVu)} vụ`);
 
   // YC1: DS,HNGĐ — hiển thị "X vụ / Y việc" hoặc "X vụ"
   const dsVu   = d.kpi.thuLyMoiDS      || 0;
   const dsViec = d.kpi.thuLyMoiDS_viec || 0;
-  $('k-thds').textContent = dsViec > 0
+  _setKV('k-thds', dsViec > 0
     ? `${F(dsVu)} vụ / ${F(dsViec)} việc`
-    : `${F(dsVu)} vụ`;
+    : `${F(dsVu)} vụ`);
 
   // YC2: THADS — hiển thị "X việc / Y đồng" (số tiền lớn format thành tỷ/triệu)
   const thadsViec = d.kpi.daThuLyKS        || 0;
@@ -3169,9 +3165,9 @@ function renderOverview() {
     if (n >= 1e6) return (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' tr';
     return F(n);
   }
-  $('k-thads').textContent = thadsDong > 0
+  _setKV('k-thads', thadsDong > 0
     ? `${F(thadsViec)} việc / ${_fmtDong(thadsDong)} đồng`
-    : `${F(thadsViec)} việc`;
+    : `${F(thadsViec)} việc`);
 
   // ── Charts: Tin báo & Khởi tố theo đơn vị ──────────────────────
   const perKV = d.perKV || [];
@@ -5423,19 +5419,19 @@ function _demoPhong(tab) {
 function animateCount(elId, target, suffix) {
   const el = $(elId);
   if (!el) return;
-  // Nếu target là chuỗi (vụ/bị can) — hiện thẳng
   if (typeof target === 'string' && isNaN(target)) {
-    el.textContent = target; return;
+    _setKV(elId, target); return;
   }
   const n = Number(target) || 0;
-  if (n === 0) { el.textContent = '0' + (suffix||''); return; }
+  if (n === 0) { _setKV(elId, '0' + (suffix||'')); return; }
   const duration = Math.min(800, Math.max(300, n * 2));
   const step = Math.ceil(n / (duration / 16));
   let cur = 0;
   const timer = setInterval(() => {
     cur = Math.min(cur + step, n);
-    el.textContent = cur.toLocaleString('vi-VN') + (suffix||'');
-    if (cur >= n) clearInterval(timer);
+    const txt = cur.toLocaleString('vi-VN') + (suffix||'');
+    el.textContent = txt;
+    if (cur >= n) { clearInterval(timer); _applyKVFontSize(el, txt); }
   }, 16);
 }
 
@@ -7016,6 +7012,23 @@ if (document.readyState === 'loading') {
   }, { passive: true });
 })();
 // ══════════════════════════════════════════════════════════════
+
+
+// ── Auto font-size cho KPI value dựa vào độ dài text ──────────
+function _applyKVFontSize(el, text) {
+  var len = (text || '').length;
+  el.style.fontSize =
+    len <= 6  ? '26px' :
+    len <= 10 ? '22px' :
+    len <= 16 ? '18px' :
+    len <= 24 ? '15px' : '13px';
+}
+function _setKV(id, text) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text || '—';
+  _applyKVFontSize(el, text || '—');
+}
 
 window.addEventListener('load', () => {
   _checkLoginSession();
