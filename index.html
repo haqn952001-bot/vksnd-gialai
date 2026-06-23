@@ -6642,11 +6642,64 @@ function filterCt6Table() {
 function _togglePresentation() {
   var body = document.body;
   var isOn = body.classList.toggle('presentation-mode');
-  var btn  = document.getElementById('btnPresent');
+
+  // Ẩn/hiện topbar và sidebar trực tiếp bằng JS (đảm bảo override mọi CSS specificity)
+  var topbar  = document.querySelector('.topbar');
+  var sidebar = document.querySelector('.sidebar');
+  var mobileNav = document.querySelector('.mobile-bottom-nav');
+  if (topbar)    topbar.style.display    = isOn ? 'none' : '';
+  if (sidebar)   sidebar.style.display   = isOn ? 'none' : '';
+  if (mobileNav) mobileNav.style.display = isOn ? 'none' : '';
+
+  // Điều chỉnh .app grid để main chiếm toàn bộ màn hình
+  var app  = document.querySelector('.app');
+  var main = document.getElementById('main');
+  if (app) {
+    app.style.gridTemplateColumns = isOn ? '1fr' : '';
+    app.style.gridTemplateRows    = isOn ? '1fr' : '';
+    app.style.display             = isOn ? 'block' : '';
+  }
+  if (main) {
+    main.style.padding = isOn ? '32px 40px' : '';
+    main.style.height  = isOn ? '100vh' : '';
+    main.style.overflowY = isOn ? 'auto' : '';
+  }
+
+  // Ẩn/hiện AI bubble
+  var aiChat = document.getElementById('aiChat');
+  if (aiChat) aiChat.style.display = isOn ? 'none' : '';
+
+  // Cập nhật nút
+  var btn = document.getElementById('btnPresent');
   if (btn) {
     btn.innerHTML = isOn
-      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Thoát TC'
+      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Thoát'
       : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Trình chiếu';
+    if (isOn) {
+      // Di chuyển nút ra ngoài topbar để vẫn hiển thị
+      btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;background:rgba(11,20,40,.9);border:1px solid rgba(255,255,255,.2);color:var(--ts);padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;gap:5px;align-items:center;cursor:pointer;backdrop-filter:blur(12px)';
+    } else {
+      btn.style.cssText = '';
+    }
+  }
+
+  // Fullscreen API nếu trình duyệt hỗ trợ
+  if (isOn) {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
+    } catch(e) {}
+  } else {
+    try {
+      if (document.exitFullscreen && document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    } catch(e) {}
   }
 }
 document.addEventListener('keydown', function(e) {
@@ -6655,6 +6708,17 @@ document.addEventListener('keydown', function(e) {
   }
   if (e.key === 'F5' && document.body.classList.contains('presentation-mode')) {
     e.preventDefault();
+    _togglePresentation();
+  }
+});
+// Sync khi user thoát fullscreen bằng Esc của trình duyệt
+document.addEventListener('fullscreenchange', function() {
+  if (!document.fullscreenElement && document.body.classList.contains('presentation-mode')) {
+    _togglePresentation();
+  }
+});
+document.addEventListener('webkitfullscreenchange', function() {
+  if (!document.webkitFullscreenElement && document.body.classList.contains('presentation-mode')) {
     _togglePresentation();
   }
 });
