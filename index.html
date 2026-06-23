@@ -247,6 +247,40 @@ body::after{
 }
 .nav-item svg{width:16px;height:16px;flex-shrink:0}
 
+/* ══ PHÒNG FILTER — dim tabs không thuộc phòng đang lọc ══════ */
+.nav-item.phong-dimmed{
+  opacity:.32;
+  pointer-events:none;
+  user-select:none;
+}
+.nav-item.phong-dimmed::after{
+  content:'';
+}
+/* Banner phòng hiện trong sidebar khi đang lọc theo phòng */
+.phong-banner{
+  display:none;
+  align-items:center;gap:6px;
+  margin:4px 0 6px;padding:7px 12px;
+  background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(0,212,255,.04));
+  border:1px solid rgba(0,212,255,.3);
+  border-radius:var(--rmd);
+  font-size:10.5px;font-weight:700;color:var(--cyan);
+  letter-spacing:.3px;cursor:pointer;
+  position:relative;
+}
+.phong-banner.active{ display:flex; }
+.phong-banner-x{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--ts);opacity:.7;line-height:1;
+}
+.phong-banner-x:hover{color:var(--coral);opacity:1}
+.phong-badge{
+  width:18px;height:18px;border-radius:4px;
+  background:linear-gradient(135deg,#0066cc,#00d4ff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#fff;flex-shrink:0;
+}
+
 /* ═══ USER PROFILE CARD (Sidebar footer) ═══ */
 .user-profile-card{
   margin-top:auto;
@@ -1574,8 +1608,21 @@ body::after{
       </div>
       <!-- ═ END SLIDER ══════════════════════════════════════════════ -->
       <!-- Đơn vị -->
-      <select id="fKV" onchange="markFilterDirty(); onTopbarKVChange()" class="fl-sel-kv" style="height:28px;font-size:11px;min-width:100px;max-width:130px">
+      <select id="fKV" onchange="markFilterDirty(); onTopbarKVChange()" class="fl-sel-kv" style="height:28px;font-size:11px;min-width:120px;max-width:155px">
         <option value="">Tất cả đơn vị</option>
+        <optgroup label="── Phòng nghiệp vụ ──" id="fKV-phong-group">
+          <option value="__phong1__">Phòng 1</option>
+          <option value="__phong2__">Phòng 2</option>
+          <option value="__phong7__">Phòng 7</option>
+          <option value="__phong8__">Phòng 8</option>
+          <option value="__phong9__">Phòng 9</option>
+          <option value="__phong10__">Phòng 10</option>
+          <option value="__phong11__">Phòng 11</option>
+          <option value="__ttra__">Thanh tra - Khiếu tố</option>
+          <option value="__phong15__">Phòng 15</option>
+        </optgroup>
+        <optgroup label="── Khu vực ──" id="fKV-kv-group">
+        </optgroup>
       </select>
       <!-- ── NHÓM 2: ACTIONS ───────────────────── -->
       <div class="tl-divider"></div>
@@ -1634,6 +1681,12 @@ body::after{
 
   <!-- ══ SIDEBAR ═════════════════════════════════════════════ -->
   <nav class="sidebar">
+    <!-- Banner hiện khi đang lọc theo Phòng -->
+    <div class="phong-banner" id="phongBanner" onclick="_clearPhongFilter()" title="Bấm để bỏ lọc phòng">
+      <div class="phong-badge" id="phongBadgeIcon">P</div>
+      <span id="phongBannerLabel">Đang xem: Phòng</span>
+      <span class="phong-banner-x">✕</span>
+    </div>
     <div class="nav-label">Tổng quan</div>
     <div class="nav-item active" data-page="overview" onclick="nav(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2772,17 +2825,25 @@ function getFilterParams() {
   const namTu    = v('fNamTu')    || '2026';
   const thangDen = v('fThangDen') || '12';
   const namDen   = v('fNamDen')   || '2026';
-  const kv       = v('fKV');
+  // Nếu đang lọc phòng (__phong1__ v.v.) → gửi kv='' lên API (lấy tất cả)
+  const kv       = (typeof _getKVForAPI === 'function') ? _getKVForAPI() : (v('fKV') || '');
   return { thangTu, namTu, thangDen, namDen, kv, kyBaoCao: '12thang' };
 }
 
 function getFilterLabel() {
-  const { thangTu, namTu, thangDen, namDen, kv } = getFilterParams();
+  const { thangTu, namTu, thangDen, namDen } = getFilterParams();
+  const selRaw  = v('fKV') || '';
   const sameYear = namTu === namDen;
   const rangeStr = sameYear
     ? `NĂM ${namTu} — T.${thangTu} ĐẾN T.${thangDen}`
     : `T.${thangTu}/${namTu} ĐẾN T.${thangDen}/${namDen}`;
-  const kvStr = kv ? ` — ${kv}` : ' — TẤT CẢ ĐƠN VỊ';
+  // Hiển thị tên phòng nếu đang lọc phòng
+  let kvStr = ' — TẤT CẢ ĐƠN VỊ';
+  if (selRaw && selRaw.startsWith('__') && typeof PHONG_TAB_MAP !== 'undefined' && PHONG_TAB_MAP[selRaw]) {
+    kvStr = ` — ${PHONG_TAB_MAP[selRaw].label.toUpperCase()}`;
+  } else if (selRaw && !selRaw.startsWith('__')) {
+    kvStr = ` — ${selRaw}`;
+  }
   return `${rangeStr}${kvStr}`;
 }
 
@@ -2790,6 +2851,9 @@ function getFilterLabel() {
 // NAVIGATION
 // ══════════════════════════════════════════════════════════════
 function nav(el) {
+  // Guard: tab bị dim (không thuộc phòng đang lọc) → không chuyển tab
+  if (el.classList.contains('phong-dimmed')) return;
+
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
@@ -2836,11 +2900,18 @@ function markFilterDirty() {
 function confirmFilter() {
   const btn = $('btnConfirm');
   if (btn) btn.classList.remove('dirty');
+  // Xóa cache phòng để force reload với filter mới khi bấm Xác nhận
+  if (typeof DATA !== 'undefined' && DATA) {
+    DATA._phongCache    = {};
+    DATA._phongCacheKey = {};
+  }
   reload(true);
 }
 window.confirmFilter = confirmFilter;
 
 function reload(immediate) {
+  // Xóa cache phong khi reload
+  if (typeof DATA !== 'undefined' && DATA) { DATA._phongCache = {}; DATA._phongCacheKey = {}; }
   // Debounce 600ms — tránh gọi GAS nhiều lần khi thay đổi nhiều filter liên tiếp
   if (_reloadTimer) clearTimeout(_reloadTimer);
   if (immediate) {
@@ -3074,10 +3145,10 @@ function renderPage(pg) {
   if (pg === 'phong1')  { _loadTabAndRender('phong1',  function(d){ renderPhong('phong1', d); });  return; }
   if (pg === 'phong2')  { _loadTabAndRender('phong2',  function(d){ renderPhong('phong2', d); });  return; }
   if (pg === 'phong7')  { _loadTabAndRender('phong7',  function(d){ renderPhong('phong7', d); });  return; }
-  if (pg === 'phong8')  { _loadTabAndRender('phong8',  function(d){ renderPhong('phong8', d); });  return; }
+  if (pg === 'phong8')  { _invalidatePhongCacheIfFilterChanged('phong8');  _loadTabAndRender('phong8',  function(d){ renderPhong('phong8', d); });  return; }
   if (pg === 'phong9')  { _loadTabAndRender('phong9',  function(d){ renderPhong('phong9', d); });  return; }
   if (pg === 'phong10') { _loadTabAndRender('phong10', function(d){ renderPhong('phong10', d); }); return; }
-  if (pg === 'phong11') { _loadTabAndRender('phong11', function(d){ renderPhong('phong11', d); }); return; }
+  if (pg === 'phong11') { _invalidatePhongCacheIfFilterChanged('phong11'); _loadTabAndRender('phong11', function(d){ renderPhong('phong11', d); }); return; }
   if (pg === 'ttra')    { _loadTabAndRender('ttra',    function(d){ renderPhong('ttra', d); });    return; }
   if (pg === 'thammuuai') { _tmPopulateKV(); return; }
   // Tab còn lại — cần DATA từ getData()
@@ -3347,15 +3418,17 @@ function populateKVFilter(donViList) {
   if (!donViList || !donViList.length) return;
   const kvSel = $('fKV');
   if (!kvSel) return;
+  const grp = $('fKV-kv-group');
+  if (!grp) return;
   // Chỉ rebuild nếu chưa có hoặc ít options hơn data mới
-  const currentCount = kvSel.options.length - 1; // trừ option "Tất cả"
+  const currentCount = grp.options ? grp.options.length : grp.children.length;
   if (currentCount >= donViList.length) return;
   const curVal = kvSel.value;
-  kvSel.innerHTML = '<option value="">Tất cả đơn vị</option>';
+  grp.innerHTML = '';
   donViList.sort().forEach(dv => {
     if (!dv) return;
     const o = document.createElement('option');
-    o.value = dv; o.textContent = dv; kvSel.appendChild(o);
+    o.value = dv; o.textContent = dv; grp.appendChild(o);
   });
   if (curVal) kvSel.value = curVal;
 }
@@ -3981,7 +4054,7 @@ window._debugState = function() {
   console.log('KV1 KPS =',  kv1.filter(r=>r.trangThai==='Không phát sinh').length);
   console.log('Sample row[0]:', JSON.stringify(d[0]));
   console.log('fKV =', v('fKV'), '| fCtDVDet =', v('fCtDVDet'));
-  const topKV = v('fKV')||'';
+  const topKV = (typeof _getKVForAPI === 'function' ? _getKVForAPI() : v('fKV')) || '';
   const tabDV = v('fCtDVDet')||'';
   const dvd = tabDV || topKV;
   console.log('→ dvd used for KPI =', dvd || '(tất cả)');
@@ -4279,16 +4352,104 @@ function ctDVInit(dvList) {
 
 
 /** Khi topbar fKV thay đổi → cập nhật ngay tab Chỉ tiêu nếu đang xem */
+// ══ MAP: phòng → tabs có dữ liệu ════════════════════════════
+// Tabs không có trong danh sách sẽ bị dim (trống, không có data)
+const PHONG_TAB_MAP = {
+  '__phong1__' : { label:'Phòng 1',             badge:'P1',  tabs:['phong1','anhuy','shhsva'] },
+  '__phong2__' : { label:'Phòng 2',             badge:'P2',  tabs:['phong2','anhuy','shhsva'] },
+  '__phong7__' : { label:'Phòng 7',             badge:'P7',  tabs:['phong7','anhuy','shhsva'] },
+  '__phong8__' : { label:'Phòng 8',             badge:'P8',  tabs:['phong8'] },
+  '__phong9__' : { label:'Phòng 9',             badge:'P9',  tabs:['phong9','shhsva','thnq205'] },
+  '__phong10__': { label:'Phòng 10',            badge:'P10', tabs:['phong10','shhsva','thnq205'] },
+  '__phong11__': { label:'Phòng 11',            badge:'P11', tabs:['phong11'] },
+  '__ttra__'   : { label:'Thanh tra - Khiếu tố',badge:'TT',  tabs:['ttra'] },
+  '__phong15__': { label:'Phòng 15',            badge:'P15', tabs:['phong15'] }
+};
+
+// Các tab luôn hiển thị bình thường (không bị dim khi lọc phòng)
+const TABS_ALWAYS_ON = ['overview','chitieu12','chitieu6','khuvuc','thammuuai'];
+
 function onTopbarKVChange() {
-  const pg = document.querySelector('.nav-item.active')?.dataset?.page;
-  const kv = v('fKV') || '';
+  const sel = v('fKV') || '';
+  const pg  = document.querySelector('.nav-item.active')?.dataset?.page;
 
-  // Topbar fKV không ảnh hưởng multi-select — chỉ trigger re-render
+  const isPhong = sel.startsWith('__') && PHONG_TAB_MAP[sel];
+
+  // Cập nhật sidebar dim + banner
+  _applyPhongFilter(sel);
+
+  // Nếu đang ở tab bị dim → chuyển sang tab đầu của phòng (hoặc overview)
+  if (isPhong) {
+    const info   = PHONG_TAB_MAP[sel];
+    const allowed = TABS_ALWAYS_ON.concat(info.tabs);
+    if (pg && !allowed.includes(pg)) {
+      // Chuyển sang tab đầu tiên của phòng
+      const firstTab = document.querySelector(`.nav-item[data-page="${info.tabs[0]}"]`);
+      if (firstTab) nav(firstTab);
+      return; // nav() đã gọi renderPage → không cần tiếp
+    }
+  }
+
+  // Topbar fKV không ảnh hưởng multi-select chỉ tiêu — chỉ trigger re-render
   if (pg === 'chitieu12' && DATA12?._ctDetailAll?.length) filterCtTable();
-
   const el6 = $('fCt6DVDet');
-  if (el6) el6.value = kv;
+  if (el6 && !isPhong) el6.value = sel;
   if (pg === 'chitieu6' && DATA6?._ctDetailAll?.length) filterCt6Table();
+}
+
+/** Áp dụng dim lên sidebar và cập nhật banner */
+function _applyPhongFilter(sel) {
+  const isPhong = sel && sel.startsWith('__') && PHONG_TAB_MAP[sel];
+  const info    = isPhong ? PHONG_TAB_MAP[sel] : null;
+
+  // Cập nhật tất cả nav-item
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    const page = el.dataset.page;
+    if (!isPhong) {
+      // Không lọc phòng → bỏ dim hết
+      el.classList.remove('phong-dimmed');
+    } else {
+      const allowed = TABS_ALWAYS_ON.concat(info.tabs);
+      if (allowed.includes(page)) {
+        el.classList.remove('phong-dimmed');
+      } else {
+        el.classList.add('phong-dimmed');
+      }
+    }
+  });
+
+  // Cập nhật banner
+  const banner = $('phongBanner');
+  const lbl    = $('phongBannerLabel');
+  const badge  = $('phongBadgeIcon');
+  if (banner) {
+    if (isPhong) {
+      banner.classList.add('active');
+      if (lbl)   lbl.textContent  = 'Đang xem: ' + info.label;
+      if (badge) badge.textContent = info.badge;
+    } else {
+      banner.classList.remove('active');
+    }
+  }
+
+  // Lưu state
+  window._activePhong = isPhong ? sel : '';
+}
+
+/** Bấm ✕ banner hoặc gọi từ nơi khác để bỏ lọc phòng */
+function _clearPhongFilter() {
+  const kvSel = $('fKV');
+  if (kvSel) kvSel.value = '';
+  window._activePhong = '';
+  _applyPhongFilter('');
+  markFilterDirty();
+}
+
+/** Lấy giá trị KV thực sự (bỏ qua prefix __phong__) để gửi API */
+function _getKVForAPI() {
+  const sel = v('fKV') || '';
+  if (sel.startsWith('__')) return ''; // lọc phòng → KV = tất cả
+  return sel;
 }
 
 function filterCtTable() {
@@ -4303,11 +4464,12 @@ function filterCtTable() {
   }
 
   // Xác định filter đơn vị (multi-select + topbar KV)
+  // Nếu đang lọc phòng (__phong__) → topKV = '' (không filter theo KV trong bảng chỉ tiêu)
   let activeDVs = null;
   if (typeof _ctDV !== 'undefined' && _ctDV.size > 0) {
     activeDVs = new Set(_ctDV);
   } else {
-    const topKV = (v('fKV') || '').trim();
+    const topKV = (typeof _getKVForAPI === 'function' ? _getKVForAPI() : (v('fKV')||'')).trim();
     if (topKV) activeDVs = new Set([topKV]);
   }
 
@@ -5590,11 +5752,32 @@ function hideLoader() {
 const _PHONG_LIKE_TABS = ['phong1','phong2','phong7','phong8','phong9','phong10','phong11','ttra'];
 function _isPhongTab(tab) { return _PHONG_LIKE_TABS.indexOf(tab) >= 0; }
 
+
+// ── Xóa cache tab phòng nếu filter đã thay đổi ──────────────
+function _invalidatePhongCacheIfFilterChanged(tab) {
+  if (!DATA || !DATA._phongCacheKey) return;
+  const cp = getFilterParams();
+  const curKey = cp.namTu + '_' + cp.thangTu + '_' + cp.thangDen + '_' + cp.kv;
+  if (DATA._phongCacheKey[tab] && DATA._phongCacheKey[tab] !== curKey) {
+    DATA._phongCache    = DATA._phongCache    || {};
+    DATA._phongCacheKey = DATA._phongCacheKey || {};
+    DATA._phongCache[tab]    = null;
+    DATA._phongCacheKey[tab] = null;
+  }
+}
 function _loadTabAndRender(tab, renderFn) {
   if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(DATA.shHsva); return; }
   if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(DATA.thNq205); return; }
   if (_isPhongTab(tab) && DATA?._phongCache?.[tab]) {
-    renderFn(DATA._phongCache[tab]); return;
+    // Kiểm tra cache có khớp với filter hiện tại không
+    const _cp = getFilterParams();
+    const _cacheKey = DATA?._phongCacheKey?.[tab];
+    const _curKey = _cp.namTu + '_' + _cp.thangTu + '_' + _cp.thangDen + '_' + _cp.kv;
+    if (_cacheKey === _curKey) {
+      renderFn(DATA._phongCache[tab]); return;
+    }
+    // Filter đã thay đổi → xóa cache cũ, load lại
+    DATA._phongCache[tab] = null;
   }
 
   showLoader('Đang tải dữ liệu…');
@@ -5607,8 +5790,12 @@ function _loadTabAndRender(tab, renderFn) {
     if (tab === 'thnq205' && d?.thNq205) { DATA = { ...DATA, thNq205: d.thNq205 }; hideLoader(); renderFn(); return; }
     if (_isPhongTab(tab) && d?.phong) {
       DATA = DATA || {};
-      DATA._phongCache = DATA._phongCache || {};
-      DATA._phongCache[tab] = d.phong;
+      DATA._phongCache     = DATA._phongCache     || {};
+      DATA._phongCacheKey  = DATA._phongCacheKey  || {};
+      DATA._phongCache[tab]    = d.phong;
+      // Lưu cache key = filter hiện tại
+      const _sp = getFilterParams();
+      DATA._phongCacheKey[tab] = _sp.namTu + '_' + _sp.thangTu + '_' + _sp.thangDen + '_' + _sp.kv;
       hideLoader(); renderFn(d.phong); return;
     }
     hideLoader(); renderFn();
@@ -5646,9 +5833,9 @@ function renderShHsva() {
   const cols    = d.numCols  || [];
   if (!cols.length) return; // sheet chưa có dữ liệu
 
-  // KPI — tổng từng cột, filter theo topbar fKV nếu đang chọn 1 KV
+  // KPI — tổng từng cột, filter theo topbar fKV nếu đang chọn 1 KV (bỏ qua phòng filter)
   const COLORS = ['var(--cyan)','var(--amber)','var(--emerald)','var(--coral)','var(--violet)'];
-  const _fkvCDS = (v('fKV') || '').trim();
+  const _fkvCDS = (typeof _getKVForAPI === 'function' ? _getKVForAPI() : (v('fKV')||'')).trim();
   const kvForKPI = _fkvCDS ? kv.filter(r => (r.donVi||'').trim() === _fkvCDS) : kv;
   $('shKpiGrid').innerHTML = cols.slice(0,5).map((c,i) => {
     const total = kvForKPI.reduce((s,r)=>s+(r[c]||0),0);
@@ -7070,6 +7257,11 @@ function _setKV(id, text) {
 window.addEventListener('load', () => {
   _checkLoginSession();
   wsCheckAndInit();
+  // Khởi tạo phong filter state (phòng trường hợp select đã có giá trị từ trước)
+  const _initSel = (typeof v === 'function') ? v('fKV') : '';
+  if (_initSel && _initSel.startsWith('__') && typeof _applyPhongFilter === 'function') {
+    _applyPhongFilter(_initSel);
+  }
 });
 </script>
 
