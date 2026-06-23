@@ -1607,16 +1607,15 @@ body::after{
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       </button>
     </div>
-    <button id="btnInstallApp" onclick="_installPWA()" style="
-  display:none;height:28px;padding:0 11px;border-radius:6px;
-  border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.1);
-  color:var(--gold);font-size:11px;font-weight:700;font-family:var(--fb);
-  cursor:pointer;align-items:center;gap:5px;white-space:nowrap;
+    <button id="btnInstallApp" onclick="_installPWA()" title="Cài đặt ứng dụng Dashboard" style="
+  display:none;height:28px;width:28px;padding:0;border-radius:6px;
+  border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.08);
+  color:var(--gold);cursor:pointer;align-items:center;justify-content:center;
   animation:confirmPulse 2s ease-in-out infinite;flex-shrink:0">
-  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
     <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-  </svg>Cài App
+  </svg>
 </button>
 <div class="tl-status">
       <div class="dot"></div>
@@ -6640,89 +6639,56 @@ function filterCt6Table() {
 // 1.2 — PRESENTATION MODE
 // ══════════════════════════════════════════════════════════════
 function _togglePresentation() {
-  var body = document.body;
-  var isOn = body.classList.toggle('presentation-mode');
+  var isOn = !document.body.classList.contains('presentation-mode');
+  document.body.classList.toggle('presentation-mode', isOn);
 
-  // Ẩn/hiện topbar và sidebar trực tiếp bằng JS (đảm bảo override mọi CSS specificity)
-  var topbar  = document.querySelector('.topbar');
-  var sidebar = document.querySelector('.sidebar');
-  var mobileNav = document.querySelector('.mobile-bottom-nav');
-  if (topbar)    topbar.style.display    = isOn ? 'none' : '';
-  if (sidebar)   sidebar.style.display   = isOn ? 'none' : '';
-  if (mobileNav) mobileNav.style.display = isOn ? 'none' : '';
+  var topbar   = document.querySelector('header.topbar');
+  var sidebar  = document.querySelector('nav.sidebar');
+  var mobileNav= document.querySelector('.mobile-bottom-nav');
+  var main     = document.getElementById('main');
+  var app      = document.querySelector('.app');
+  var aiChat   = document.getElementById('aiChat');
+  var btn      = document.getElementById('btnPresent');
 
-  // Điều chỉnh .app grid để main chiếm toàn bộ màn hình
-  var app  = document.querySelector('.app');
-  var main = document.getElementById('main');
-  if (app) {
-    app.style.gridTemplateColumns = isOn ? '1fr' : '';
-    app.style.gridTemplateRows    = isOn ? '1fr' : '';
-    app.style.display             = isOn ? 'block' : '';
-  }
-  if (main) {
-    main.style.padding = isOn ? '32px 40px' : '';
-    main.style.height  = isOn ? '100vh' : '';
-    main.style.overflowY = isOn ? 'auto' : '';
-  }
-
-  // Ẩn/hiện AI bubble
-  var aiChat = document.getElementById('aiChat');
-  if (aiChat) aiChat.style.display = isOn ? 'none' : '';
-
-  // Cập nhật nút
-  var btn = document.getElementById('btnPresent');
-  if (btn) {
-    btn.innerHTML = isOn
-      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Thoát'
-      : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Trình chiếu';
-    if (isOn) {
-      // Di chuyển nút ra ngoài topbar để vẫn hiển thị
-      btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;background:rgba(11,20,40,.9);border:1px solid rgba(255,255,255,.2);color:var(--ts);padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;gap:5px;align-items:center;cursor:pointer;backdrop-filter:blur(12px)';
-    } else {
-      btn.style.cssText = '';
-    }
-  }
-
-  // Fullscreen API nếu trình duyệt hỗ trợ
   if (isOn) {
+    // ── BẬT presentation ──────────────────────────────────
+    if (topbar)    { topbar.dataset.pdisplay = topbar.style.display; topbar.style.display = 'none'; }
+    if (sidebar)   { sidebar.dataset.pdisplay = sidebar.style.display; sidebar.style.display = 'none'; }
+    if (mobileNav) { mobileNav.dataset.pdisplay = mobileNav.style.display; mobileNav.style.display = 'none'; }
+    if (aiChat)    { aiChat.dataset.pdisplay = aiChat.style.display; aiChat.style.display = 'none'; }
+    if (app)  { app.style.gridTemplateColumns = '1fr'; app.style.gridTemplateRows = '1fr'; }
+    if (main) { main.style.gridColumn = '1/-1'; main.style.gridRow = '1/-1'; main.style.padding = '28px 36px'; }
+    if (btn)  {
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+      btn.title = 'Thoát trình chiếu (Esc)';
+      btn.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;display:flex;width:36px;height:36px;padding:0;align-items:center;justify-content:center;border-radius:50%;background:rgba(11,20,40,.85);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:pointer;backdrop-filter:blur(12px);transition:all .2s';
+    }
+    // Fullscreen
     try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen();
-      }
+      var el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     } catch(e) {}
   } else {
+    // ── TẮT presentation ──────────────────────────────────
+    if (topbar)    { topbar.style.display = topbar.dataset.pdisplay || ''; delete topbar.dataset.pdisplay; }
+    if (sidebar)   { sidebar.style.display = sidebar.dataset.pdisplay || ''; delete sidebar.dataset.pdisplay; }
+    if (mobileNav) { mobileNav.style.display = mobileNav.dataset.pdisplay || ''; delete mobileNav.dataset.pdisplay; }
+    if (aiChat)    { aiChat.style.display = aiChat.dataset.pdisplay || ''; delete aiChat.dataset.pdisplay; }
+    if (app)  { app.style.gridTemplateColumns = ''; app.style.gridTemplateRows = ''; }
+    if (main) { main.style.gridColumn = ''; main.style.gridRow = ''; main.style.padding = ''; }
+    if (btn)  {
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+      btn.title = 'Trình chiếu (Esc để thoát)';
+      btn.style.cssText = '';
+    }
+    // Thoát fullscreen
     try {
-      if (document.exitFullscreen && document.fullscreenElement) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      }
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
     } catch(e) {}
   }
 }
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && document.body.classList.contains('presentation-mode')) {
-    _togglePresentation();
-  }
-  if (e.key === 'F5' && document.body.classList.contains('presentation-mode')) {
-    e.preventDefault();
-    _togglePresentation();
-  }
-});
-// Sync khi user thoát fullscreen bằng Esc của trình duyệt
-document.addEventListener('fullscreenchange', function() {
-  if (!document.fullscreenElement && document.body.classList.contains('presentation-mode')) {
-    _togglePresentation();
-  }
-});
-document.addEventListener('webkitfullscreenchange', function() {
-  if (!document.webkitFullscreenElement && document.body.classList.contains('presentation-mode')) {
-    _togglePresentation();
-  }
-});
-
 // ══════════════════════════════════════════════════════════════
 // 1.3 — EXPORT PDF
 // ══════════════════════════════════════════════════════════════
