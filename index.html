@@ -135,7 +135,7 @@ body::after{
 }
 .tl-title{font-size:12px;font-weight:700;line-height:1;color:var(--tp);white-space:nowrap}
 .tl-sub  {font-size:10px;color:var(--ts);line-height:1.5;white-space:nowrap}
-.tl-space{flex:1;min-width:8px}
+.tl-space{flex:1;min-width:0}
 .tl-filters{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:visible}
 .tl-filters select{
   height:28px;border-radius:var(--rsm);
@@ -201,7 +201,7 @@ body::after{
   0%,100%{ box-shadow:0 0 8px rgba(0,229,160,.2) }
   50%{ box-shadow:0 0 18px rgba(0,229,160,.45) }
 }
-.tl-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--ts);font-family:var(--fm)}
+.tl-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--ts);font-family:var(--fm);flex-shrink:0;white-space:nowrap;margin-left:auto}
 .dot{
   width:7px;height:7px;border-radius:50%;
   background:var(--emerald);box-shadow:0 0 8px var(--emerald);
@@ -1231,7 +1231,7 @@ body::after{
   cursor:pointer;transition:border-color .2s,background .2s;flex-shrink:0;
 }
 .tr-badge:hover{border-color:var(--cyan);background:rgba(0,212,255,.12)}
-.tr-inner{position:relative;width:160px;height:30px;display:flex;align-items:center;flex-shrink:0}
+.tr-inner{position:relative;width:150px;height:30px;display:flex;align-items:center;flex-shrink:0}
 .tr-track{position:absolute;left:8px;right:8px;height:3px;background:rgba(0,212,255,.1);border-radius:99px}
 .tr-fill{position:absolute;height:3px;background:linear-gradient(90deg,var(--cyan),rgba(0,212,255,.55));border-radius:99px}
 .tr-thumb{
