@@ -6597,12 +6597,16 @@ function filterCtTable() {
   _ctSearchInfo_ct12_total   = total;
   _ctSetSearchInfo('ct12', rows.length, total);
 
+  // ── Cập nhật KPI cards (đây là phần bị thiếu gây ra bug) ──
+  if (typeof _countAndSetKPI === 'function') {
+    _countAndSetKPI(rows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
+  }
+
   // Dùng biến global _ctDetailRows cho pagination
   window._ctDetailRows = rows;
   window._ctDetailPage = 0;
   if (typeof _renderCtDetailPage === 'function') _renderCtDetailPage();
   if (typeof renderCtTable === 'function') {
-    // Render bảng tóm tắt bên trên (nếu có)
     var _dvSummaryAll = window.DATA12?._dvSummaryAll || window.DATA12?.chiTieu?.dvSummary || [];
     var fCtKV = typeof v === 'function' ? v('fCtKV') : '';
     var summaryRows = fCtKV ? _dvSummaryAll.filter(function(r){ return r.donVi === fCtKV; }) : _dvSummaryAll;
@@ -6633,6 +6637,11 @@ function filterCt6Table() {
   }
 
   _ctSetSearchInfo('ct6', rows.length, total);
+
+  // ── Cập nhật KPI cards CT6 ──
+  if (typeof _countAndSetKPI === 'function') {
+    _countAndSetKPI(rows, 'ct-dat', 'ct-vuot', 'ct-kdat', 'ct-kps');
+  }
 
   // Dùng các biến CT6 pagination
   if (typeof window._ct6Rows !== 'undefined') window._ct6Rows = rows;
