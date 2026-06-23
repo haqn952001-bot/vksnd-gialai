@@ -4366,8 +4366,9 @@ const PHONG_TAB_MAP = {
   '__phong15__': { label:'Phòng 15',            badge:'P15', tabs:['phong15'] }
 };
 
-// Các tab luôn hiển thị bình thường (không bị dim khi lọc phòng)
-const TABS_ALWAYS_ON = ['overview','chitieu12','chitieu6','khuvuc','thammuuai'];
+// Các tab luôn hiển thị bình thường dù đang lọc phòng nào
+// chitieu12/chitieu6/khuvuc KHÔNG nằm đây vì là tab toàn đơn vị, không liên quan 1 phòng
+const TABS_ALWAYS_ON = ['overview','thammuuai'];
 
 function onTopbarKVChange() {
   const sel = v('fKV') || '';
