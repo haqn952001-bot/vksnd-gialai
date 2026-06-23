@@ -6639,56 +6639,107 @@ function filterCt6Table() {
 // 1.2 — PRESENTATION MODE
 // ══════════════════════════════════════════════════════════════
 function _togglePresentation() {
+  // Guard: không cho phép presentation mode trên mobile
+  if (window.innerWidth <= 767) return;
+  // Guard: đọc state TRƯỚC khi toggle để tránh race condition
   var isOn = !document.body.classList.contains('presentation-mode');
   document.body.classList.toggle('presentation-mode', isOn);
 
-  var topbar   = document.querySelector('header.topbar');
-  var sidebar  = document.querySelector('nav.sidebar');
-  var mobileNav= document.querySelector('.mobile-bottom-nav');
-  var main     = document.getElementById('main');
-  var app      = document.querySelector('.app');
-  var aiChat   = document.getElementById('aiChat');
-  var btn      = document.getElementById('btnPresent');
+  var els = {
+    topbar   : document.querySelector('header.topbar'),
+    sidebar  : document.querySelector('nav.sidebar'),
+    mobileNav: document.querySelector('.mobile-bottom-nav'),
+    aiChat   : document.getElementById('aiChat'),
+    app      : document.querySelector('.app'),
+    main     : document.getElementById('main'),
+    btn      : document.getElementById('btnPresent')
+  };
 
   if (isOn) {
-    // ── BẬT presentation ──────────────────────────────────
-    if (topbar)    { topbar.dataset.pdisplay = topbar.style.display; topbar.style.display = 'none'; }
-    if (sidebar)   { sidebar.dataset.pdisplay = sidebar.style.display; sidebar.style.display = 'none'; }
-    if (mobileNav) { mobileNav.dataset.pdisplay = mobileNav.style.display; mobileNav.style.display = 'none'; }
-    if (aiChat)    { aiChat.dataset.pdisplay = aiChat.style.display; aiChat.style.display = 'none'; }
-    if (app)  { app.style.gridTemplateColumns = '1fr'; app.style.gridTemplateRows = '1fr'; }
-    if (main) { main.style.gridColumn = '1/-1'; main.style.gridRow = '1/-1'; main.style.padding = '28px 36px'; }
-    if (btn)  {
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
-      btn.title = 'Thoát trình chiếu (Esc)';
-      btn.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;display:flex;width:36px;height:36px;padding:0;align-items:center;justify-content:center;border-radius:50%;background:rgba(11,20,40,.85);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:pointer;backdrop-filter:blur(12px);transition:all .2s';
+    // ── BẬT: lưu trạng thái gốc → ẩn / mở rộng ────────────
+    Object.keys(els).forEach(function(k) {
+      var el = els[k];
+      if (!el) return;
+      // Lưu toàn bộ inline style hiện tại vào attribute
+      el.setAttribute('data-ps-style', el.getAttribute('style') || '');
+    });
+
+    if (els.topbar)    els.topbar.style.cssText    += ';display:none!important';
+    if (els.sidebar)   els.sidebar.style.cssText   += ';display:none!important';
+    if (els.mobileNav) els.mobileNav.style.cssText += ';display:none!important';
+    if (els.aiChat)    els.aiChat.style.cssText    += ';display:none!important';
+
+    if (els.app) {
+      els.app.style.display              = 'grid';
+      els.app.style.gridTemplateColumns  = '1fr';
+      els.app.style.gridTemplateRows     = '1fr';
     }
-    // Fullscreen
+    if (els.main) {
+      els.main.style.gridColumn  = '1 / -1';
+      els.main.style.gridRow     = '1 / -1';
+      els.main.style.padding     = '28px 36px';
+      els.main.style.overflowY   = 'auto';
+    }
+    if (els.btn) {
+      els.btn.setAttribute('data-ps-style', els.btn.getAttribute('style') || '');
+      els.btn.style.cssText = [
+        'position:fixed', 'bottom:18px', 'right:18px', 'z-index:99999',
+        'display:flex', 'width:36px', 'height:36px', 'padding:0',
+        'align-items:center', 'justify-content:center',
+        'border-radius:50%', 'background:rgba(11,20,40,.88)',
+        'border:1px solid rgba(255,255,255,.18)',
+        'color:rgba(255,255,255,.6)', 'cursor:pointer',
+        'backdrop-filter:blur(10px)', 'transition:all .2s'
+      ].join(';');
+      els.btn.title = 'Thoát trình chiếu (Esc)';
+      els.btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M8 21H5a2 2 0 0 0-2-2v-3M21 16v3a2 2 0 0 0-2 2h-3"/></svg>';
+    }
+
+    // Fullscreen API
     try {
-      var el = document.documentElement;
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      var root = document.documentElement;
+      (root.requestFullscreen || root.webkitRequestFullscreen || root.mozRequestFullScreen || function(){}).call(root);
     } catch(e) {}
+
   } else {
-    // ── TẮT presentation ──────────────────────────────────
-    if (topbar)    { topbar.style.display = topbar.dataset.pdisplay || ''; delete topbar.dataset.pdisplay; }
-    if (sidebar)   { sidebar.style.display = sidebar.dataset.pdisplay || ''; delete sidebar.dataset.pdisplay; }
-    if (mobileNav) { mobileNav.style.display = mobileNav.dataset.pdisplay || ''; delete mobileNav.dataset.pdisplay; }
-    if (aiChat)    { aiChat.style.display = aiChat.dataset.pdisplay || ''; delete aiChat.dataset.pdisplay; }
-    if (app)  { app.style.gridTemplateColumns = ''; app.style.gridTemplateRows = ''; }
-    if (main) { main.style.gridColumn = ''; main.style.gridRow = ''; main.style.padding = ''; }
-    if (btn)  {
-      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
-      btn.title = 'Trình chiếu (Esc để thoát)';
-      btn.style.cssText = '';
-    }
-    // Thoát fullscreen
+    // ── TẮT: khôi phục style gốc từ attribute ───────────────
+    ['topbar','sidebar','mobileNav','aiChat','app','main','btn'].forEach(function(k) {
+      var el = els[k];
+      if (!el) return;
+      var savedStyle = el.getAttribute('data-ps-style');
+      if (savedStyle !== null) {
+        el.setAttribute('style', savedStyle);
+        el.removeAttribute('data-ps-style');
+      } else {
+        el.removeAttribute('style');
+      }
+    });
+
+    // Thoát fullscreen nếu đang fullscreen
     try {
-      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+      var exitFn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+      if (exitFn && (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement)) {
+        exitFn.call(document);
+      }
     } catch(e) {}
   }
 }
+
+// ── Đồng bộ khi trình duyệt thoát fullscreen bằng Esc ───────
+(function() {
+  function _onFSChange() {
+    var isFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+    var isPM = document.body.classList.contains('presentation-mode');
+    // Nếu thoát fullscreen nhưng vẫn đang presentation → tắt presentation
+    if (!isFS && isPM) {
+      _togglePresentation();
+    }
+  }
+  document.addEventListener('fullscreenchange',       _onFSChange);
+  document.addEventListener('webkitfullscreenchange', _onFSChange);
+  document.addEventListener('mozfullscreenchange',    _onFSChange);
+  document.addEventListener('MSFullscreenChange',     _onFSChange);
+})();
 // ══════════════════════════════════════════════════════════════
 // 1.3 — EXPORT PDF
 // ══════════════════════════════════════════════════════════════
@@ -8641,6 +8692,10 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
 /* ═══ END SEARCH CSS ══════════════════════════════════════════ */
 
 /* ═══ PRESENTATION MODE ════════════════════════════════════════ */
+/* Ẩn nút Trình chiếu trên mobile — fullscreen không phù hợp */
+@media(max-width:767px){
+  #btnPresent{ display:none !important; }
+}
 body.presentation-mode .sidebar,
 body.presentation-mode .topbar,
 body.presentation-mode .mobile-bottom-nav,
