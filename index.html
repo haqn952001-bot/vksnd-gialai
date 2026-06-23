@@ -2923,7 +2923,7 @@ function onData(d) {
   const pg = document.querySelector('.nav-item.active')?.dataset?.page || 'overview';
   renderPage(pg);
 
-  const now = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const now = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('tsUp').textContent = now;
 
   saveFilter();
