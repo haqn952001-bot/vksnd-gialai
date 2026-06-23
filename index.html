@@ -2912,6 +2912,8 @@ window.confirmFilter = confirmFilter;
 function reload(immediate) {
   // Xóa cache phong khi reload
   if (typeof DATA !== 'undefined' && DATA) { DATA._phongCache = {}; DATA._phongCacheKey = {}; }
+  // Xóa cache tab Án hủy theo phòng khi filter thay đổi
+  _anHuyPhongCache = {};
   // Debounce 600ms — tránh gọi GAS nhiều lần khi thay đổi nhiều filter liên tiếp
   if (_reloadTimer) clearTimeout(_reloadTimer);
   if (immediate) {
@@ -3155,7 +3157,17 @@ function renderPage(pg) {
   if (!DATA) return;
   if (pg === 'overview') renderOverview();
   if (pg === 'khuvuc')   renderKhuVuc();
-  if (pg === 'anhuy')    renderAnHuy();
+  if (pg === 'anhuy') {
+    // Khi đang lọc phòng → load riêng với kv=tên phòng (sheet AnHuy có cột Đơn vị = Phòng X)
+    const _phongSel = v('fKV') || '';
+    const _isPhongFilter = _phongSel.startsWith('__') && typeof PHONG_TAB_MAP !== 'undefined' && PHONG_TAB_MAP[_phongSel];
+    if (_isPhongFilter) {
+      const _phongKvName = PHONG_TAB_MAP[_phongSel].kvName || '';
+      _loadAnHuyByPhong(_phongKvName);
+    } else {
+      renderAnHuy();
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -4355,15 +4367,15 @@ function ctDVInit(dvList) {
 // ══ MAP: phòng → tabs có dữ liệu ════════════════════════════
 // Tabs không có trong danh sách sẽ bị dim (trống, không có data)
 const PHONG_TAB_MAP = {
-  '__phong1__' : { label:'Phòng 1',             badge:'P1',  tabs:['phong1','anhuy','shhsva'] },
-  '__phong2__' : { label:'Phòng 2',             badge:'P2',  tabs:['phong2','anhuy','shhsva'] },
-  '__phong7__' : { label:'Phòng 7',             badge:'P7',  tabs:['phong7','anhuy','shhsva'] },
-  '__phong8__' : { label:'Phòng 8',             badge:'P8',  tabs:['phong8'] },
-  '__phong9__' : { label:'Phòng 9',             badge:'P9',  tabs:['phong9','shhsva','thnq205'] },
-  '__phong10__': { label:'Phòng 10',            badge:'P10', tabs:['phong10','shhsva','thnq205'] },
-  '__phong11__': { label:'Phòng 11',            badge:'P11', tabs:['phong11'] },
-  '__ttra__'   : { label:'Thanh tra - Khiếu tố',badge:'TT',  tabs:['ttra'] },
-  '__phong15__': { label:'Phòng 15',            badge:'P15', tabs:['phong15'] }
+  '__phong1__' : { label:'Phòng 1',             badge:'P1',  kvName:'Phòng 1',             tabs:['phong1','anhuy','shhsva'] },
+  '__phong2__' : { label:'Phòng 2',             badge:'P2',  kvName:'Phòng 2',             tabs:['phong2','anhuy','shhsva'] },
+  '__phong7__' : { label:'Phòng 7',             badge:'P7',  kvName:'Phòng 7',             tabs:['phong7','anhuy','shhsva'] },
+  '__phong8__' : { label:'Phòng 8',             badge:'P8',  kvName:'Phòng 8',             tabs:['phong8'] },
+  '__phong9__' : { label:'Phòng 9',             badge:'P9',  kvName:'Phòng 9',             tabs:['phong9','shhsva','thnq205'] },
+  '__phong10__': { label:'Phòng 10',            badge:'P10', kvName:'Phòng 10',            tabs:['phong10','shhsva','thnq205'] },
+  '__phong11__': { label:'Phòng 11',            badge:'P11', kvName:'Phòng 11',            tabs:['phong11'] },
+  '__ttra__'   : { label:'Thanh tra - Khiếu tố',badge:'TT',  kvName:'Thanh tra - Khiếu tố',tabs:['ttra'] },
+  '__phong15__': { label:'Phòng 15',            badge:'P15', kvName:'Phòng 15',            tabs:['phong15'] }
 };
 
 // Các tab luôn hiển thị bình thường dù đang lọc phòng nào
@@ -4379,22 +4391,31 @@ function onTopbarKVChange() {
   // Cập nhật sidebar dim + banner
   _applyPhongFilter(sel);
 
-  // Nếu đang ở tab bị dim → chuyển sang tab đầu của phòng (hoặc overview)
   if (isPhong) {
-    const info   = PHONG_TAB_MAP[sel];
+    const info    = PHONG_TAB_MAP[sel];
     const allowed = TABS_ALWAYS_ON.concat(info.tabs);
+
+    // Nếu đang ở tab bị dim → chuyển sang tab đầu của phòng
     if (pg && !allowed.includes(pg)) {
-      // Chuyển sang tab đầu tiên của phòng
       const firstTab = document.querySelector(`.nav-item[data-page="${info.tabs[0]}"]`);
-      if (firstTab) nav(firstTab);
-      return; // nav() đã gọi renderPage → không cần tiếp
+      if (firstTab) {
+        // Chuyển tab rồi reload với filter mới
+        nav(firstTab);
+      }
     }
+
+    // Tự động reload ngay với kv = kvName (không cần bấm Xác nhận)
+    const btn = $('btnConfirm');
+    if (btn) btn.classList.remove('dirty'); // bỏ dirty vì sẽ reload luôn
+    reload(true);
+    return;
   }
 
-  // Topbar fKV không ảnh hưởng multi-select chỉ tiêu — chỉ trigger re-render
+  // Lọc theo KV thông thường (không phải phòng) → đánh dấu dirty chờ Xác nhận
+  // (đã được markFilterDirty() gọi từ onchange của select)
   if (pg === 'chitieu12' && DATA12?._ctDetailAll?.length) filterCtTable();
   const el6 = $('fCt6DVDet');
-  if (el6 && !isPhong) el6.value = sel;
+  if (el6) el6.value = sel;
   if (pg === 'chitieu6' && DATA6?._ctDetailAll?.length) filterCt6Table();
 }
 
@@ -4443,14 +4464,25 @@ function _clearPhongFilter() {
   if (kvSel) kvSel.value = '';
   window._activePhong = '';
   _applyPhongFilter('');
-  markFilterDirty();
+  // Tự reload lại với kv='' (tất cả đơn vị)
+  const btn = $('btnConfirm');
+  if (btn) btn.classList.remove('dirty');
+  reload(true);
 }
 
-/** Lấy giá trị KV thực sự (bỏ qua prefix __phong__) để gửi API */
+/** Lấy giá trị KV để gửi lên API.
+ *  - Nếu chọn phòng (__phongX__) → trả về tên thực trong sheet (vd: 'Phòng 1')
+ *  - Nếu chọn KV cụ thể (KV1...) → trả nguyên giá trị
+ *  - Nếu "Tất cả" → trả ''
+ */
 function _getKVForAPI() {
   const sel = v('fKV') || '';
-  if (sel.startsWith('__')) return ''; // lọc phòng → KV = tất cả
-  return sel;
+  if (!sel) return '';
+  if (sel.startsWith('__') && PHONG_TAB_MAP[sel]) {
+    // Lọc theo phòng → dùng kvName là tên đơn vị thực trong sheet
+    return PHONG_TAB_MAP[sel].kvName || '';
+  }
+  return sel; // KV thông thường
 }
 
 function filterCtTable() {
@@ -5059,6 +5091,70 @@ function renderAnHuy() {
       <td style="color:var(--emerald)">${F(r['Không có lỗi'])}</td>
       <td style="color:var(--amber)">${F(r['Chưa đánh giá lỗi'])}</td>
     </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ÁN HỦY THEO PHÒNG — load riêng với kv = tên phòng thực
+// ══════════════════════════════════════════════════════════════
+var _anHuyPhongCache = {}; // cache để tránh load lại khi đã có data
+
+function _loadAnHuyByPhong(kvName) {
+  if (!kvName) { renderAnHuy(); return; }
+
+  // Nếu đã có cache cho phòng này + cùng filter thời gian → dùng lại
+  const p   = getFilterParams();
+  const key = `${kvName}|${p.thangTu}|${p.thangDen}|${p.namTu}|${p.namDen}`;
+  if (_anHuyPhongCache[key]) {
+    _renderAnHuyWithData(_anHuyPhongCache[key]);
+    return;
+  }
+
+  showLoader('Đang tải số liệu Án hủy…');
+
+  const params = { ...p, kv: kvName, forceRefresh: false };
+
+  // Vercel mode
+  if (!GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com')) {
+    gasAPI('getData', params)
+      .then(d => {
+        hideLoader();
+        if (d?.anHuy) {
+          _anHuyPhongCache[key] = d.anHuy;
+          _renderAnHuyWithData(d.anHuy);
+        }
+      })
+      .catch(() => { hideLoader(); renderAnHuy(); });
+    return;
+  }
+
+  // GAS mode
+  if (GAS) {
+    google.script.run
+      .withSuccessHandler(d => {
+        hideLoader();
+        if (d?.anHuy) {
+          _anHuyPhongCache[key] = d.anHuy;
+          _renderAnHuyWithData(d.anHuy);
+        }
+      })
+      .withFailureHandler(() => { hideLoader(); renderAnHuy(); })
+      .getData(params);
+    return;
+  }
+
+  // Demo mode
+  renderAnHuy();
+}
+
+/** Render tab Án hủy với data tùy chỉnh (thay vì DATA.anHuy) */
+function _renderAnHuyWithData(anHuyData) {
+  if (!anHuyData) return;
+  // Tạm gán vào DATA.anHuy rồi gọi renderAnHuy bình thường
+  const backup    = DATA?.anHuy;
+  if (!DATA) return;
+  DATA.anHuy      = anHuyData;
+  renderAnHuy();
+  DATA.anHuy      = backup; // khôi phục data gốc
 }
 
 // ══════════════════════════════════════════════════════════════
