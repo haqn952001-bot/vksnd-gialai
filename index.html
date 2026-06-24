@@ -2930,7 +2930,7 @@ function _doReload() {
   showLoader('Đang tải dữ liệu…');
   document.querySelector('.tl-filters')?.classList.add('loading');
 
-  const p = { ...getFilterParams(), forceRefresh: true };
+  const p = { ...getFilterParams(), forceRefresh: false };
 
   // Vercel mode: gọi GAS REST API qua JSONP
   if (!GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com')) {
