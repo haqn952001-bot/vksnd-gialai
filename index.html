@@ -4386,33 +4386,39 @@ function onTopbarKVChange() {
   const sel = v('fKV') || '';
   const pg  = document.querySelector('.nav-item.active')?.dataset?.page;
 
-  const isPhong = sel.startsWith('__') && PHONG_TAB_MAP[sel];
+  const isPhong    = sel && sel.startsWith('__') && PHONG_TAB_MAP[sel];
+  const wasPhong   = !!window._activePhong; // trước đó có đang lọc phòng không
 
-  // Cập nhật sidebar dim + banner
+  // Cập nhật sidebar dim + banner (luôn gọi, kể cả khi chọn Tất cả)
   _applyPhongFilter(sel);
 
   if (isPhong) {
+    // ── Đang chọn một Phòng cụ thể ──────────────────────────────
     const info    = PHONG_TAB_MAP[sel];
     const allowed = TABS_ALWAYS_ON.concat(info.tabs);
 
     // Nếu đang ở tab bị dim → chuyển sang tab đầu của phòng
     if (pg && !allowed.includes(pg)) {
       const firstTab = document.querySelector(`.nav-item[data-page="${info.tabs[0]}"]`);
-      if (firstTab) {
-        // Chuyển tab rồi reload với filter mới
-        nav(firstTab);
-      }
+      if (firstTab) nav(firstTab);
     }
 
-    // Tự động reload ngay với kv = kvName (không cần bấm Xác nhận)
+    // Tự động reload ngay (không cần bấm Xác nhận)
     const btn = $('btnConfirm');
-    if (btn) btn.classList.remove('dirty'); // bỏ dirty vì sẽ reload luôn
+    if (btn) btn.classList.remove('dirty');
     reload(true);
     return;
   }
 
-  // Lọc theo KV thông thường (không phải phòng) → đánh dấu dirty chờ Xác nhận
-  // (đã được markFilterDirty() gọi từ onchange của select)
+  if (wasPhong && !isPhong) {
+    // ── Vừa bỏ lọc phòng (chọn Tất cả hoặc KV) → reload lại ───
+    const btn = $('btnConfirm');
+    if (btn) btn.classList.remove('dirty');
+    reload(true);
+    return;
+  }
+
+  // ── Lọc theo KV thông thường (không đổi từ phòng) ────────────
   if (pg === 'chitieu12' && DATA12?._ctDetailAll?.length) filterCtTable();
   const el6 = $('fCt6DVDet');
   if (el6) el6.value = sel;
