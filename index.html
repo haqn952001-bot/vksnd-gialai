@@ -3006,7 +3006,18 @@ function onData(d) {
     setVal('fThangDen', f.thangDen); setVal('fNamDen',  f.namDen);
     if(typeof _trSetValues==='function') _trSetValues(f.thangTu, f.thangDen);
     var _s2=document.getElementById('fNamSel'); if(_s2&&f.namTu) _s2.value=f.namTu;
-    if (f.kv !== undefined) { const el=$('fKV'); if(el) el.value = f.kv; }
+    if (f.kv !== undefined) {
+      const el = $('fKV');
+      if (el) {
+        // Thử set trực tiếp trước
+        el.value = f.kv;
+        // Nếu select trống (f.kv là tên phòng thực như 'Phòng 1', không khớp option)
+        // → khôi phục từ _activePhong (lưu giá trị __phong1__ gốc)
+        if (!el.value && window._activePhong && window._activePhong.startsWith('__')) {
+          el.value = window._activePhong;
+        }
+      }
+    }
   }
 
   const pg = document.querySelector('.nav-item.active')?.dataset?.page || 'overview';
@@ -5431,6 +5442,8 @@ function showSkeleton(pgId) {
 function saveFilter() {
   try {
     const f = getFilterParams();
+    // Lưu thêm _activePhong (__phong1__ v.v.) để restore đúng option select
+    f._phongSel = window._activePhong || '';
     sessionStorage.setItem('vksnd_filter', JSON.stringify(f));
   } catch(_) {}
 }
@@ -5445,7 +5458,16 @@ function loadSavedFilter() {
     set('fThangDen', f.thangDen); set('fNamDen', f.namDen);
     if(typeof _trSetValues==='function') _trSetValues(f.thangTu, f.thangDen);
     var _s3=document.getElementById('fNamSel'); if(_s3&&f.namTu) _s3.value=f.namTu;
-    if (f.kv) set('fKV', f.kv);
+    // Restore fKV: ưu tiên _phongSel (__phong1__...) nếu có, fallback f.kv
+    const kvToSet = (f._phongSel && f._phongSel.startsWith('__')) ? f._phongSel : (f.kv || '');
+    if (kvToSet) {
+      const elKV = $('fKV');
+      if (elKV) {
+        elKV.value = kvToSet;
+        if (typeof _applyPhongFilter === 'function') _applyPhongFilter(kvToSet);
+        window._activePhong = kvToSet.startsWith('__') ? kvToSet : '';
+      }
+    }
     return true;
   } catch(_) { return false; }
 }
