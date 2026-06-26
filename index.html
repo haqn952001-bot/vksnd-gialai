@@ -3037,46 +3037,21 @@ function onData(d) {
 
 /** Pre-fetch ngầm — chạy sau khi Tổng quan đã render xong */
 function _prefetchBackground() {
-  const p = getFilterParams();
+  // PA3: chỉ prefetch CT12T sau 2s — quan trọng nhất, user hay vào nhất
+  // CT6T/CĐS/NQ205 → cache đã được warm bởi _rebuildCache() trên GAS mỗi 8 phút
+  // → không cần prefetch ngầm, tránh cạnh tranh băng thông GAS khi load trang
+  if (!GAS) return; // Vercel mode: lazy load khi user click tab
+  const p     = getFilterParams();
   const nam12 = v('fCtNam') || p.namDen || '2026';
-  const nam6  = v('fCt6Nam') || p.namDen || '2026';
 
-  // _prefetchBackground: chỉ prefetch summary trong GAS mode
-  // Vercel mode sẽ load khi user vào tab (reloadChiTieu12/6)
-  if (!GAS) return; // Vercel mode: skip prefetch, dùng gasAPI khi vào tab
-
-  if (!DATA12?.chiTieu?.dvSummary?.length) {
-    google.script.run
-      .withSuccessHandler(d => { if (d?.chiTieu?.dvSummary?.length) DATA12 = d; })
-      .withFailureHandler(()=>{})
-      .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
-  }
   setTimeout(() => {
-    if (!DATA6?.chiTieu?.dvSummary?.length) {
+    if (!DATA12?.chiTieu?.dvSummary?.length) {
       google.script.run
-        .withSuccessHandler(d => { if (d?.chiTieu?.dvSummary?.length) DATA6 = d; })
+        .withSuccessHandler(d => { if (d?.chiTieu?.dvSummary?.length) DATA12 = d; })
         .withFailureHandler(()=>{})
-        .getChiTieu({ nam: nam6, kyBaoCao:'6thang' });
+        .getChiTieu({ nam: nam12, kyBaoCao:'12thang' });
     }
-  }, 400);
-  // CĐS (delay 800ms)
-  setTimeout(() => {
-    if (!DATA?.shHsva?.numCols?.length) {
-      google.script.run
-        .withSuccessHandler(d => { if (d?.shHsva) DATA = { ...DATA, shHsva: d.shHsva }; })
-        .withFailureHandler(()=>{})
-        .getTabData({ tab:'shhsva', ...p });
-    }
-  }, 800);
-  // NQ205 (delay 1200ms)
-  setTimeout(() => {
-    if (!DATA?.thNq205?.colMap?.colE) {
-      google.script.run
-        .withSuccessHandler(d => { if (d?.thNq205) DATA = { ...DATA, thNq205: d.thNq205 }; })
-        .withFailureHandler(()=>{})
-        .getTabData({ tab:'thnq205', ...p });
-    }
-  }, 1200);
+  }, 2000); // delay 2s: sau khi getData() chính đã hoàn thành
 }
 
 function onErr(err) {
