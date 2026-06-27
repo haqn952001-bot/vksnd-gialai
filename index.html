@@ -8323,74 +8323,7 @@ function runPhatBieu() {
   var loaiLabel = loaiLabels[loai] || loai;
   var vpLabel   = vpLabels[vanPhong] || vanPhong;
 
-  // ── Build specialized prompt ──
-  var prompt = [
-    '=== YÊU CẦU: PHÁT BIỂU NHANH ===',
-    'Vai trò: Viện trưởng Viện kiểm sát nhân dân tỉnh Gia Lai.',
-    'Loại sự kiện: ' + loaiLabel + '.',
-    'Chủ đề: ' + chuDe + '.',
-    'Văn phong yêu cầu: ' + vpLabel + '.',
-    '',
-    boiCanh ? '=== BỐI CẢNH BỔ SUNG TỪ NGƯỜI DÙNG ===\n' + boiCanh + '\n' : '',
-    '=== NGUYÊN TẮC BẮT BUỘC ===',
-    '1. KHÔNG tự suy diễn chủ trương, quy định hoặc số hiệu văn bản. Chỉ sử dụng thông tin có trong Knowledge Drive, Q/A hoặc bối cảnh bổ sung.',
-    '2. Khi thiếu căn cứ cụ thể: nêu nguyên tắc chung và đánh dấu [cần bổ sung].',
-    '3. Ưu tiên ngắn gọn, súc tích, đi thẳng trọng tâm. Thể hiện tư duy lãnh đạo, tính chỉ đạo.',
-    '4. Không viết bài phát biểu hoàn chỉnh — chỉ tạo các ý phát biểu dạng gạch đầu dòng.',
-    '',
-    '=== FORMAT TRẢ LỜI — PHẢI TUÂN THỦ ===',
-    '',
-    '## CÂU MỞ ĐẦU GỢI Ý',
-    '(1-2 câu mở đầu ngắn phù hợp với loại sự kiện)',
-    '',
-    '## THÔNG ĐIỆP TRỌNG TÂM',
-    '(1-3 câu trọng tâm xuyên suốt bài phát biểu)',
-    '',
-    '## ĐÁNH GIÁ TÌNH HÌNH',
-    '- Gạch đầu dòng: các điểm đánh giá chính, kèm số liệu/căn cứ nếu có',
-    '',
-    '## CHỈ ĐẠO, ĐỊNH HƯỚNG',
-    '- Gạch đầu dòng: các nội dung chỉ đạo, nhiệm vụ trọng tâm',
-    '',
-    '## YÊU CẦU THỰC HIỆN',
-    '- Gạch đầu dòng: các yêu cầu cụ thể đối với đơn vị, cá nhân',
-    '',
-    '## CÂU NHẤN MẠNH / KẾT',
-    '(1-2 câu kết thúc mạnh mẽ, truyền cảm hứng, phù hợp văn phong đã chọn)',
-    '',
-    'LƯU Ý QUAN TRỌNG:',
-    '- Mỗi phần tối đa 5 gạch đầu dòng. Không liệt kê dài dòng.',
-    '- Dùng **bold** cho từ khóa quan trọng.',
-    '- Nếu có số liệu trong Knowledge Drive phù hợp chủ đề → đưa vào.',
-    '- Nếu không có → dùng [số liệu cụ thể] làm chỗ trống để lãnh đạo tự điền.'
-  ].filter(Boolean).join('\n');
-
-  // ── Lấy chức danh user ──
-  var _pbTitle = '';
-  try {
-    var _pbSess = JSON.parse(sessionStorage.getItem(_SESSION_KEY) || '{}');
-    if (_pbSess && _pbSess.user && _USER_PROFILE[_pbSess.user]) {
-      _pbTitle = _USER_PROFILE[_pbSess.user].name;
-    }
-  } catch(e) {}
-
-  var contextParams = {
-    namTu: '2026', namDen: '2026',
-    thangTu: '1', thangDen: '12',
-    kv: '',
-    kyBaoCao: '12thang',
-    userTitle: _pbTitle,
-    dataSources: ['drive']  // RAG từ KB Drive + Q/A
-  };
-
-  var messages = [{ role: 'user', content: prompt }];
-  var payload  = {
-    messages      : messages,
-    contextParams : contextParams,
-    analyzePrompt : prompt,
-    analyzeMode   : true
-  };
-
+  // ── Callback kết quả ──
   function onResult(reply) {
     document.getElementById('tmLoading').style.display = 'none';
     document.getElementById('tmResult').style.display = 'block';
@@ -8398,35 +8331,32 @@ function runPhatBieu() {
     ['btnTmCopy','btnTmExport'].forEach(function(id){
       var b = document.getElementById(id); if(b) b.style.display='flex';
     });
-    var _pbModelLabel = model === 'claude' ? '◆ Claude'
-                      : model === 'deepseek' ? '⚡ DeepSeek V4'
-                      : '✦ Gemini';
-    document.getElementById('tmMeta').textContent = _pbModelLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
+    var mLabel = model==='claude'?'◆ Claude':model==='deepseek'?'⚡ DeepSeek V4':'✦ Gemini';
+    document.getElementById('tmMeta').textContent = mLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
     var el = document.getElementById('tmContent');
-    el.innerHTML = typeof _aiFormatReply === 'function' ? _aiFormatReply(reply) : reply;
+    el.innerHTML = typeof _aiFormatReply==='function' ? _aiFormatReply(reply) : reply;
     el.scrollTop = 0;
-    _pbRunning = false; btn.disabled = false; btn.style.opacity = '1';
+    _pbRunning=false; btn.disabled=false; btn.style.opacity='1';
   }
-
   function onError(err) {
     document.getElementById('tmLoading').style.display = 'none';
     document.getElementById('tmResult').style.display = 'block';
     document.getElementById('tmTitle').textContent = 'LỖI TẠO Ý PHÁT BIỂU';
     document.getElementById('tmContent').innerHTML = '<div style="color:var(--coral);padding:20px">' +
-      (err && err.message ? err.message : String(err)) + '</div>';
-    _pbRunning = false; btn.disabled = false; btn.style.opacity = '1';
+      (err&&err.message?err.message:String(err)) + '</div>';
+    _pbRunning=false; btn.disabled=false; btn.style.opacity='1';
   }
 
-  // ── Gọi AI theo model ──
-  if (model === 'claude') {
-    _callClaudeAnalyze(payload).then(onResult).catch(onError);
-  } else if (model === 'deepseek') {
-    _callDeepSeekAnalyze(payload).then(onResult).catch(onError);
-  } else {
-    gasAPI('askAI', { payload: JSON.stringify(payload) })
-      .then(function(d) { onResult(d.reply || d.error || '(Không có phản hồi)'); })
-      .catch(onError);
-  }
+  // ── Gọi GAS askPhatBieu server-side (tránh JSONP URL quá dài) ──
+  gasAPI('askPhatBieu', {
+    loai    : loai,
+    vanPhong: vanPhong,
+    chuDe   : encodeURIComponent(chuDe),
+    boiCanh : encodeURIComponent(boiCanh.slice(0, 2000)),
+    model   : model
+  })
+    .then(function(d) { onResult(d.reply || d.error || '(Không có phản hồi)'); })
+    .catch(onError);
 }
 window.runPhatBieu = runPhatBieu;
 
@@ -8731,49 +8661,6 @@ function _tmPopulateKV() {
 
 
 // ── THAM MƯU AI: Copy và Export kết quả ─────────────────
-function tmCopyResult() {
-  var el  = document.getElementById('tmContent');
-  var btn = document.getElementById('btnTmCopy');
-  var txt = document.getElementById('btnTmCopyTxt');
-  if (!el) return;
-  var title   = (document.getElementById('tmTitle')||{}).textContent || 'KET QUA PHAN TICH';
-  var meta    = (document.getElementById('tmMeta') ||{}).textContent || '';
-  var content = '# ' + title + '\n' + meta + '\n\n' + el.innerText;
-  navigator.clipboard.writeText(content).then(function() {
-    if (txt) txt.textContent = '✓ Đã copy';
-    if (btn) btn.style.background = 'rgba(16,185,129,.2)';
-    setTimeout(function() {
-      if (txt) txt.textContent = 'Copy';
-      if (btn) btn.style.background = 'rgba(250,204,21,.08)';
-    }, 2000);
-  }).catch(function() {
-    var ta = document.createElement('textarea');
-    ta.value = content; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    if (txt) txt.textContent = '✓ Đã copy';
-    setTimeout(function(){ if (txt) txt.textContent = 'Copy'; }, 2000);
-  });
-}
-
-function tmExportTxt() {
-  var el    = document.getElementById('tmContent');
-  var title = (document.getElementById('tmTitle')||{}).textContent || 'KET_QUA';
-  var meta  = (document.getElementById('tmMeta') ||{}).textContent || '';
-  if (!el) return;
-  var sep     = '='.repeat(60);
-  var content = title + '\n' + meta + '\n' + sep + '\n\n' + el.innerText;
-  var blob    = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  var url     = URL.createObjectURL(blob);
-  var a       = document.createElement('a');
-  a.href      = url;
-  a.download  = 'ThamMuuAI_' + new Date().toLocaleDateString('vi-VN').replace(/\//g,'-') + '.txt';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
-
-// ══ THAM MƯU AI: Copy & Export ════════════════════════════
 function tmCopyResult() {
   var el  = document.getElementById('tmContent');
   var btn = document.getElementById('btnTmCopy');
@@ -9111,6 +8998,35 @@ async function _callClaudeAPI(messages, contextParams) {
   });
 }
 
+
+// ── DeepSeek Analyze (dùng cho Tham mưu AI và Phát biểu nhanh) ──
+async function _callDeepSeekAnalyze(payload) {
+  const url = new URL(GAS_API_URL);
+  const cbName = '_gcb_dsa_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  url.searchParams.set('action',   'askDeepSeek');
+  url.searchParams.set('callback', cbName);
+  // Chỉ gửi params cần thiết, tránh URL quá dài
+  const safePayload = {
+    contextParams : payload.contextParams,
+    analyzePrompt : (payload.analyzePrompt || '').slice(0, 2000),
+    analyzeMode   : true
+  };
+  url.searchParams.set('payload', JSON.stringify(safePayload));
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { cleanup(); reject(new Error('DeepSeek timeout (120s)')); }, 120000);
+    window[cbName] = (data) => {
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data && (data.reply || data.content) ? (data.reply || data.content) : '[Không có phản hồi]');
+    };
+    function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.onerror = () => { cleanup(); reject(new Error('JSONP script error: askDeepSeek')); };
+    document.head.appendChild(script);
+  });
+}
 // ── DeepSeek API (qua GAS — giữ API key an toàn ở server) ─────
 async function _callDeepSeekAPI(messages, contextParams) {
   // DeepSeek R1 — gọi qua GAS action=askDeepSeek (tương tự Claude)
