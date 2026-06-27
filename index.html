@@ -2545,7 +2545,7 @@ body::after{
       </div>      </div>
 
       <!-- Bảng kiến nghị / kháng nghị -->
-      <div class="tw fi fi3" id="tqt-kn-card" style="display:none">
+      <div class="tw fi fi1" id="tqt-kn-card" style="display:none">
         <div class="tw-hd">
           <div class="tw-title">BẢNG KIẾN NGHỊ — KHÁNG NGHỊ</div>
         </div>
@@ -2568,7 +2568,7 @@ body::after{
       </div>
 
       <!-- Bảng số liệu chi tiết — ẩn các cột KN/Kháng nghị/Nhiệm vụ -->
-      <div class="tw fi fi4" id="tqt-table-card" style="display:none">
+      <div class="tw fi fi1" id="tqt-table-card" style="display:none">
         <div class="tw-hd">
           <div class="tw-title">BẢNG SỐ LIỆU CHI TIẾT — TOÀN TỈNH</div>
           <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">Sheet: Tổng quan toàn tỉnh</div>
@@ -2582,7 +2582,7 @@ body::after{
       </div>
 
       <!-- Nhiệm vụ trọng tâm -->
-      <div class="cc fi fi4" id="tqt-nhiemvu-card" style="display:none">
+      <div class="cc fi fi1" id="tqt-nhiemvu-card" style="display:none">
         <div class="cc-hd">
           <div class="cc-title">NHIỆM VỤ TRỌNG TÂM THÁNG TỚI</div>
           <div class="cc-pill" id="tqt-nhiemvu-period">—</div>
@@ -6631,11 +6631,22 @@ function renderTongQuanTinh(d) {
   // Ẩn skeleton, hiện tất cả section
   var skel = document.getElementById('tqt-skeleton');
   if (skel) skel.style.display = 'none';
-  ['tqt-kpi1','tqt-kpi2','tqt-kpi3',
-   'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'].forEach(function(id) {
+  var _tqtIds = ['tqt-kpi1','tqt-kpi2','tqt-kpi3',
+                  'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'];
+  _tqtIds.forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.style.display = '';
+    if (el) {
+      el.style.removeProperty('display');
+      el.style.display = 'block';
+    } else { console.warn('[TQT] not found:', id); }
   });
+  // Đặt lại grid cho các KPI container
+  ['tqt-kpi1','tqt-kpi2','tqt-kpi3'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'grid';
+  });
+  console.log('[TQT] render called, kpi keys:', Object.keys(tqt.kpi||{}).length,
+              'rows:', (tqt.rows||[]).length, 'headers:', (tqt.headers||[]).length);
 
   var kpi  = tqt.kpi  || {};
   var rows = tqt.rows || [];
@@ -6681,6 +6692,9 @@ function renderTongQuanTinh(d) {
   setEl('tqt-b-kn-tgtg',     kpi['Kiến nghị trong công tác TGTG, THAHS']);
   setEl('tqt-b-kn-thads',    kpi['Kiến nghị trong công tác THADS']);
   setEl('tqt-b-khangnghi',   kpi['Kháng nghị trên các lĩnh vực']);
+  console.log('[TQT] KN card values: kp-nguon=', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'],
+              'tgtg=', kpi['Kiến nghị trong công tác TGTG, THAHS'],
+              'khangnghi=', kpi['Kháng nghị trên các lĩnh vực']);
 
   // ── Bảng chi tiết — loại cột văn bản dài ──
   // Các cột bị loại: KN/Kháng nghị dạng văn bản + Nhiệm vụ trọng tâm
