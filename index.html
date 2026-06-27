@@ -2602,13 +2602,23 @@ body::after{
     <div class="page" id="page-thammuuai">
       <div class="ph fi">
         <div>
-          <div class="ph-sub">PHÂN TÍCH DỮ LIỆU — THAM MƯU, ĐỀ XUẤT</div>
+          <div class="ph-sub" id="tmSubTitle">PHÂN TÍCH DỮ LIỆU — THAM MƯU, ĐỀ XUẤT</div>
           <h1>Tham mưu AI</h1>
         </div>
       </div>
 
+      <!-- Chế độ: Phân tích / Phát biểu nhanh -->
+      <div class="fi fi1" style="display:flex;gap:8px;margin-bottom:-8px">
+        <button id="tmModeAnalyze" onclick="_tmSwitchMode('analyze')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(139,92,246,.3);border-bottom:none;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08));color:#c4b5fd;font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:all .2s">
+          📊 Phân tích số liệu
+        </button>
+        <button id="tmModeSpeech" onclick="_tmSwitchMode('speech')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(0,212,255,.2);border-bottom:none;background:var(--n800);color:var(--ts);font-size:12px;font-weight:600;font-family:var(--fb);cursor:pointer;transition:all .2s">
+          🎤 Phát biểu nhanh
+        </button>
+      </div>
+
       <!-- Bộ lọc kỳ phân tích -->
-      <div class="cc fi fi1" style="padding:16px 20px">
+      <div id="tmAnalyzeSection" class="cc fi fi1" style="padding:16px 20px">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ts)">Kỳ phân tích:</div>
           <select id="fTmKy" onchange="tmOnKyChange()" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;cursor:pointer;min-width:160px">
@@ -2662,6 +2672,77 @@ body::after{
             <option value="claude">◆ Claude</option>
             <option value="deepseek">⚡ DeepSeek V4</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Form Phát biểu nhanh -->
+      <div id="pbSection" style="display:none">
+        <div class="cc fi fi1" style="padding:20px">
+          <div class="cc-hd" style="margin-bottom:14px">
+            <div class="cc-title" style="color:var(--cyan)">🎤 KHỞI TẠO PHÁT BIỂU NHANH</div>
+            <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">RAG: Knowledge Drive + Q/A</div>
+          </div>
+
+          <!-- Row 1: Loại hội nghị + Bối cảnh -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Loại hội nghị / sự kiện</label>
+              <select id="pbLoai" style="width:100%;height:34px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
+                <option value="tong_ket">Hội nghị tổng kết (năm, 6 tháng, quý)</option>
+                <option value="so_ket">Hội nghị sơ kết</option>
+                <option value="chuyen_de">Hội nghị chuyên đề</option>
+                <option value="giao_ban">Hội nghị giao ban</option>
+                <option value="tap_huan">Hội nghị tập huấn</option>
+                <option value="kiem_tra">Hội nghị rút kinh nghiệm / kiểm tra</option>
+                <option value="lien_nganh">Hội nghị liên ngành / phối hợp</option>
+                <option value="hdnd">Kỳ họp HĐND / tiếp xúc cử tri</option>
+                <option value="tinh_uy">Hội nghị Tỉnh ủy / Ban Nội chính</option>
+                <option value="le_ky_niem">Lễ kỷ niệm / Tri ân / Chúc mừng</option>
+                <option value="dot_xuat">Phát biểu đột xuất</option>
+                <option value="khac">Khác (mô tả bên dưới)</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Văn phong</label>
+              <select id="pbVanPhong" style="width:100%;height:34px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
+                <option value="chi_dao">Chỉ đạo — quyết liệt, dứt khoát, yêu cầu thực hiện</option>
+                <option value="dong_vien">Động viên — ghi nhận, khích lệ, định hướng</option>
+                <option value="doi_ngoai">Đối ngoại — trang trọng, cân nhắc, ngoại giao</option>
+                <option value="tri_an">Tri ân — cảm xúc, truyền cảm hứng, gần gũi</option>
+                <option value="khan_cap">Khẩn cấp — ngắn gọn, trọng tâm, hành động ngay</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: Chủ đề -->
+          <div style="margin-bottom:12px">
+            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Chủ đề / Nội dung chính</label>
+            <input id="pbChuDe" type="text" placeholder="Ví dụ: Tổng kết 6 tháng đầu năm 2026, nâng cao chất lượng THQCT trong lĩnh vực hình sự..." style="width:100%;height:36px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:13px;padding:0 14px;font-family:var(--fb)"/>
+          </div>
+
+          <!-- Row 3: Bối cảnh bổ sung -->
+          <div style="margin-bottom:14px">
+            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bối cảnh / Tài liệu bổ sung <span style="font-weight:400;color:var(--tm)">(tùy chọn — dán trực tiếp nghị quyết, số liệu, chương trình hội nghị...)</span></label>
+            <textarea id="pbBoiCanh" rows="4" placeholder="Dán nội dung tại đây hoặc để trống nếu không có tài liệu bổ sung. AI sẽ tìm kiếm từ Knowledge Drive..." style="width:100%;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:10px 14px;font-family:var(--fb);resize:vertical;line-height:1.6"></textarea>
+          </div>
+
+          <!-- Row 4: Model + Nút tạo -->
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="pbModel" style="height:34px;border-radius:var(--rsm);border:1px solid rgba(0,212,255,.25);background:var(--n800);color:var(--cyan);font-size:11px;padding:0 10px;cursor:pointer" title="Chọn AI model">
+              <option value="gemini">✦ Gemini</option>
+              <option value="claude">◆ Claude</option>
+              <option value="deepseek">⚡ DeepSeek V4</option>
+            </select>
+            <button onclick="runPhatBieu()" id="btnPhatBieu" style="
+              height:34px;padding:0 22px;border-radius:var(--rsm);border:none;cursor:pointer;
+              background:linear-gradient(135deg,#0891b2,#06b6d4);
+              color:#fff;font-size:12px;font-weight:700;font-family:var(--fb);
+              display:flex;align-items:center;gap:7px;transition:opacity .2s;
+            ">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M10 16l4-4-4-4"/></svg>
+              Tạo ý phát biểu
+            </button>
+          </div>
         </div>
       </div>
 
@@ -8128,6 +8209,226 @@ function sendAiMsg() {
 // THAM MƯU AI — Phân tích số liệu kỳ báo cáo
 // ══════════════════════════════════════════════════════════════
 var _tmRunning = false;
+
+
+// ══════════════════════════════════════════════════════════════
+// PHÁT BIỂU NHANH — Khởi tạo ý phát biểu cho Viện trưởng
+// RAG: tìm kiếm KB Drive + Q/A trước khi sinh nội dung
+// ══════════════════════════════════════════════════════════════
+
+function _tmSwitchMode(mode) {
+  var analyzeSection = document.getElementById('tmAnalyzeSection');  // bộ lọc kỳ
+  var pbSection      = document.getElementById('pbSection');
+  var btnA = document.getElementById('tmModeAnalyze');
+  var btnS = document.getElementById('tmModeSpeech');
+  var subT = document.getElementById('tmSubTitle');
+
+  // Ẩn kết quả cũ
+  document.getElementById('tmPlaceholder').style.display = 'none';
+  document.getElementById('tmResult').style.display = 'none';
+  document.getElementById('tmLoading').style.display = 'none';
+
+  if (mode === 'speech') {
+    // Ẩn form phân tích, hiện form phát biểu
+    if (analyzeSection) analyzeSection.style.display = 'none';
+    if (pbSection) pbSection.style.display = 'block';
+    // Toggle buttons
+    btnS.style.background = 'linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,212,255,.08))';
+    btnS.style.color = '#67e8f9';
+    btnS.style.borderColor = 'rgba(0,212,255,.3)';
+    btnA.style.background = 'var(--n800)';
+    btnA.style.color = 'var(--ts)';
+    btnA.style.borderColor = 'rgba(0,212,255,.15)';
+    if (subT) subT.textContent = 'PHÁT BIỂU NHANH — HỖ TRỢ LÃNH ĐẠO';
+    // Hiện placeholder phù hợp
+    var ph = document.getElementById('tmPlaceholder');
+    if (ph) {
+      ph.style.display = 'block';
+      ph.innerHTML = '<div style="font-size:40px;margin-bottom:16px;opacity:.5">🎤</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--tp);margin-bottom:8px">Điền thông tin và nhấn "Tạo ý phát biểu"</div>' +
+        '<div style="font-size:12px;color:var(--ts);max-width:520px;margin:0 auto;line-height:1.6">' +
+        'AI sẽ tìm kiếm từ Knowledge Drive, tổng hợp các văn bản, quy định liên quan ' +
+        'và tạo ra các ý phát biểu dưới dạng gạch đầu dòng — thông điệp trọng tâm, ' +
+        'định hướng chỉ đạo, yêu cầu thực hiện và câu nhấn mạnh.</div>';
+    }
+  } else {
+    // Hiện form phân tích, ẩn form phát biểu
+    if (analyzeSection) analyzeSection.style.display = '';
+    if (pbSection) pbSection.style.display = 'none';
+    btnA.style.background = 'linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08))';
+    btnA.style.color = '#c4b5fd';
+    btnA.style.borderColor = 'rgba(139,92,246,.3)';
+    btnS.style.background = 'var(--n800)';
+    btnS.style.color = 'var(--ts)';
+    btnS.style.borderColor = 'rgba(0,212,255,.15)';
+    if (subT) subT.textContent = 'PHÂN TÍCH DỮ LIỆU — THAM MƯU, ĐỀ XUẤT';
+    // Hiện placeholder phân tích
+    var ph2 = document.getElementById('tmPlaceholder');
+    if (ph2) {
+      ph2.style.display = 'block';
+      ph2.innerHTML = '<div style="font-size:40px;margin-bottom:16px;opacity:.5">🧠</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--tp);margin-bottom:8px">Chọn kỳ báo cáo và nhấn "Phân tích ngay"</div>' +
+        '<div style="font-size:12px;color:var(--ts);max-width:500px;margin:0 auto;line-height:1.6">' +
+        'AI sẽ phân tích toàn bộ số liệu trong kỳ đã chọn, bao gồm hoạt động từng phòng nghiệp vụ, ' +
+        'đưa ra nhận xét về những chỉ tiêu cần chú ý, dự báo xu hướng và đề xuất phương án ' +
+        'đôn đốc, quán triệt các đơn vị thực hiện.</div>';
+    }
+  }
+}
+window._tmSwitchMode = _tmSwitchMode;
+
+var _pbRunning = false;
+
+function runPhatBieu() {
+  if (_pbRunning) return;
+  _pbRunning = true;
+
+  var loai     = document.getElementById('pbLoai').value;
+  var vanPhong = document.getElementById('pbVanPhong').value;
+  var chuDe    = document.getElementById('pbChuDe').value.trim();
+  var boiCanh  = document.getElementById('pbBoiCanh').value.trim();
+  var model    = document.getElementById('pbModel').value;
+
+  if (!chuDe) {
+    alert('Vui lòng nhập chủ đề / nội dung chính.');
+    _pbRunning = false;
+    return;
+  }
+
+  // UI
+  document.getElementById('tmPlaceholder').style.display = 'none';
+  document.getElementById('tmResult').style.display = 'none';
+  document.getElementById('tmLoading').style.display = 'block';
+  var btn = document.getElementById('btnPhatBieu');
+  btn.disabled = true; btn.style.opacity = '.5';
+
+  // ── Map labels ──
+  var loaiLabels = {
+    'tong_ket':'Hội nghị tổng kết','so_ket':'Hội nghị sơ kết',
+    'chuyen_de':'Hội nghị chuyên đề','giao_ban':'Hội nghị giao ban',
+    'tap_huan':'Hội nghị tập huấn','kiem_tra':'Hội nghị rút kinh nghiệm/kiểm tra',
+    'lien_nganh':'Hội nghị liên ngành/phối hợp',
+    'hdnd':'Kỳ họp HĐND/tiếp xúc cử tri',
+    'tinh_uy':'Hội nghị Tỉnh ủy/Ban Nội chính',
+    'le_ky_niem':'Lễ kỷ niệm/Tri ân/Chúc mừng',
+    'dot_xuat':'Phát biểu đột xuất','khac':'Khác'
+  };
+  var vpLabels = {
+    'chi_dao':'chỉ đạo — quyết liệt, dứt khoát',
+    'dong_vien':'động viên — ghi nhận, khích lệ',
+    'doi_ngoai':'đối ngoại — trang trọng, ngoại giao',
+    'tri_an':'tri ân — cảm xúc, gần gũi, truyền cảm hứng',
+    'khan_cap':'khẩn cấp — ngắn gọn, hành động ngay'
+  };
+  var loaiLabel = loaiLabels[loai] || loai;
+  var vpLabel   = vpLabels[vanPhong] || vanPhong;
+
+  // ── Build specialized prompt ──
+  var prompt = [
+    '=== YÊU CẦU: PHÁT BIỂU NHANH ===',
+    'Vai trò: Viện trưởng Viện kiểm sát nhân dân tỉnh Gia Lai.',
+    'Loại sự kiện: ' + loaiLabel + '.',
+    'Chủ đề: ' + chuDe + '.',
+    'Văn phong yêu cầu: ' + vpLabel + '.',
+    '',
+    boiCanh ? '=== BỐI CẢNH BỔ SUNG TỪ NGƯỜI DÙNG ===\n' + boiCanh + '\n' : '',
+    '=== NGUYÊN TẮC BẮT BUỘC ===',
+    '1. KHÔNG tự suy diễn chủ trương, quy định hoặc số hiệu văn bản. Chỉ sử dụng thông tin có trong Knowledge Drive, Q/A hoặc bối cảnh bổ sung.',
+    '2. Khi thiếu căn cứ cụ thể: nêu nguyên tắc chung và đánh dấu [cần bổ sung].',
+    '3. Ưu tiên ngắn gọn, súc tích, đi thẳng trọng tâm. Thể hiện tư duy lãnh đạo, tính chỉ đạo.',
+    '4. Không viết bài phát biểu hoàn chỉnh — chỉ tạo các ý phát biểu dạng gạch đầu dòng.',
+    '',
+    '=== FORMAT TRẢ LỜI — PHẢI TUÂN THỦ ===',
+    '',
+    '## CÂU MỞ ĐẦU GỢI Ý',
+    '(1-2 câu mở đầu ngắn phù hợp với loại sự kiện)',
+    '',
+    '## THÔNG ĐIỆP TRỌNG TÂM',
+    '(1-3 câu trọng tâm xuyên suốt bài phát biểu)',
+    '',
+    '## ĐÁNH GIÁ TÌNH HÌNH',
+    '- Gạch đầu dòng: các điểm đánh giá chính, kèm số liệu/căn cứ nếu có',
+    '',
+    '## CHỈ ĐẠO, ĐỊNH HƯỚNG',
+    '- Gạch đầu dòng: các nội dung chỉ đạo, nhiệm vụ trọng tâm',
+    '',
+    '## YÊU CẦU THỰC HIỆN',
+    '- Gạch đầu dòng: các yêu cầu cụ thể đối với đơn vị, cá nhân',
+    '',
+    '## CÂU NHẤN MẠNH / KẾT',
+    '(1-2 câu kết thúc mạnh mẽ, truyền cảm hứng, phù hợp văn phong đã chọn)',
+    '',
+    'LƯU Ý QUAN TRỌNG:',
+    '- Mỗi phần tối đa 5 gạch đầu dòng. Không liệt kê dài dòng.',
+    '- Dùng **bold** cho từ khóa quan trọng.',
+    '- Nếu có số liệu trong Knowledge Drive phù hợp chủ đề → đưa vào.',
+    '- Nếu không có → dùng [số liệu cụ thể] làm chỗ trống để lãnh đạo tự điền.'
+  ].filter(Boolean).join('\n');
+
+  // ── Lấy chức danh user ──
+  var _pbTitle = '';
+  try {
+    var _pbSess = JSON.parse(sessionStorage.getItem(_SESSION_KEY) || '{}');
+    if (_pbSess && _pbSess.user && _USER_PROFILE[_pbSess.user]) {
+      _pbTitle = _USER_PROFILE[_pbSess.user].name;
+    }
+  } catch(e) {}
+
+  var contextParams = {
+    namTu: '2026', namDen: '2026',
+    thangTu: '1', thangDen: '12',
+    kv: '',
+    kyBaoCao: '12thang',
+    userTitle: _pbTitle,
+    dataSources: ['drive']  // RAG từ KB Drive + Q/A
+  };
+
+  var messages = [{ role: 'user', content: prompt }];
+  var payload  = {
+    messages      : messages,
+    contextParams : contextParams,
+    analyzePrompt : prompt,
+    analyzeMode   : true
+  };
+
+  function onResult(reply) {
+    document.getElementById('tmLoading').style.display = 'none';
+    document.getElementById('tmResult').style.display = 'block';
+    document.getElementById('tmTitle').textContent = '🎤 Ý PHÁT BIỂU — ' + loaiLabel.toUpperCase();
+    ['btnTmCopy','btnTmExport'].forEach(function(id){
+      var b = document.getElementById(id); if(b) b.style.display='flex';
+    });
+    var _pbModelLabel = model === 'claude' ? '◆ Claude'
+                      : model === 'deepseek' ? '⚡ DeepSeek V4'
+                      : '✦ Gemini';
+    document.getElementById('tmMeta').textContent = _pbModelLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
+    var el = document.getElementById('tmContent');
+    el.innerHTML = typeof _aiFormatReply === 'function' ? _aiFormatReply(reply) : reply;
+    el.scrollTop = 0;
+    _pbRunning = false; btn.disabled = false; btn.style.opacity = '1';
+  }
+
+  function onError(err) {
+    document.getElementById('tmLoading').style.display = 'none';
+    document.getElementById('tmResult').style.display = 'block';
+    document.getElementById('tmTitle').textContent = 'LỖI TẠO Ý PHÁT BIỂU';
+    document.getElementById('tmContent').innerHTML = '<div style="color:var(--coral);padding:20px">' +
+      (err && err.message ? err.message : String(err)) + '</div>';
+    _pbRunning = false; btn.disabled = false; btn.style.opacity = '1';
+  }
+
+  // ── Gọi AI theo model ──
+  if (model === 'claude') {
+    _callClaudeAnalyze(payload).then(onResult).catch(onError);
+  } else if (model === 'deepseek') {
+    _callDeepSeekAnalyze(payload).then(onResult).catch(onError);
+  } else {
+    gasAPI('askAI', { payload: JSON.stringify(payload) })
+      .then(function(d) { onResult(d.reply || d.error || '(Không có phản hồi)'); })
+      .catch(onError);
+  }
+}
+window.runPhatBieu = runPhatBieu;
 
 function runThamMuuAI() {
   if (_tmRunning) return;
