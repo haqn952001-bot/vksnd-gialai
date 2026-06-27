@@ -1658,10 +1658,7 @@ body::after{
       <button id="btnPresent" class="tb-btn" onclick="_togglePresentation()" title="Trình chiếu (Esc để thoát)" style="padding:0 8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
       </button>
-      <!-- Xuất PDF -->
-      <button id="btnExportPdf" class="tb-btn" onclick="_exportPDF()" title="Xuất PDF trang hiện tại" style="padding:0 8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-      </button>
+
     </div>
     <button id="btnInstallApp" onclick="_installPWA()" title="Cài đặt ứng dụng Dashboard" style="
   display:none;height:28px;width:28px;padding:0;border-radius:6px;
@@ -1767,6 +1764,10 @@ body::after{
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
       </svg>Thanh tra - Khiếu tố
+    </div>
+    <div class="nav-label">Tổng hợp</div>
+    <div class="nav-item" data-page="tongquantinh" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tổng quan toàn tỉnh
     </div>
     <div class="nav-label">Phân tích</div>
     <div class="nav-item" data-page="thammuuai" onclick="nav(this)">
@@ -2439,6 +2440,135 @@ body::after{
 </div></div>
     </div>
 
+
+    <!-- PAGE: TỔNG QUAN TOÀN TỈNH -->
+    <div class="page" id="page-tongquantinh">
+      <div class="ph fi">
+        <div>
+          <div class="ph-sub" id="tqt-sub">TỔNG QUAN TOÀN TỈNH — NĂM 2026</div>
+          <h1>Tổng quan toàn tỉnh</h1>
+        </div>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div id="tqt-skeleton" class="tab-skeleton">
+        <div class="sk-row"><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div></div>
+        <div class="sk-row"><div class="sk-block sk-chart-lg"></div></div>
+        <div class="sk-row"><div class="sk-block sk-table-full"></div></div>
+      </div>
+
+      <!-- KPI Row 1: Kiểm sát nguồn tin -->
+      <div class="kpi-grid5 fi fi1" id="tqt-kpi1" style="display:none">
+        <div class="kc" data-ac="cyan">
+          <div class="kc-lbl">Tin báo mới</div>
+          <div class="kc-val kc-val-sm" id="tqt-tinbao">—</div>
+          <div class="kc-sub">Toàn tỉnh</div>
+        </div>
+        <div class="kc" data-ac="amber">
+          <div class="kc-lbl">Trực tiếp kiểm sát (cuộc)</div>
+          <div class="kc-val kc-val-sm" id="tqt-ttks">—</div>
+          <div class="kc-sub">Nguồn tin</div>
+        </div>
+        <div class="kc" data-ac="violet">
+          <div class="kc-lbl">KN khắc phục vi phạm — Nguồn tin</div>
+          <div class="kc-val kc-val-sm" id="tqt-kn-kp-nguon">—</div>
+          <div class="kc-sub">bản kiến nghị</div>
+        </div>
+        <div class="kc" data-ac="emerald">
+          <div class="kc-lbl">KN phòng ngừa VPPL — Nguồn tin</div>
+          <div class="kc-val kc-val-sm" id="tqt-kn-pn-nguon">—</div>
+          <div class="kc-sub">bản kiến nghị</div>
+        </div>
+        <div class="kc" data-ac="cyan">
+          <div class="kc-lbl">Khởi tố mới</div>
+          <div class="kc-val kc-val-sm" id="tqt-khoito">—</div>
+          <div class="kc-sub">Điều tra</div>
+        </div>
+      </div>
+
+      <!-- KPI Row 2: Truy tố - Xét xử -->
+      <div class="kpi-grid5 fi fi2" id="tqt-kpi2" style="display:none">
+        <div class="kc" data-ac="violet">
+          <div class="kc-lbl">KN khắc phục — Điều tra</div>
+          <div class="kc-val kc-val-sm" id="tqt-kn-kp-dt">—</div>
+          <div class="kc-sub">bản kiến nghị</div>
+        </div>
+        <div class="kc" data-ac="amber">
+          <div class="kc-lbl">KN phòng ngừa — Điều tra</div>
+          <div class="kc-val kc-val-sm" id="tqt-kn-pn-dt">—</div>
+          <div class="kc-sub">bản kiến nghị</div>
+        </div>
+        <div class="kc" data-ac="emerald">
+          <div class="kc-lbl">Truy tố</div>
+          <div class="kc-val kc-val-sm" id="tqt-truyto">—</div>
+          <div class="kc-sub">Toàn tỉnh</div>
+        </div>
+        <div class="kc" data-ac="coral">
+          <div class="kc-lbl">VKS trả hồ sơ ĐTBS</div>
+          <div class="kc-val kc-val-sm" id="tqt-vks-tra">—</div>
+          <div class="kc-sub">vụ</div>
+        </div>
+        <div class="kc" data-ac="cyan">
+          <div class="kc-lbl">Xét xử án HS</div>
+          <div class="kc-val kc-val-sm" id="tqt-xetxu-hs">—</div>
+          <div class="kc-sub">Kiểm sát xét xử</div>
+        </div>
+      </div>
+
+      <!-- KPI Row 3: Án hủy + kháng nghị -->
+      <div class="kpi-grid5 fi fi2" id="tqt-kpi3" style="display:none">
+        <div class="kc" data-ac="coral">
+          <div class="kc-lbl">Tòa trả hồ sơ ĐTBS</div>
+          <div class="kc-val kc-val-sm" id="tqt-toa-tra">—</div>
+          <div class="kc-sub">vụ</div>
+        </div>
+        <div class="kc" data-ac="amber">
+          <div class="kc-lbl">Xét xử trực tuyến</div>
+          <div class="kc-val kc-val-sm" id="tqt-xetxu-tt">—</div>
+          <div class="kc-sub">phiên</div>
+        </div>
+        <div class="kc" data-ac="coral">
+          <div class="kc-lbl">Phúc thẩm hủy án HS</div>
+          <div class="kc-val kc-val-sm" id="tqt-pt-huy-hs">—</div>
+          <div class="kc-sub">vụ</div>
+        </div>
+        <div class="kc" data-ac="violet">
+          <div class="kc-lbl">Kháng nghị các lĩnh vực</div>
+          <div class="kc-val kc-val-sm" id="tqt-khangnghi">—</div>
+          <div class="kc-sub">kháng nghị</div>
+        </div>
+        <div class="kc" data-ac="emerald">
+          <div class="kc-lbl">KN công tác TGTG, THAHS</div>
+          <div class="kc-val kc-val-sm" id="tqt-kn-tgtg">—</div>
+          <div class="kc-sub">kiến nghị</div>
+        </div>
+      </div>
+
+      <!-- Nhiệm vụ trọng tâm -->
+      <div class="cc fi fi3" id="tqt-nhiemvu-card" style="display:none">
+        <div class="cc-hd">
+          <div class="cc-title">NHIỆM VỤ TRỌNG TÂM THÁNG TỚI</div>
+          <div class="cc-pill" id="tqt-nhiemvu-period">—</div>
+        </div>
+        <div id="tqt-nhiemvu" style="font-size:13px;color:var(--tp);line-height:1.8;white-space:pre-line;padding:4px 0">—</div>
+      </div>
+
+      <!-- Bảng chi tiết toàn bộ dữ liệu -->
+      <div class="tw fi fi4" id="tqt-table-card" style="display:none">
+        <div class="tw-hd">
+          <div class="tw-title">BẢNG SỐ LIỆU CHI TIẾT — TOÀN TỈNH</div>
+          <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">Sheet: Tổng quan toàn tỉnh</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="tqt-table" style="min-width:1800px;table-layout:auto">
+            <thead id="tqt-thead"></thead>
+            <tbody id="tqt-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tongquantinh -->
+
     <!-- PAGE: THAM MƯU AI -->
     <div class="page" id="page-thammuuai">
       <div class="ph fi">
@@ -2662,6 +2792,10 @@ body::after{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>Thanh tra
+  </button>
+  <button class="mobile-nav-btn" data-page="tongquantinh" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    <span>TQ Tỉnh</span>
   </button>
   <button class="mobile-nav-btn" data-page="thammuuai" onclick="mobileNav(this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3104,7 +3238,8 @@ const PAGE_CHARTS = {
   phong9    : ['cphong9TL'],
   phong10   : ['cphong10TL'],
   phong11   : ['cphong11TL'],
-  ttra      : ['cttraTL']
+  ttra         : ['cttraTL'],
+  tongquantinh : []
 };
 function destroyCharts(pg) {
   (PAGE_CHARTS[pg] || []).forEach(id => {
@@ -3138,6 +3273,7 @@ function renderPage(pg) {
   if (pg === 'phong10') { _loadTabAndRender('phong10', function(d){ renderPhong('phong10', d); }); return; }
   if (pg === 'phong11') { _invalidatePhongCacheIfFilterChanged('phong11'); _loadTabAndRender('phong11', function(d){ renderPhong('phong11', d); }); return; }
   if (pg === 'ttra')    { _loadTabAndRender('ttra',    function(d){ renderPhong('ttra', d); });    return; }
+  if (pg === 'tongquantinh') { _loadTabAndRender('tongquantinh', renderTongQuanTinh); return; }
   if (pg === 'thammuuai') { _tmPopulateKV(); return; }
   // Tab còn lại — cần DATA từ getData()
   if (!DATA) return;
@@ -4366,7 +4502,7 @@ const PHONG_TAB_MAP = {
 
 // Các tab luôn hiển thị bình thường dù đang lọc phòng nào
 // chitieu12/chitieu6/khuvuc KHÔNG nằm đây vì là tab toàn đơn vị, không liên quan 1 phòng
-const TABS_ALWAYS_ON = ['overview','thammuuai'];
+const TABS_ALWAYS_ON = ['overview','thammuuai','tongquantinh'];
 
 function onTopbarKVChange() {
   const sel = v('fKV') || '';
@@ -5716,7 +5852,13 @@ function _demoPhong(tab) {
       'Số cuộc TTKS tại THADS tỉnh Gia Lai','Số cuộc TTKS THADS tỉnh đã ban hành kết luận',
       'Số kiến nghị (kể cả kiến nghị trong kết luận)','Kháng nghị'
     ],
-    ttra: [
+    tongquantinh: [
+    'Tổng số tin báo tội phạm toàn tỉnh trong kỳ là bao nhiêu?',
+    'Số vụ khởi tố mới toàn tỉnh trong kỳ là bao nhiêu?',
+    'Nhiệm vụ trọng tâm tháng tới của toàn tỉnh là gì?',
+    'Số kháng nghị trên các lĩnh vực trong kỳ?'
+  ],
+  ttra: [
       'Tiếp công dân','Số đơn tiếp nhận mới',
       'Thụ lý mới đơn thuộc thẩm quyền giải quyết VKSND',
       'Đơn thuộc thẩm quyền giải quyết VKSND đã giải quyết',
@@ -5850,6 +5992,7 @@ function hideLoader() {
 // Lazy load tab nặng — chỉ gọi GAS khi user thực sự vào tab
 // Danh sách tab dùng cấu trúc "phong" generic (lazy load, render bảng + KPI + chart)
 const _PHONG_LIKE_TABS = ['phong1','phong2','phong7','phong8','phong9','phong10','phong11','ttra'];
+const _TONG_QUAN_TINH_TABS = ['tongquantinh'];
 function _isPhongTab(tab) { return _PHONG_LIKE_TABS.indexOf(tab) >= 0; }
 
 
@@ -6449,6 +6592,114 @@ function renderPhong(tab, d) {
       });
     }, 50);
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// RENDER TỔNG QUAN TOÀN TỈNH
+// ══════════════════════════════════════════════════════════════
+function renderTongQuanTinh(d) {
+  const tqt = d && d.tongQuanTinh;
+  if (!tqt) return;
+
+  // Ẩn skeleton, hiện các section
+  const skel = document.getElementById('tqt-skeleton');
+  if (skel) skel.style.display = 'none';
+  ['tqt-kpi1','tqt-kpi2','tqt-kpi3','tqt-nhiemvu-card','tqt-table-card'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+
+  const kpi = tqt.kpi || {};
+  const tl  = tqt.timeline || [];
+  const rows = tqt.rows || [];
+
+  // ── Sub header ──
+  var sub = document.getElementById('tqt-sub');
+  if (sub && kpi['Tháng'] !== undefined) {
+    sub = document.getElementById('tqt-sub');
+    var thangLabel = kpi['Tháng'] ? 'THÁNG ' + kpi['Tháng'] : '';
+    var namLabel   = kpi['Năm']   ? 'NĂM '   + kpi['Năm']   : '';
+    sub.textContent = 'TỔNG QUAN TOÀN TỈNH — ' + [namLabel, thangLabel].filter(Boolean).join(' — ');
+  }
+
+  // ── KPI helper ──
+  function setKPI(id, val) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val && val !== '' ? val : '—';
+  }
+
+  // Row 1
+  setKPI('tqt-tinbao',    kpi['Tin báo mới']);
+  setKPI('tqt-ttks',      kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)']);
+  setKPI('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
+  setKPI('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
+  setKPI('tqt-khoito',    kpi['Khởi tố mới']);
+
+  // Row 2
+  setKPI('tqt-kn-kp-dt',  kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)']);
+  setKPI('tqt-kn-pn-dt',  kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)']);
+  setKPI('tqt-truyto',    kpi['Truy tố']);
+  setKPI('tqt-vks-tra',   kpi['VKS trả hồ sơ để điều tra bổ sung']);
+  setKPI('tqt-xetxu-hs',  kpi['Xét xử án HS']);
+
+  // Row 3
+  setKPI('tqt-toa-tra',   kpi['Tòa trả hồ sơ để ĐTBS']);
+  setKPI('tqt-xetxu-tt',  kpi['Xét xử trực tuyến']);
+  setKPI('tqt-pt-huy-hs', kpi['Phúc thẩm hủy án HS']);
+  setKPI('tqt-khangnghi', kpi['Kháng nghị trên các lĩnh vực']);
+  setKPI('tqt-kn-tgtg',   kpi['Kiến nghị trong công tác TGTG, THAHS']);
+
+  // Nhiệm vụ trọng tâm
+  var nhiemVu = kpi['Nhiệm vụ trọng tâm tháng tới'] || '';
+  var nvEl = document.getElementById('tqt-nhiemvu');
+  if (nvEl) nvEl.textContent = nhiemVu || '(Chưa có dữ liệu)';
+  var nvPeriod = document.getElementById('tqt-nhiemvu-period');
+  if (nvPeriod) {
+    var th = kpi['Tháng'] || ''; var nm = kpi['Năm'] || '';
+    nvPeriod.textContent = th && nm ? ('T' + th + '/' + nm) : '';
+  }
+
+  // ── Bảng chi tiết — dùng headers từ sheet ──
+  var headers = tqt.headers || [];
+  var thead = document.getElementById('tqt-thead');
+  var tbody = document.getElementById('tqt-tbody');
+  if (!thead || !tbody) return;
+
+  // Header row
+  var thHtml = '<tr>';
+  headers.forEach(function(h) {
+    thHtml += '<th style="white-space:normal;min-width:80px;max-width:200px;line-height:1.3;font-size:9px">' + esc(h) + '</th>';
+  });
+  thHtml += '</tr>';
+  thead.innerHTML = thHtml;
+
+  // Data rows
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:24px;color:var(--tm)">Chưa có dữ liệu trong sheet "Tổng quan toàn tỉnh"</td></tr>';
+    return;
+  }
+
+  var tbHtml = '';
+  rows.forEach(function(r) {
+    tbHtml += '<tr>';
+    headers.forEach(function(h) {
+      var v = r[h];
+      var display = (v === null || v === undefined || v === '') ? '—' : String(v);
+      // Làm nổi bật cột Tháng và Năm
+      var style = (h === 'Tháng' || h === 'Năm' || h === 'Đơn vị')
+        ? 'font-family:var(--fm);color:var(--cyan);font-weight:600;white-space:nowrap'
+        : 'color:var(--tp);white-space:nowrap';
+      // Cột văn bản dài → cho wrap
+      if (h === 'Kháng nghị trên các lĩnh vực' || h === 'Nhiệm vụ trọng tâm tháng tới') {
+        style = 'color:var(--ts);font-size:11px;white-space:normal;min-width:200px;line-height:1.5';
+      }
+      tbHtml += '<td style="' + style + '">' + esc(display) + '</td>';
+    });
+    tbHtml += '</tr>';
+  });
+  tbody.innerHTML = tbHtml;
 }
 
 function renderThNq205() {
@@ -7075,114 +7326,9 @@ window._togglePresentation = _togglePresentation;
 // ══════════════════════════════════════════════════════════════
 // 1.3 — EXPORT PDF
 // ══════════════════════════════════════════════════════════════
-function _exportPDF() {
-  var activePage = document.querySelector('.nav-item.active');
-  var pageName   = activePage ? activePage.textContent.trim() : 'Dashboard';
-  document.title = 'VKSND Gia Lai — ' + pageName + ' — ' + new Date().toLocaleDateString('vi-VN');
-  window.print();
-  setTimeout(function() {
-    document.title = 'VKSND Gia Lai — Dashboard 2026';
-  }, 2000);
-}
-window._exportPDF = _exportPDF;
+// _exportPDF removed
 
-// ══════════════════════════════════════════════════════════════
-// 2.2 — CHAT HISTORY (sessionStorage, 5 session gần nhất)
-// ══════════════════════════════════════════════════════════════
-var _CHAT_HIST_KEY = 'vksnd_ai_chat_hist';
-var _MAX_SESSIONS  = 5;
-
-function _saveChatSession() {
-  if (!_aiHistory || _aiHistory.length < 2) return;
-  try {
-    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
-    var firstQ = '';
-    for (var i = 0; i < _aiHistory.length; i++) {
-      if (_aiHistory[i].role === 'user') { firstQ = _aiHistory[i].content; break; }
-    }
-    sessions.unshift({
-      id       : Date.now(),
-      ts       : new Date().toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'}),
-      firstQ   : firstQ.slice(0, 80),
-      messages : _aiHistory.slice(-20)
-    });
-    if (sessions.length > _MAX_SESSIONS) sessions = sessions.slice(0, _MAX_SESSIONS);
-    sessionStorage.setItem(_CHAT_HIST_KEY, JSON.stringify(sessions));
-  } catch(e) {}
-}
-
-function _loadChatSession(id) {
-  try {
-    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
-    var s = sessions.find(function(x) { return x.id === id; });
-    if (!s) return;
-    _aiHistory = s.messages || [];
-    var box = document.getElementById('aiMessages');
-    if (!box) return;
-    box.innerHTML = '';
-    _aiHistory.forEach(function(m) {
-      var cls = m.role === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
-      var el = document.createElement('div');
-      el.className = 'ai-msg ' + cls;
-      el.innerHTML = _aiFormatReply(m.content);
-      box.appendChild(el);
-    });
-    box.scrollTop = box.scrollHeight;
-    _closeChatHistory();
-  } catch(e) {}
-}
-
-function _toggleChatHistory(e) {
-  if (e) e.stopPropagation();
-  var panel = document.getElementById('aiHistoryPanel');
-  if (!panel) return;
-  var isOpen = panel.style.display === 'block';
-  if (isOpen) { panel.style.display = 'none'; return; }
-
-  try {
-    var sessions = JSON.parse(sessionStorage.getItem(_CHAT_HIST_KEY) || '[]');
-    if (sessions.length === 0) {
-      panel.innerHTML = '<div style="padding:16px;font-size:11px;color:var(--tm);text-align:center">Chưa có lịch sử hội thoại</div>';
-    } else {
-      panel.innerHTML = '<div style="padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--tm);text-transform:uppercase;border-bottom:1px solid var(--bd)">Lịch sử gần đây</div>' +
-        sessions.map(function(s) {
-          return '<div onclick="_loadChatSession(' + s.id + ')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.05);transition:background .15s" onmouseover="this.style.background=\'rgba(0,212,255,.07)\'" onmouseout="this.style.background=\'\'">' +
-            '<div style="font-size:11.5px;color:var(--tp);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + (s.firstQ || '(Cuộc hội thoại)') + '</div>' +
-            '<div style="font-size:9px;color:var(--tm);font-family:var(--fm);margin-top:2px">⏱ ' + s.ts + ' — ' + s.messages.length + ' tin nhắn</div>' +
-            '</div>';
-        }).join('') +
-        '<div onclick="_clearChatHistory()" style="padding:7px 12px;font-size:10px;color:var(--coral);cursor:pointer;text-align:center;border-top:1px solid var(--bd)" onmouseover="this.style.background=\'rgba(255,90,90,.07)\'" onmouseout="this.style.background=\'\'">🗑 Xóa lịch sử</div>';
-    }
-  } catch(e) {
-    panel.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--coral)">Lỗi tải lịch sử</div>';
-  }
-  panel.style.display = 'block';
-  document.addEventListener('click', _closeChatHistory, { once: true });
-}
-
-function _closeChatHistory() {
-  var panel = document.getElementById('aiHistoryPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function _clearChatHistory() {
-  try { sessionStorage.removeItem(_CHAT_HIST_KEY); } catch(e) {}
-  _closeChatHistory();
-}
-
-// Auto-save khi bắt đầu cuộc hội thoại mới (hook vào sendAiMsg)
-(function() {
-  var _origSend = window.sendAiMsg;
-  if (typeof _origSend !== 'function') return;
-  var _hooked = false;
-  window.sendAiMsg = function() {
-    if (!_hooked && _aiHistory && _aiHistory.length >= 2) {
-      _saveChatSession();
-      _hooked = false;
-    }
-    return _origSend.apply(this, arguments);
-  };
-})();
+// Chat history JS removed
 
 
 // ══════════════════════════════════════════════════════════════
@@ -7271,20 +7417,17 @@ if (document.readyState === 'loading') {
 
 
 // ══════════════════════════════════════════════════════════════
-// 5.2 — SWIPE NAVIGATION (mobile — vuốt trái/phải đổi tab)
+// 5.2 — TAB NAV ARROWS (nút chuyển tab ẩn mờ góc trái/phải)
+// Thay thế swipe gesture — hiển thị trên cả mobile và desktop
 // ══════════════════════════════════════════════════════════════
 (function() {
   var _PAGES = [
     'overview','chitieu12','chitieu6','khuvuc','anhuy',
     'shhsva','thnq205','phong1','phong2','phong7','phong8',
-    'phong9','phong10','phong11','ttra','thammuuai'
+    'phong9','phong10','phong11','ttra','tongquantinh','thammuuai'
   ];
-  var startX = 0, startY = 0, swiping = false;
-  var SWIPE_MIN = 60;   // px tối thiểu để tính là swipe
-  var SWIPE_RATIO = 2;  // ratio ngang/dọc để phân biệt swipe vs scroll
 
   function _getVisiblePages() {
-    // Chỉ swipe qua tab có quyền xem và không bị ẩn
     return _PAGES.filter(function(pg) {
       var el = document.querySelector('.nav-item[data-page="' + pg + '"]');
       return el && !el.classList.contains('perm-hidden');
@@ -7300,40 +7443,78 @@ if (document.readyState === 'loading') {
   function _navToPage(pg) {
     var el = document.querySelector('.nav-item[data-page="' + pg + '"]');
     if (el) nav(el);
-    // Sync mobile nav
     var mEl = document.querySelector('.mobile-nav-btn[data-page="' + pg + '"]');
     if (mEl) mobileNav(mEl);
   }
 
-  var main = document.getElementById('main');
-  if (!main) return;
-
-  main.addEventListener('touchstart', function(e) {
-    if (window.innerWidth > 767) return;  // chỉ mobile
-    if (e.touches.length !== 1) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    swiping = true;
-  }, { passive: true });
-
-  main.addEventListener('touchend', function(e) {
-    if (!swiping || window.innerWidth > 767) return;
-    swiping = false;
-    if (!e.changedTouches || !e.changedTouches[0]) return;
-    var dx = e.changedTouches[0].clientX - startX;
-    var dy = e.changedTouches[0].clientY - startY;
-    // Bỏ qua nếu chủ yếu là scroll dọc
-    if (Math.abs(dy) * SWIPE_RATIO > Math.abs(dx)) return;
-    if (Math.abs(dx) < SWIPE_MIN) return;
-
+  function _updateArrows() {
     var pages = _getVisiblePages();
     var idx   = _getCurrentIdx(pages);
-    if (dx < 0 && idx < pages.length - 1) {
-      _navToPage(pages[idx + 1]);  // vuốt trái → tab tiếp theo
-    } else if (dx > 0 && idx > 0) {
-      _navToPage(pages[idx - 1]);  // vuốt phải → tab trước
+    var btnL  = document.getElementById('_tabNavLeft');
+    var btnR  = document.getElementById('_tabNavRight');
+    if (!btnL || !btnR) return;
+    // Ẩn nút nếu không có tab trước/sau
+    btnL.style.opacity = idx > 0 ? '0.22' : '0';
+    btnL.style.pointerEvents = idx > 0 ? 'auto' : 'none';
+    btnR.style.opacity = idx < pages.length - 1 ? '0.22' : '0';
+    btnR.style.pointerEvents = idx < pages.length - 1 ? 'auto' : 'none';
+    // Tooltip tên tab
+    if (idx > 0) {
+      var prevEl = document.querySelector('.nav-item[data-page="' + pages[idx-1] + '"]');
+      btnL.title = prevEl ? prevEl.textContent.trim() : '';
     }
-  }, { passive: true });
+    if (idx < pages.length - 1) {
+      var nextEl = document.querySelector('.nav-item[data-page="' + pages[idx+1] + '"]');
+      btnR.title = nextEl ? nextEl.textContent.trim() : '';
+    }
+  }
+
+  // Tạo 2 nút arrow
+  function _createArrows() {
+    var BASE = 'position:fixed;top:50%;transform:translateY(-50%);z-index:900;' +
+               'width:28px;height:56px;display:flex;align-items:center;justify-content:center;' +
+               'background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);' +
+               'cursor:pointer;transition:opacity .25s,background .2s;' +
+               'color:var(--cyan);font-size:16px;user-select:none;';
+    var btnL = document.createElement('button');
+    btnL.id          = '_tabNavLeft';
+    btnL.style.cssText = BASE + 'left:0;border-radius:0 8px 8px 0;border-left:none;';
+    btnL.innerHTML   = '&#8249;'; // ‹
+    btnL.addEventListener('click', function() {
+      var pages = _getVisiblePages();
+      var idx   = _getCurrentIdx(pages);
+      if (idx > 0) _navToPage(pages[idx - 1]);
+    });
+    btnL.addEventListener('mouseenter', function() { this.style.background='rgba(0,212,255,.18)'; this.style.opacity='0.75'; });
+    btnL.addEventListener('mouseleave', function() { this.style.background='rgba(0,212,255,.08)'; _updateArrows(); });
+
+    var btnR = document.createElement('button');
+    btnR.id          = '_tabNavRight';
+    btnR.style.cssText = BASE + 'right:0;border-radius:8px 0 0 8px;border-right:none;';
+    btnR.innerHTML   = '&#8250;'; // ›
+    btnR.addEventListener('click', function() {
+      var pages = _getVisiblePages();
+      var idx   = _getCurrentIdx(pages);
+      if (idx < pages.length - 1) _navToPage(pages[idx + 1]);
+    });
+    btnR.addEventListener('mouseenter', function() { this.style.background='rgba(0,212,255,.18)'; this.style.opacity='0.75'; });
+    btnR.addEventListener('mouseleave', function() { this.style.background='rgba(0,212,255,.08)'; _updateArrows(); });
+
+    document.body.appendChild(btnL);
+    document.body.appendChild(btnR);
+    _updateArrows();
+  }
+
+  // Khởi tạo sau khi DOM sẵn sàng
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _createArrows);
+  } else {
+    _createArrows();
+  }
+
+  // Cập nhật trạng thái nút mỗi khi nav() được gọi
+  // Patch vào window._updateTabArrows để renderPage có thể gọi
+  window._updateTabArrows = _updateArrows;
 })();
 // ══════════════════════════════════════════════════════════════
 
@@ -7983,7 +8164,7 @@ function runThamMuuAI() {
   var phongLabels = {
     'phong1':'Phòng 1','phong2':'Phòng 2','phong7':'Phòng 7','phong8':'Phòng 8',
     'phong9':'Phòng 9','phong10':'Phòng 10','phong11':'Phòng 11',
-    'ttra':'Thanh tra','phong15':'Phòng 15'
+    'ttra':'Thanh tra','phong15':'Phòng 15','tongquantinh':'Toàn tỉnh'
   };
   var dvLabel = isPhong ? (phongLabels[phongKey] || phongKey) : (kv || 'toàn tỉnh');
   var kyLabel;
@@ -8735,9 +8916,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
         <button id="btnProvClaude" onclick="aiSetProvider('claude')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng Claude (Anthropic API trực tiếp)">◆ Claude</button>
         <button id="btnProvDeepseek" onclick="aiSetProvider('deepseek')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng DeepSeek R1 (API trực tiếp)">⚡ DeepSeek</button>
       </div>
-      <button id="aiHistoryBtn" onclick="_toggleChatHistory(event)" title="Lịch sử hội thoại" style="background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);color:var(--ts);border-radius:6px;cursor:pointer;font-size:12px;padding:3px 8px;font-family:var(--fb);transition:all .18s">⏱</button>
-      <!-- History dropdown -->
-      <div id="aiHistoryPanel" style="display:none;position:absolute;top:52px;right:8px;width:280px;background:var(--n850);border:1px solid var(--bdm);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.5);z-index:10;overflow:hidden;max-height:240px;overflow-y:auto"></div>
+
       <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0;border-radius:6px;cursor:pointer;font-size:11px;padding:3px 7px;font-family:var(--fb)">↻</button>
       <button onclick="toggleAiChat()" style="background:none;border:none;cursor:pointer;color:var(--ts);font-size:18px;line-height:1;padding:4px">×</button>
     </div>
@@ -9079,66 +9258,10 @@ body.presentation-mode #btnPresent {
 /* ═══ END PRESENTATION ════════════════════════════════════════ */
 
 /* ═══ PRINT / PDF EXPORT ════════════════════════════════════════ */
-@media print {
-  body { background:#fff !important; color:#111 !important; overflow:auto !important; }
-  .sidebar, .topbar, .mobile-bottom-nav,
-  #aiBubble, #aiChat, #aiPanel,
-  .btn-refresh, #btnPresent, #btnExportPdf,
-  .tl-filters, .loading, #btnConfirm { display:none !important; }
-  .app {
-    display:block !important;
-    height:auto !important;
-  }
-  .main {
-    overflow:visible !important;
-    padding:12px !important;
-    display:block !important;
-  }
-  .page { display:none !important; }
-  .page.active { display:block !important; }
-  .kc { background:#f5f7fa !important; border:1px solid #dde !important;
-        break-inside:avoid; }
-  .kc-val { color:#1a56db !important; }
-  .cc { background:#f5f7fa !important; border:1px solid #dde !important;
-        break-inside:avoid; }
-  .tw { background:#f5f7fa !important; border:1px solid #dde !important; }
-  .tw th { background:#e8edf5 !important; color:#333 !important; }
-  .tw td { color:#222 !important; border-color:#dde !important; }
-  canvas { max-width:100% !important; height:auto !important; }
-  /* Header in PDF */
-  body::before {
-    content: "VKSND TỈNH GIA LAI — DASHBOARD SỐ LIỆU CÔNG TÁC";
-    display:block;font-size:13px;font-weight:700;
-    text-align:center;padding:8px 0 16px;color:#1a56db;
-    border-bottom:2px solid #1a56db;margin-bottom:16px;
-  }
-}
-/* #btnExportPdf → unified .tb-btn */
-/* ═══ END PRINT ════════════════════════════════════════════════ */
+/* @media print removed */
 
-/* ═══ CHAT HISTORY ══════════════════════════════════════════════ */
-#aiHistoryBtn {
-  height:28px;width:28px;border-radius:6px;border:1px solid var(--bdm);
-  background:rgba(0,212,255,.06);color:var(--ts);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .18s;flex-shrink:0;
-}
-#aiHistoryBtn:hover { background:rgba(0,212,255,.15);color:var(--cyan); }
-#aiHistoryPanel {
-  display:none;flex-direction:column;gap:0;
-  position:absolute;top:52px;left:0;right:0;
-  background:var(--n850);border-bottom:1px solid var(--bdm);
-  max-height:220px;overflow-y:auto;z-index:10;
-}
-#aiHistoryPanel.open { display:flex; }
-.ahi-item {
-  padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(0,212,255,.06);
-  transition:background .15s;
-}
-.ahi-item:hover { background:rgba(0,212,255,.08); }
-.ahi-item-q { font-size:11.5px;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.ahi-item-t { font-size:9px;color:var(--tm);font-family:var(--fm);margin-top:2px; }
-.ahi-empty  { padding:16px 14px;font-size:11px;color:var(--tm);text-align:center; }
+/* Chat history CSS removed */
+
 /* ═══ END CHAT HISTORY ══════════════════════════════════════════ */
 
 /* ═══ PHÂN QUYỀN — ẩn nav-item chưa có quyền ═══════════════════ */
