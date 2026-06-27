@@ -1685,14 +1685,14 @@ body::after{
       <span class="phong-banner-x">✕</span>
     </div>
     <div class="nav-label">Tổng quan</div>
-    <div class="nav-item active" data-page="overview" onclick="nav(this)">
+    <div class="nav-item" data-page="tongquantinh" onclick="nav(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tổng quan toàn tỉnh
+    </div>
+    <div class="nav-item" data-page="overview" onclick="nav(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
         <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>Tổng quan các khu vực
-    </div>
-    <div class="nav-item" data-page="tongquantinh" onclick="nav(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tổng quan toàn tỉnh
     </div>
     <div class="nav-label">Theo dõi</div>
     <div class="nav-item" data-page="chitieu12" onclick="nav(this)">
@@ -2714,14 +2714,14 @@ body::after{
 
 <!-- Bottom Navigation (mobile only) -->
 <nav class="mobile-nav">
-  <button class="mobile-nav-btn active" data-page="overview" onclick="mobileNav(this)">
+  <button class="mobile-nav-btn" data-page="tongquantinh" onclick="mobileNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>TQ Tỉnh
+  </button>
+  <button class="mobile-nav-btn" data-page="overview" onclick="mobileNav(this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
       <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
     </svg>TQ KV
-  </button>
-  <button class="mobile-nav-btn" data-page="tongquantinh" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>TQ Tỉnh
   </button>
   <button class="mobile-nav-btn" data-page="chitieu12" onclick="mobileNav(this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -6009,6 +6009,7 @@ function _invalidatePhongCacheIfFilterChanged(tab) {
 function _loadTabAndRender(tab, renderFn) {
   if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(DATA.shHsva); return; }
   if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(DATA.thNq205); return; }
+  if (tab === 'tongquantinh' && DATA?._tqtCache) { renderFn(DATA._tqtCache); return; }
   if (_isPhongTab(tab) && DATA?._phongCache?.[tab]) {
     // Kiểm tra cache có khớp với filter hiện tại không
     const _cp = getFilterParams();
@@ -6027,6 +6028,7 @@ function _loadTabAndRender(tab, renderFn) {
 
   const onOk = (d) => {
     console.log('[TabData]', tab, 'keys:', Object.keys(d||{}).join(','));
+    if (tab === 'tongquantinh' && d?.tongQuanTinh) { DATA = DATA || {}; DATA._tqtCache = d; hideLoader(); renderFn(d); return; }
     if (tab === 'shhsva'  && d?.shHsva)  { DATA = { ...DATA, shHsva:  d.shHsva  }; hideLoader(); renderFn(); return; }
     if (tab === 'thnq205' && d?.thNq205) { DATA = { ...DATA, thNq205: d.thNq205 }; hideLoader(); renderFn(); return; }
     if (_isPhongTab(tab) && d?.phong) {
@@ -6050,7 +6052,8 @@ function _loadTabAndRender(tab, renderFn) {
   }
 
   if (!GAS) {
-    // Demo mode: nếu có cache phong thì render, không thì tạo demo rỗng
+    // Demo mode
+    if (tab === 'tongquantinh') { hideLoader(); renderFn({ tongQuanTinh: { kpi:{}, timeline:[], rows:[], headers:[] } }); return; }
     if (_isPhongTab(tab)) {
       const cached = DATA?._phongCache?.[tab];
       if (cached) { hideLoader(); renderFn(cached); }
@@ -6597,8 +6600,9 @@ function renderPhong(tab, d) {
 // RENDER TỔNG QUAN TOÀN TỈNH
 // ══════════════════════════════════════════════════════════════
 function renderTongQuanTinh(d) {
-  const tqt = d && d.tongQuanTinh;
-  if (!tqt) return;
+  // d có thể là full response { tongQuanTinh: {...} } hoặc trực tiếp object tqt
+  const tqt = (d && d.tongQuanTinh) ? d.tongQuanTinh : (d && d.kpi !== undefined ? d : null);
+  if (!tqt) { console.warn('[TQT] No data, d=', d); return; }
 
   // Ẩn skeleton, hiện các section
   const skel = document.getElementById('tqt-skeleton');
@@ -7420,9 +7424,9 @@ if (document.readyState === 'loading') {
 // ══════════════════════════════════════════════════════════════
 (function() {
   var _PAGES = [
-    'overview','chitieu12','chitieu6','khuvuc','anhuy',
+    'tongquantinh','overview','chitieu12','chitieu6','khuvuc','anhuy',
     'shhsva','thnq205','phong1','phong2','phong7','phong8',
-    'phong9','phong10','phong11','ttra','tongquantinh','thammuuai'
+    'phong9','phong10','phong11','ttra','thammuuai'
   ];
 
   function _getVisiblePages() {
