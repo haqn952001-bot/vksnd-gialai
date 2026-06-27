@@ -2456,82 +2456,93 @@ body::after{
         <div class="sk-row"><div class="sk-block sk-table-full"></div></div>
       </div>
 
-      <!-- KPI Row 1: Kiểm sát nguồn tin -->
-      <div class="kpi-grid5 fi fi1" id="tqt-kpi1" style="display:none">
+      <!-- TQT KPI CSS inline -->
+      <style>
+        .tqt-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+        .tqt-grid .kc{min-height:88px}
+        .tqt-grid .kc.s2{grid-column:span 2}
+        .tqt-grid .kc .kc-val{font-size:17px;font-weight:800;font-family:var(--fb);line-height:1.35;white-space:normal;word-break:break-word}
+        .tqt-grid .kc .kc-lbl{font-size:9.5px;margin-bottom:8px;line-height:1.4}
+        @media(max-width:1200px){.tqt-grid{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:700px){.tqt-grid{grid-template-columns:repeat(2,1fr)}}
+      </style>
+
+      <!-- KPI Row 1: Nguồn tin -->
+      <div class="tqt-grid fi fi1" id="tqt-kpi1" style="display:none">
         <div class="kc" data-ac="cyan">
           <div class="kc-lbl">Tin báo mới</div>
-          <div class="kc-val kc-val-sm" id="tqt-tinbao">—</div>
+          <div class="kc-val" id="tqt-tinbao">—</div>
           <div class="kc-sub">Toàn tỉnh</div>
         </div>
         <div class="kc" data-ac="amber">
           <div class="kc-lbl">Trực tiếp kiểm sát (cuộc)</div>
-          <div class="kc-val kc-val-sm" id="tqt-ttks">—</div>
+          <div class="kc-val" id="tqt-ttks">—</div>
           <div class="kc-sub">Nguồn tin</div>
         </div>
         <div class="kc" data-ac="violet">
-          <div class="kc-lbl">KN khắc phục vi phạm — Nguồn tin</div>
-          <div class="kc-val kc-val-sm" id="tqt-kn-kp-nguon">—</div>
-          <div class="kc-sub">bản kiến nghị</div>
+          <div class="kc-lbl">KN khắc phục VP — Nguồn tin</div>
+          <div class="kc-val" id="tqt-kn-kp-nguon">—</div>
+          <div class="kc-sub">bản</div>
         </div>
         <div class="kc" data-ac="emerald">
           <div class="kc-lbl">KN phòng ngừa VPPL — Nguồn tin</div>
-          <div class="kc-val kc-val-sm" id="tqt-kn-pn-nguon">—</div>
-          <div class="kc-sub">bản kiến nghị</div>
+          <div class="kc-val" id="tqt-kn-pn-nguon">—</div>
+          <div class="kc-sub">bản</div>
         </div>
-        <div class="kc" data-ac="cyan">
+        <div class="kc s2" data-ac="amber">
           <div class="kc-lbl">Khởi tố mới</div>
-          <div class="kc-val kc-val-sm" id="tqt-khoito">—</div>
+          <div class="kc-val" id="tqt-khoito">—</div>
           <div class="kc-sub">Điều tra</div>
         </div>
       </div>
 
-      <!-- KPI Row 2: Truy tố - Xét xử -->
-      <div class="kpi-grid5 fi fi2" id="tqt-kpi2" style="display:none">
+      <!-- KPI Row 2: Điều tra - Truy tố - Xét xử -->
+      <div class="tqt-grid fi fi2" id="tqt-kpi2" style="display:none">
         <div class="kc" data-ac="violet">
           <div class="kc-lbl">KN khắc phục — Điều tra</div>
-          <div class="kc-val kc-val-sm" id="tqt-kn-kp-dt">—</div>
-          <div class="kc-sub">bản kiến nghị</div>
+          <div class="kc-val" id="tqt-kn-kp-dt">—</div>
+          <div class="kc-sub">bản</div>
         </div>
         <div class="kc" data-ac="amber">
           <div class="kc-lbl">KN phòng ngừa — Điều tra</div>
-          <div class="kc-val kc-val-sm" id="tqt-kn-pn-dt">—</div>
-          <div class="kc-sub">bản kiến nghị</div>
+          <div class="kc-val" id="tqt-kn-pn-dt">—</div>
+          <div class="kc-sub">bản</div>
         </div>
-        <div class="kc" data-ac="emerald">
+        <div class="kc s2" data-ac="emerald">
           <div class="kc-lbl">Truy tố</div>
-          <div class="kc-val kc-val-sm" id="tqt-truyto">—</div>
+          <div class="kc-val" id="tqt-truyto">—</div>
           <div class="kc-sub">Toàn tỉnh</div>
         </div>
-        <div class="kc" data-ac="coral">
+        <div class="kc s2" data-ac="coral">
           <div class="kc-lbl">VKS trả hồ sơ ĐTBS</div>
-          <div class="kc-val kc-val-sm" id="tqt-vks-tra">—</div>
-          <div class="kc-sub">vụ</div>
-        </div>
-        <div class="kc" data-ac="cyan">
-          <div class="kc-lbl">Xét xử án HS</div>
-          <div class="kc-val kc-val-sm" id="tqt-xetxu-hs">—</div>
-          <div class="kc-sub">Kiểm sát xét xử</div>
+          <div class="kc-val" id="tqt-vks-tra">—</div>
+          <div class="kc-sub">vụ / bị can</div>
         </div>
       </div>
 
-      <!-- KPI Row 3: Án hủy + kháng nghị -->
-      <div class="kpi-grid5 fi fi2" id="tqt-kpi3" style="display:none">
-        <div class="kc" data-ac="coral">
+      <!-- KPI Row 3: Xét xử - Án hủy -->
+      <div class="tqt-grid fi fi2" id="tqt-kpi3" style="display:none">
+        <div class="kc s2" data-ac="cyan">
+          <div class="kc-lbl">Xét xử án HS</div>
+          <div class="kc-val" id="tqt-xetxu-hs">—</div>
+          <div class="kc-sub">Kiểm sát xét xử</div>
+        </div>
+        <div class="kc s2" data-ac="coral">
           <div class="kc-lbl">Tòa trả hồ sơ ĐTBS</div>
-          <div class="kc-val kc-val-sm" id="tqt-toa-tra">—</div>
-          <div class="kc-sub">vụ</div>
+          <div class="kc-val" id="tqt-toa-tra">—</div>
+          <div class="kc-sub">vụ / bị cáo</div>
         </div>
         <div class="kc" data-ac="amber">
           <div class="kc-lbl">Xét xử trực tuyến</div>
-          <div class="kc-val kc-val-sm" id="tqt-xetxu-tt">—</div>
+          <div class="kc-val" id="tqt-xetxu-tt">—</div>
           <div class="kc-sub">phiên</div>
         </div>
         <div class="kc" data-ac="coral">
-          <div class="kc-lbl">Phúc thẩm hủy án HS</div>
-          <div class="kc-val kc-val-sm" id="tqt-pt-huy-hs">—</div>
+          <div class="kc-lbl">Phúc thẩm hủy HS</div>
+          <div class="kc-val" id="tqt-pt-huy-hs">—</div>
           <div class="kc-sub">vụ</div>
         </div>
-      </div>
+      </div>      </div>
 
       <!-- Bảng kiến nghị / kháng nghị -->
       <div class="tw fi fi3" id="tqt-kn-card" style="display:none">
@@ -2540,18 +2551,18 @@ body::after{
         </div>
         <table>
           <thead><tr>
-            <th style="width:25%">Kiến nghị khắc phục VP — Nguồn tin</th>
-            <th style="width:25%">KN phòng ngừa VPPL — Nguồn tin</th>
-            <th style="width:25%">KN công tác TGTG, THAHS</th>
-            <th style="width:25%">KN công tác THADS</th>
-            <th style="width:25%">Kháng nghị các lĩnh vực</th>
+            <th style="width:20%;font-size:9px">KN khắc phục VP — Nguồn tin</th>
+            <th style="width:20%;font-size:9px">KN phòng ngừa VPPL — Nguồn tin</th>
+            <th style="width:20%;font-size:9px">KN công tác TGTG, THAHS</th>
+            <th style="width:20%;font-size:9px">KN công tác THADS</th>
+            <th style="width:20%;font-size:9px">Kháng nghị các lĩnh vực</th>
           </tr></thead>
           <tbody><tr>
-            <td id="tqt-b-kn-kp-nguon" style="font-size:13px;color:var(--tp);white-space:pre-line;line-height:1.7">—</td>
-            <td id="tqt-b-kn-pn-nguon" style="font-size:13px;color:var(--tp);white-space:pre-line;line-height:1.7">—</td>
-            <td id="tqt-b-kn-tgtg"     style="font-size:13px;color:var(--emerald);white-space:pre-line;line-height:1.7">—</td>
-            <td id="tqt-b-kn-thads"    style="font-size:13px;color:var(--emerald);white-space:pre-line;line-height:1.7">—</td>
-            <td id="tqt-b-khangnghi"   style="font-size:13px;color:var(--cyan);white-space:pre-line;line-height:1.7">—</td>
+            <td id="tqt-b-kn-kp-nguon" style="font-size:13px;font-weight:600;color:var(--tp);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
+            <td id="tqt-b-kn-pn-nguon" style="font-size:13px;font-weight:600;color:var(--tp);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
+            <td id="tqt-b-kn-tgtg"     style="font-size:13px;font-weight:600;color:var(--amber);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
+            <td id="tqt-b-kn-thads"    style="font-size:13px;font-weight:600;color:var(--amber);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
+            <td id="tqt-b-khangnghi"   style="font-size:13px;font-weight:600;color:var(--cyan);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
           </tr></tbody>
         </table>
       </div>
