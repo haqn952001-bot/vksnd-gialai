@@ -2450,7 +2450,7 @@ body::after{
       </div>
 
       <!-- Skeleton loading -->
-      <div id="tqt-skeleton" class="tab-skeleton">
+      <div id="tqt-skeleton" class="tab-skeleton" style="display:none">
         <div class="sk-row"><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div><div class="sk-block sk-kpi"></div></div>
         <div class="sk-row"><div class="sk-block sk-chart-lg"></div></div>
         <div class="sk-row"><div class="sk-block sk-table-full"></div></div>
@@ -2544,7 +2544,7 @@ body::after{
           <div class="kc-val" id="tqt-pt-huy-hs">—</div>
           <div class="kc-sub">vụ</div>
         </div>
-      </div>      </div>
+            </div>
 
       <!-- Bảng kiến nghị / kháng nghị -->
       <div class="tw" id="tqt-kn-card">
@@ -6035,7 +6035,7 @@ function _invalidatePhongCacheIfFilterChanged(tab) {
 function _loadTabAndRender(tab, renderFn) {
   if (tab === 'shhsva'  && DATA?.shHsva?.numCols?.length)  { renderFn(DATA.shHsva); return; }
   if (tab === 'thnq205' && DATA?.thNq205?.colMap?.colE)    { renderFn(DATA.thNq205); return; }
-  if (tab === 'tongquantinh' && DATA?._tqtCache) { renderFn(DATA._tqtCache); return; }
+  // tongquantinh: không cache (dữ liệu phụ thuộc filter tháng)
   if (_isPhongTab(tab) && DATA?._phongCache?.[tab]) {
     // Kiểm tra cache có khớp với filter hiện tại không
     const _cp = getFilterParams();
@@ -6054,7 +6054,7 @@ function _loadTabAndRender(tab, renderFn) {
 
   const onOk = (d) => {
     console.log('[TabData]', tab, 'keys:', Object.keys(d||{}).join(','));
-    if (tab === 'tongquantinh' && d?.tongQuanTinh) { DATA = DATA || {}; DATA._tqtCache = d; hideLoader(); renderFn(d); return; }
+    if (tab === 'tongquantinh' && d?.tongQuanTinh) { hideLoader(); renderFn(d); return; }
     if (tab === 'shhsva'  && d?.shHsva)  { DATA = { ...DATA, shHsva:  d.shHsva  }; hideLoader(); renderFn(); return; }
     if (tab === 'thnq205' && d?.thNq205) { DATA = { ...DATA, thNq205: d.thNq205 }; hideLoader(); renderFn(); return; }
     if (_isPhongTab(tab) && d?.phong) {
@@ -6628,28 +6628,26 @@ function renderPhong(tab, d) {
 // ══════════════════════════════════════════════════════════════
 function renderTongQuanTinh(d) {
   var tqt = (d && d.tongQuanTinh) ? d.tongQuanTinh : (d && d.kpi !== undefined ? d : null);
-  if (!tqt) { console.warn('[TQT] No data, d=', d); return; }
+  if (!tqt) { console.warn('[TQT] No data'); return; }
+  console.log('[TQT] render: kpi=', Object.keys(tqt.kpi||{}).length, 'rows=', (tqt.rows||[]).length);
 
-  // Ẩn skeleton, hiện tất cả section
+  // Ẩn skeleton
   var skel = document.getElementById('tqt-skeleton');
   if (skel) skel.style.display = 'none';
-  var _tqtIds = ['tqt-kpi1','tqt-kpi2','tqt-kpi3',
-                  'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'];
-  _tqtIds.forEach(function(id) {
+
+  // Hiện các section — dùng setTimeout để tránh bị block bởi render loop
+  var _tqtSections = ['tqt-kpi1','tqt-kpi2','tqt-kpi3',
+                       'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'];
+  _tqtSections.forEach(function(id) {
     var el = document.getElementById(id);
-    if (!el) { console.warn('[TQT] not found:', id); return; }
-    el.removeAttribute('style');          // xóa hoàn toàn inline style
-    el.classList.remove('tqt-fadein');
-    void el.offsetWidth;                  // force reflow để restart animation
-    el.classList.add('tqt-fadein');
+    if (!el) return;
+    el.style.cssText = '';  // xóa toàn bộ inline style
   });
-  // KPI grid cần display:grid (các tw/cc mặc định block)
-  ['tqt-kpi1','tqt-kpi2','tqt-kpi3'].forEach(function(id){
+  // KPI cần display:grid
+  ['tqt-kpi1','tqt-kpi2','tqt-kpi3'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = 'grid';
   });
-  console.log('[TQT] render called, kpi keys:', Object.keys(tqt.kpi||{}).length,
-              'rows:', (tqt.rows||[]).length, 'headers:', (tqt.headers||[]).length);
 
   var kpi  = tqt.kpi  || {};
   var rows = tqt.rows || [];
