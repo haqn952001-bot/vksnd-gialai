@@ -2471,9 +2471,6 @@ body::after{
           color:#9CB3D9 !important;
           font-size:9px;letter-spacing:.7px;
         }
-        .tqt-grid .kc .kc-val { color:#FFD54A !important; }
-        .tqt-grid .kc .kc-sub { color:#9CB3D9 !important; }
-        .tqt-grid .kc .kc-lbl { color:#9CB3D9 !important; }
       </style>
 
       <!-- KPI Row 1: Nguồn tin -->
@@ -6706,24 +6703,24 @@ function renderTongQuanTinh(d) {
     }
   }
 
-  // ── KPI Row 1 — dùng colorize cho số liệu ──
-  setEl('tqt-tinbao',     kpi['Tin báo mới'], true);
-  setEl('tqt-ttks',       kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)'], true);
-  setEl('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'], true);
-  setEl('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)'], true);
-  setEl('tqt-khoito',     kpi['Khởi tố mới'], true);
+  // ── KPI Row 1 ──
+  setEl('tqt-tinbao',     kpi['Tin báo mới']);
+  setEl('tqt-ttks',       kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)']);
+  setEl('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
+  setEl('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
+  setEl('tqt-khoito',     kpi['Khởi tố mới']);
 
   // ── KPI Row 2 ──
-  setEl('tqt-kn-kp-dt',   kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)'], true);
-  setEl('tqt-kn-pn-dt',   kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)'], true);
-  setEl('tqt-truyto',     kpi['Truy tố'], true);
-  setEl('tqt-vks-tra',    kpi['VKS trả hồ sơ để điều tra bổ sung'], true);
-  setEl('tqt-xetxu-hs',   kpi['Xét xử án HS'], true);
+  setEl('tqt-kn-kp-dt',   kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)']);
+  setEl('tqt-kn-pn-dt',   kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)']);
+  setEl('tqt-truyto',     kpi['Truy tố']);
+  setEl('tqt-vks-tra',    kpi['VKS trả hồ sơ để điều tra bổ sung']);
+  setEl('tqt-xetxu-hs',   kpi['Xét xử án HS']);
 
   // ── KPI Row 3 ──
-  setEl('tqt-toa-tra',    kpi['Tòa trả hồ sơ để ĐTBS'], true);
-  setEl('tqt-xetxu-tt',   kpi['Xét xử trực tuyến'], true);
-  setEl('tqt-pt-huy-hs',  kpi['Phúc thẩm hủy án HS'], true);
+  setEl('tqt-toa-tra',    kpi['Tòa trả hồ sơ để ĐTBS']);
+  setEl('tqt-xetxu-tt',   kpi['Xét xử trực tuyến']);
+  setEl('tqt-pt-huy-hs',  kpi['Phúc thẩm hủy án HS']);
 
   // ── Bảng Kiến nghị / Kháng nghị — colorize toàn bộ ──
   setEl('tqt-b-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'], true);
