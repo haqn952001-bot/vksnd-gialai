@@ -2467,6 +2467,13 @@ body::after{
         .tqt-grid .kc .kc-lbl{font-size:9.5px;margin-bottom:8px;line-height:1.4}
         @media(max-width:1200px){.tqt-grid{grid-template-columns:repeat(3,1fr)}}
         @media(max-width:700px){.tqt-grid{grid-template-columns:repeat(2,1fr)}}
+        #tqt-kn-card th, #tqt-table-card th {
+          color:#9CB3D9 !important;
+          font-size:9px;letter-spacing:.7px;
+        }
+        .tqt-grid .kc .kc-val { color:#FFD54A !important; }
+        .tqt-grid .kc .kc-sub { color:#9CB3D9 !important; }
+        .tqt-grid .kc .kc-lbl { color:#9CB3D9 !important; }
       </style>
 
       <!-- KPI Row 1: Nguồn tin -->
@@ -2560,11 +2567,11 @@ body::after{
             <th style="width:20%;font-size:9px">Kháng nghị các lĩnh vực</th>
           </tr></thead>
           <tbody><tr>
-            <td id="tqt-b-kn-kp-nguon" style="font-size:13px;font-weight:600;color:var(--tp);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
-            <td id="tqt-b-kn-pn-nguon" style="font-size:13px;font-weight:600;color:var(--tp);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
-            <td id="tqt-b-kn-tgtg"     style="font-size:13px;font-weight:600;color:var(--amber);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
-            <td id="tqt-b-kn-thads"    style="font-size:13px;font-weight:600;color:var(--amber);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
-            <td id="tqt-b-khangnghi"   style="font-size:13px;font-weight:600;color:var(--cyan);white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top">—</td>
+            <td id="tqt-b-kn-kp-nguon" style="font-size:13px;white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top" class="tqt-kn-cell">—</td>
+            <td id="tqt-b-kn-pn-nguon" style="font-size:13px;white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top" class="tqt-kn-cell">—</td>
+            <td id="tqt-b-kn-tgtg"     style="font-size:13px;white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top" class="tqt-kn-cell">—</td>
+            <td id="tqt-b-kn-thads"    style="font-size:13px;white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top" class="tqt-kn-cell">—</td>
+            <td id="tqt-b-khangnghi"   style="font-size:13px;white-space:pre-line;line-height:1.7;padding:14px 16px;vertical-align:top" class="tqt-kn-cell tqt-kn-cell-kn">—</td>
           </tr></tbody>
         </table>
       </div>
@@ -6622,6 +6629,32 @@ function renderPhong(tab, d) {
 }
 
 
+
+/**
+ * Tô màu thông minh theo bảng màu TQT:
+ *   - Số + đơn vị đếm ngay sau (167 vụ, 04 kiến nghị, 318 bị can) → vàng
+ *   - Tên nguồn trong ngoặc (VKSKV2), (P10) → xanh dương
+ *   - Phần mô tả còn lại → trắng xanh
+ */
+function _tqtColorize(text) {
+  if (!text || text === '—') return '<span style="color:#9CB3D9">—</span>';
+  // Escape HTML
+  var safe = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // 1. Tô tên nguồn trong ngoặc: (VKSKV2), (P10), (VKSND...), (KV...)
+  safe = safe.replace(/\(([^)]+)\)/g,
+    '<span style="color:#7EB8FF;font-weight:600">($1)</span>');
+  // 2. Tô số + đơn vị đếm ngay sau (vụ, bị can, bị cáo, kiến nghị, cuộc, phiên, lần)
+  safe = safe.replace(/(\d+)\s*(vụ|bị can|bị cáo|kiến nghị|cuộc|phiên|lần|bản|kháng nghị)(\b|\s|\/|<)/g,
+    '<span style="color:#FFD54A;font-weight:700">$1</span>'
+    + '<span style="color:#E8EDF5"> $2</span>$3');
+  // 3. Tô phần đầu có dạng "- " (gạch đầu dòng) → màu trắng xanh nhạt
+  safe = safe.replace(/(^|\n)(– |— |- )/g,
+    '$1<span style="color:#9CB3D9">– </span>');
+  return safe;
+}
+window._tqtColorize = _tqtColorize;
 // ══════════════════════════════════════════════════════════════
 // RENDER TỔNG QUAN TOÀN TỈNH
 // Thứ tự: Scorecards → Bảng KN/Kháng nghị → Bảng chi tiết → Nhiệm vụ trọng tâm
@@ -6662,37 +6695,42 @@ function renderTongQuanTinh(d) {
     sub.textContent = 'TỔNG QUAN TOÀN TỈNH' + (parts.length ? ' — ' + parts.join(' — ') : '');
   }
 
-  function setEl(id, val) {
+  function setEl(id, val, colorize) {
     var el = document.getElementById(id);
     if (!el) return;
-    el.textContent = (val && String(val).trim() !== '') ? String(val) : '—';
+    var v = (val && String(val).trim() !== '') ? String(val) : '—';
+    if (colorize && window._tqtColorize) {
+      el.innerHTML = window._tqtColorize(v);
+    } else {
+      el.textContent = v;
+    }
   }
 
-  // ── KPI Row 1 ──
-  setEl('tqt-tinbao',     kpi['Tin báo mới']);
-  setEl('tqt-ttks',       kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)']);
-  setEl('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
-  setEl('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
-  setEl('tqt-khoito',     kpi['Khởi tố mới']);
+  // ── KPI Row 1 — dùng colorize cho số liệu ──
+  setEl('tqt-tinbao',     kpi['Tin báo mới'], true);
+  setEl('tqt-ttks',       kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)'], true);
+  setEl('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'], true);
+  setEl('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)'], true);
+  setEl('tqt-khoito',     kpi['Khởi tố mới'], true);
 
   // ── KPI Row 2 ──
-  setEl('tqt-kn-kp-dt',   kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)']);
-  setEl('tqt-kn-pn-dt',   kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)']);
-  setEl('tqt-truyto',     kpi['Truy tố']);
-  setEl('tqt-vks-tra',    kpi['VKS trả hồ sơ để điều tra bổ sung']);
-  setEl('tqt-xetxu-hs',   kpi['Xét xử án HS']);
+  setEl('tqt-kn-kp-dt',   kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)'], true);
+  setEl('tqt-kn-pn-dt',   kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)'], true);
+  setEl('tqt-truyto',     kpi['Truy tố'], true);
+  setEl('tqt-vks-tra',    kpi['VKS trả hồ sơ để điều tra bổ sung'], true);
+  setEl('tqt-xetxu-hs',   kpi['Xét xử án HS'], true);
 
-  // ── KPI Row 3 (đã bỏ Kháng nghị + KN TGTG) ──
-  setEl('tqt-toa-tra',    kpi['Tòa trả hồ sơ để ĐTBS']);
-  setEl('tqt-xetxu-tt',   kpi['Xét xử trực tuyến']);
-  setEl('tqt-pt-huy-hs',  kpi['Phúc thẩm hủy án HS']);
+  // ── KPI Row 3 ──
+  setEl('tqt-toa-tra',    kpi['Tòa trả hồ sơ để ĐTBS'], true);
+  setEl('tqt-xetxu-tt',   kpi['Xét xử trực tuyến'], true);
+  setEl('tqt-pt-huy-hs',  kpi['Phúc thẩm hủy án HS'], true);
 
-  // ── Bảng Kiến nghị / Kháng nghị ──
-  setEl('tqt-b-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
-  setEl('tqt-b-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
-  setEl('tqt-b-kn-tgtg',     kpi['Kiến nghị trong công tác TGTG, THAHS']);
-  setEl('tqt-b-kn-thads',    kpi['Kiến nghị trong công tác THADS']);
-  setEl('tqt-b-khangnghi',   kpi['Kháng nghị trên các lĩnh vực']);
+  // ── Bảng Kiến nghị / Kháng nghị — colorize toàn bộ ──
+  setEl('tqt-b-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'], true);
+  setEl('tqt-b-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)'], true);
+  setEl('tqt-b-kn-tgtg',     kpi['Kiến nghị trong công tác TGTG, THAHS'], true);
+  setEl('tqt-b-kn-thads',    kpi['Kiến nghị trong công tác THADS'], true);
+  setEl('tqt-b-khangnghi',   kpi['Kháng nghị trên các lĩnh vực'], true);
 
 
   // ── Bảng chi tiết — loại cột văn bản dài ──
@@ -6728,10 +6766,23 @@ function renderTongQuanTinh(d) {
         tableHeaders.forEach(function(h) {
           var v = r[h];
           var display = (v === null || v === undefined || v === '') ? '—' : String(v);
-          var style = (h === 'Tháng' || h === 'Năm' || h === 'Đơn vị')
-            ? 'font-family:var(--fm);color:var(--cyan);font-weight:600;white-space:nowrap'
-            : 'color:var(--tp);white-space:nowrap;font-size:12px';
-          tbHtml += '<td style="' + style + '">' + esc(display) + '</td>';
+          var isId = (h === 'Tháng' || h === 'Năm' || h === 'Đơn vị');
+          var style = 'white-space:nowrap;font-size:12px;padding:8px 14px;';
+          var cellHtml;
+          if (isId) {
+            style += 'color:#7EB8FF;font-weight:700;font-family:var(--fm);';
+            cellHtml = '<td style="' + style + '">' + esc(display) + '</td>';
+          } else if (display === '—') {
+            style += 'color:#9CB3D9;';
+            cellHtml = '<td style="' + style + '">—</td>';
+          } else {
+            // Colorize: số → vàng, text → trắng xanh
+            style += 'white-space:nowrap;';
+            cellHtml = '<td style="' + style + '">' +
+              (window._tqtColorize ? window._tqtColorize(display) : esc(display)) +
+              '</td>';
+          }
+          tbHtml += cellHtml;
         });
         tbHtml += '</tr>';
       });
