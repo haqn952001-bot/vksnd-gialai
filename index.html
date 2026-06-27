@@ -2458,6 +2458,8 @@ body::after{
 
       <!-- TQT KPI CSS inline -->
       <style>
+        @keyframes tqtFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        .tqt-fadein{animation:tqtFadeIn .3s ease both}
         .tqt-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
         .tqt-grid .kc{min-height:88px}
         .tqt-grid .kc.s2{grid-column:span 2}
@@ -2468,7 +2470,7 @@ body::after{
       </style>
 
       <!-- KPI Row 1: Nguồn tin -->
-      <div class="tqt-grid fi fi1" id="tqt-kpi1" style="display:none">
+      <div class="tqt-grid" id="tqt-kpi1">
         <div class="kc" data-ac="cyan">
           <div class="kc-lbl">Tin báo mới</div>
           <div class="kc-val" id="tqt-tinbao">—</div>
@@ -2497,7 +2499,7 @@ body::after{
       </div>
 
       <!-- KPI Row 2: Điều tra - Truy tố - Xét xử -->
-      <div class="tqt-grid fi fi2" id="tqt-kpi2" style="display:none">
+      <div class="tqt-grid" id="tqt-kpi2">
         <div class="kc" data-ac="violet">
           <div class="kc-lbl">KN khắc phục — Điều tra</div>
           <div class="kc-val" id="tqt-kn-kp-dt">—</div>
@@ -2521,7 +2523,7 @@ body::after{
       </div>
 
       <!-- KPI Row 3: Xét xử - Án hủy -->
-      <div class="tqt-grid fi fi2" id="tqt-kpi3" style="display:none">
+      <div class="tqt-grid" id="tqt-kpi3">
         <div class="kc s2" data-ac="cyan">
           <div class="kc-lbl">Xét xử án HS</div>
           <div class="kc-val" id="tqt-xetxu-hs">—</div>
@@ -2545,7 +2547,7 @@ body::after{
       </div>      </div>
 
       <!-- Bảng kiến nghị / kháng nghị -->
-      <div class="tw fi fi1" id="tqt-kn-card" style="display:none">
+      <div class="tw" id="tqt-kn-card">
         <div class="tw-hd">
           <div class="tw-title">BẢNG KIẾN NGHỊ — KHÁNG NGHỊ</div>
         </div>
@@ -2568,7 +2570,7 @@ body::after{
       </div>
 
       <!-- Bảng số liệu chi tiết — ẩn các cột KN/Kháng nghị/Nhiệm vụ -->
-      <div class="tw fi fi1" id="tqt-table-card" style="display:none">
+      <div class="tw" id="tqt-table-card">
         <div class="tw-hd">
           <div class="tw-title">BẢNG SỐ LIỆU CHI TIẾT — TOÀN TỈNH</div>
           <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">Sheet: Tổng quan toàn tỉnh</div>
@@ -2582,7 +2584,7 @@ body::after{
       </div>
 
       <!-- Nhiệm vụ trọng tâm -->
-      <div class="cc fi fi1" id="tqt-nhiemvu-card" style="display:none">
+      <div class="cc" id="tqt-nhiemvu-card">
         <div class="cc-hd">
           <div class="cc-title">NHIỆM VỤ TRỌNG TÂM THÁNG TỚI</div>
           <div class="cc-pill" id="tqt-nhiemvu-period">—</div>
@@ -6635,12 +6637,13 @@ function renderTongQuanTinh(d) {
                   'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'];
   _tqtIds.forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) {
-      el.style.removeProperty('display');
-      el.style.display = 'block';
-    } else { console.warn('[TQT] not found:', id); }
+    if (!el) { console.warn('[TQT] not found:', id); return; }
+    el.removeAttribute('style');          // xóa hoàn toàn inline style
+    el.classList.remove('tqt-fadein');
+    void el.offsetWidth;                  // force reflow để restart animation
+    el.classList.add('tqt-fadein');
   });
-  // Đặt lại grid cho các KPI container
+  // KPI grid cần display:grid (các tw/cc mặc định block)
   ['tqt-kpi1','tqt-kpi2','tqt-kpi3'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.style.display = 'grid';
@@ -6692,9 +6695,7 @@ function renderTongQuanTinh(d) {
   setEl('tqt-b-kn-tgtg',     kpi['Kiến nghị trong công tác TGTG, THAHS']);
   setEl('tqt-b-kn-thads',    kpi['Kiến nghị trong công tác THADS']);
   setEl('tqt-b-khangnghi',   kpi['Kháng nghị trên các lĩnh vực']);
-  console.log('[TQT] KN card values: kp-nguon=', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)'],
-              'tgtg=', kpi['Kiến nghị trong công tác TGTG, THAHS'],
-              'khangnghi=', kpi['Kháng nghị trên các lĩnh vực']);
+
 
   // ── Bảng chi tiết — loại cột văn bản dài ──
   // Các cột bị loại: KN/Kháng nghị dạng văn bản + Nhiệm vụ trọng tâm
