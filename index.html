@@ -2531,39 +2531,52 @@ body::after{
           <div class="kc-val kc-val-sm" id="tqt-pt-huy-hs">—</div>
           <div class="kc-sub">vụ</div>
         </div>
-        <div class="kc" data-ac="violet">
-          <div class="kc-lbl">Kháng nghị các lĩnh vực</div>
-          <div class="kc-val kc-val-sm" id="tqt-khangnghi">—</div>
-          <div class="kc-sub">kháng nghị</div>
-        </div>
-        <div class="kc" data-ac="emerald">
-          <div class="kc-lbl">KN công tác TGTG, THAHS</div>
-          <div class="kc-val kc-val-sm" id="tqt-kn-tgtg">—</div>
-          <div class="kc-sub">kiến nghị</div>
-        </div>
       </div>
 
-      <!-- Nhiệm vụ trọng tâm -->
-      <div class="cc fi fi3" id="tqt-nhiemvu-card" style="display:none">
-        <div class="cc-hd">
-          <div class="cc-title">NHIỆM VỤ TRỌNG TÂM THÁNG TỚI</div>
-          <div class="cc-pill" id="tqt-nhiemvu-period">—</div>
+      <!-- Bảng kiến nghị / kháng nghị -->
+      <div class="tw fi fi3" id="tqt-kn-card" style="display:none">
+        <div class="tw-hd">
+          <div class="tw-title">BẢNG KIẾN NGHỊ — KHÁNG NGHỊ</div>
         </div>
-        <div id="tqt-nhiemvu" style="font-size:13px;color:var(--tp);line-height:1.8;white-space:pre-line;padding:4px 0">—</div>
+        <table>
+          <thead><tr>
+            <th style="width:25%">Kiến nghị khắc phục VP — Nguồn tin</th>
+            <th style="width:25%">KN phòng ngừa VPPL — Nguồn tin</th>
+            <th style="width:25%">KN công tác TGTG, THAHS</th>
+            <th style="width:25%">KN công tác THADS</th>
+            <th style="width:25%">Kháng nghị các lĩnh vực</th>
+          </tr></thead>
+          <tbody><tr>
+            <td id="tqt-b-kn-kp-nguon" style="font-size:13px;color:var(--tp);white-space:pre-line;line-height:1.7">—</td>
+            <td id="tqt-b-kn-pn-nguon" style="font-size:13px;color:var(--tp);white-space:pre-line;line-height:1.7">—</td>
+            <td id="tqt-b-kn-tgtg"     style="font-size:13px;color:var(--emerald);white-space:pre-line;line-height:1.7">—</td>
+            <td id="tqt-b-kn-thads"    style="font-size:13px;color:var(--emerald);white-space:pre-line;line-height:1.7">—</td>
+            <td id="tqt-b-khangnghi"   style="font-size:13px;color:var(--cyan);white-space:pre-line;line-height:1.7">—</td>
+          </tr></tbody>
+        </table>
       </div>
 
-      <!-- Bảng chi tiết toàn bộ dữ liệu -->
+      <!-- Bảng số liệu chi tiết — ẩn các cột KN/Kháng nghị/Nhiệm vụ -->
       <div class="tw fi fi4" id="tqt-table-card" style="display:none">
         <div class="tw-hd">
           <div class="tw-title">BẢNG SỐ LIỆU CHI TIẾT — TOÀN TỈNH</div>
           <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">Sheet: Tổng quan toàn tỉnh</div>
         </div>
         <div style="overflow-x:auto">
-          <table id="tqt-table" style="min-width:1800px;table-layout:auto">
+          <table id="tqt-table" style="min-width:1400px;table-layout:auto">
             <thead id="tqt-thead"></thead>
             <tbody id="tqt-tbody"></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Nhiệm vụ trọng tâm -->
+      <div class="cc fi fi4" id="tqt-nhiemvu-card" style="display:none">
+        <div class="cc-hd">
+          <div class="cc-title">NHIỆM VỤ TRỌNG TÂM THÁNG TỚI</div>
+          <div class="cc-pill" id="tqt-nhiemvu-period">—</div>
+        </div>
+        <div id="tqt-nhiemvu" style="font-size:13px;color:var(--tp);line-height:1.8;white-space:pre-line;padding:4px 0">—</div>
       </div>
 
     </div><!-- /tongquantinh -->
@@ -6598,110 +6611,119 @@ function renderPhong(tab, d) {
 
 // ══════════════════════════════════════════════════════════════
 // RENDER TỔNG QUAN TOÀN TỈNH
+// Thứ tự: Scorecards → Bảng KN/Kháng nghị → Bảng chi tiết → Nhiệm vụ trọng tâm
 // ══════════════════════════════════════════════════════════════
 function renderTongQuanTinh(d) {
-  // d có thể là full response { tongQuanTinh: {...} } hoặc trực tiếp object tqt
-  const tqt = (d && d.tongQuanTinh) ? d.tongQuanTinh : (d && d.kpi !== undefined ? d : null);
+  var tqt = (d && d.tongQuanTinh) ? d.tongQuanTinh : (d && d.kpi !== undefined ? d : null);
   if (!tqt) { console.warn('[TQT] No data, d=', d); return; }
 
-  // Ẩn skeleton, hiện các section
-  const skel = document.getElementById('tqt-skeleton');
+  // Ẩn skeleton, hiện tất cả section
+  var skel = document.getElementById('tqt-skeleton');
   if (skel) skel.style.display = 'none';
-  ['tqt-kpi1','tqt-kpi2','tqt-kpi3','tqt-nhiemvu-card','tqt-table-card'].forEach(function(id) {
+  ['tqt-kpi1','tqt-kpi2','tqt-kpi3',
+   'tqt-kn-card','tqt-table-card','tqt-nhiemvu-card'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = '';
   });
 
-  const kpi = tqt.kpi || {};
-  const tl  = tqt.timeline || [];
-  const rows = tqt.rows || [];
+  var kpi  = tqt.kpi  || {};
+  var rows = tqt.rows || [];
 
   // ── Sub header ──
   var sub = document.getElementById('tqt-sub');
-  if (sub && kpi['Tháng'] !== undefined) {
-    sub = document.getElementById('tqt-sub');
-    var thangLabel = kpi['Tháng'] ? 'THÁNG ' + kpi['Tháng'] : '';
-    var namLabel   = kpi['Năm']   ? 'NĂM '   + kpi['Năm']   : '';
-    sub.textContent = 'TỔNG QUAN TOÀN TỈNH — ' + [namLabel, thangLabel].filter(Boolean).join(' — ');
+  if (sub) {
+    var th = kpi['Tháng'] || ''; var nm = kpi['Năm'] || '';
+    var parts = [];
+    if (nm) parts.push('NĂM ' + nm);
+    if (th) parts.push('THÁNG ' + th);
+    sub.textContent = 'TỔNG QUAN TOÀN TỈNH' + (parts.length ? ' — ' + parts.join(' — ') : '');
   }
 
-  // ── KPI helper ──
-  function setKPI(id, val) {
+  function setEl(id, val) {
     var el = document.getElementById(id);
     if (!el) return;
-    el.textContent = val && val !== '' ? val : '—';
+    el.textContent = (val && String(val).trim() !== '') ? String(val) : '—';
   }
 
-  // Row 1
-  setKPI('tqt-tinbao',    kpi['Tin báo mới']);
-  setKPI('tqt-ttks',      kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)']);
-  setKPI('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
-  setKPI('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
-  setKPI('tqt-khoito',    kpi['Khởi tố mới']);
+  // ── KPI Row 1 ──
+  setEl('tqt-tinbao',     kpi['Tin báo mới']);
+  setEl('tqt-ttks',       kpi['Trực tiếp kiểm sát - nguồn tin (cuộc)']);
+  setEl('tqt-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
+  setEl('tqt-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
+  setEl('tqt-khoito',     kpi['Khởi tố mới']);
 
-  // Row 2
-  setKPI('tqt-kn-kp-dt',  kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)']);
-  setKPI('tqt-kn-pn-dt',  kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)']);
-  setKPI('tqt-truyto',    kpi['Truy tố']);
-  setKPI('tqt-vks-tra',   kpi['VKS trả hồ sơ để điều tra bổ sung']);
-  setKPI('tqt-xetxu-hs',  kpi['Xét xử án HS']);
+  // ── KPI Row 2 ──
+  setEl('tqt-kn-kp-dt',   kpi['Kiến nghị yêu cầu khắc phục vi phạm - điều tra (bản)']);
+  setEl('tqt-kn-pn-dt',   kpi['Kiến nghị phòng ngừa VPPL - điều tra (bản)']);
+  setEl('tqt-truyto',     kpi['Truy tố']);
+  setEl('tqt-vks-tra',    kpi['VKS trả hồ sơ để điều tra bổ sung']);
+  setEl('tqt-xetxu-hs',   kpi['Xét xử án HS']);
 
-  // Row 3
-  setKPI('tqt-toa-tra',   kpi['Tòa trả hồ sơ để ĐTBS']);
-  setKPI('tqt-xetxu-tt',  kpi['Xét xử trực tuyến']);
-  setKPI('tqt-pt-huy-hs', kpi['Phúc thẩm hủy án HS']);
-  setKPI('tqt-khangnghi', kpi['Kháng nghị trên các lĩnh vực']);
-  setKPI('tqt-kn-tgtg',   kpi['Kiến nghị trong công tác TGTG, THAHS']);
+  // ── KPI Row 3 (đã bỏ Kháng nghị + KN TGTG) ──
+  setEl('tqt-toa-tra',    kpi['Tòa trả hồ sơ để ĐTBS']);
+  setEl('tqt-xetxu-tt',   kpi['Xét xử trực tuyến']);
+  setEl('tqt-pt-huy-hs',  kpi['Phúc thẩm hủy án HS']);
 
-  // Nhiệm vụ trọng tâm
-  var nhiemVu = kpi['Nhiệm vụ trọng tâm tháng tới'] || '';
-  var nvEl = document.getElementById('tqt-nhiemvu');
-  if (nvEl) nvEl.textContent = nhiemVu || '(Chưa có dữ liệu)';
-  var nvPeriod = document.getElementById('tqt-nhiemvu-period');
-  if (nvPeriod) {
-    var th = kpi['Tháng'] || ''; var nm = kpi['Năm'] || '';
-    nvPeriod.textContent = th && nm ? ('T' + th + '/' + nm) : '';
-  }
+  // ── Bảng Kiến nghị / Kháng nghị ──
+  setEl('tqt-b-kn-kp-nguon', kpi['Kiến nghị yêu cầu khắc phục vi phạm - nguồn tin (bản)']);
+  setEl('tqt-b-kn-pn-nguon', kpi['Kiến nghị phòng ngừa VPPL - nguồn tin (bản)']);
+  setEl('tqt-b-kn-tgtg',     kpi['Kiến nghị trong công tác TGTG, THAHS']);
+  setEl('tqt-b-kn-thads',    kpi['Kiến nghị trong công tác THADS']);
+  setEl('tqt-b-khangnghi',   kpi['Kháng nghị trên các lĩnh vực']);
 
-  // ── Bảng chi tiết — dùng headers từ sheet ──
-  var headers = tqt.headers || [];
+  // ── Bảng chi tiết — loại cột văn bản dài ──
+  // Các cột bị loại: KN/Kháng nghị dạng văn bản + Nhiệm vụ trọng tâm
+  var SKIP_COLS = [
+    'Kiến nghị trong công tác TGTG, THAHS',
+    'Kiến nghị trong công tác THADS',
+    'Kháng nghị trên các lĩnh vực',
+    'Nhiệm vụ trọng tâm tháng tới'
+  ];
+
+  var allHeaders  = tqt.headers || [];
+  var tableHeaders = allHeaders.filter(function(h) {
+    return h && SKIP_COLS.indexOf(h) < 0;
+  });
+
   var thead = document.getElementById('tqt-thead');
   var tbody = document.getElementById('tqt-tbody');
-  if (!thead || !tbody) return;
+  if (thead && tbody) {
+    var thHtml = '<tr>';
+    tableHeaders.forEach(function(h) {
+      thHtml += '<th style="white-space:normal;min-width:70px;line-height:1.3;font-size:9px">' + esc(h) + '</th>';
+    });
+    thHtml += '</tr>';
+    thead.innerHTML = thHtml;
 
-  // Header row
-  var thHtml = '<tr>';
-  headers.forEach(function(h) {
-    thHtml += '<th style="white-space:normal;min-width:80px;max-width:200px;line-height:1.3;font-size:9px">' + esc(h) + '</th>';
-  });
-  thHtml += '</tr>';
-  thead.innerHTML = thHtml;
-
-  // Data rows
-  if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="' + headers.length + '" style="text-align:center;padding:24px;color:var(--tm)">Chưa có dữ liệu trong sheet "Tổng quan toàn tỉnh"</td></tr>';
-    return;
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="' + tableHeaders.length + '" style="text-align:center;padding:24px;color:var(--tm)">Chưa có dữ liệu</td></tr>';
+    } else {
+      var tbHtml = '';
+      rows.forEach(function(r) {
+        tbHtml += '<tr>';
+        tableHeaders.forEach(function(h) {
+          var v = r[h];
+          var display = (v === null || v === undefined || v === '') ? '—' : String(v);
+          var style = (h === 'Tháng' || h === 'Năm' || h === 'Đơn vị')
+            ? 'font-family:var(--fm);color:var(--cyan);font-weight:600;white-space:nowrap'
+            : 'color:var(--tp);white-space:nowrap;font-size:12px';
+          tbHtml += '<td style="' + style + '">' + esc(display) + '</td>';
+        });
+        tbHtml += '</tr>';
+      });
+      tbody.innerHTML = tbHtml;
+    }
   }
 
-  var tbHtml = '';
-  rows.forEach(function(r) {
-    tbHtml += '<tr>';
-    headers.forEach(function(h) {
-      var v = r[h];
-      var display = (v === null || v === undefined || v === '') ? '—' : String(v);
-      // Làm nổi bật cột Tháng và Năm
-      var style = (h === 'Tháng' || h === 'Năm' || h === 'Đơn vị')
-        ? 'font-family:var(--fm);color:var(--cyan);font-weight:600;white-space:nowrap'
-        : 'color:var(--tp);white-space:nowrap';
-      // Cột văn bản dài → cho wrap
-      if (h === 'Kháng nghị trên các lĩnh vực' || h === 'Nhiệm vụ trọng tâm tháng tới') {
-        style = 'color:var(--ts);font-size:11px;white-space:normal;min-width:200px;line-height:1.5';
-      }
-      tbHtml += '<td style="' + style + '">' + esc(display) + '</td>';
-    });
-    tbHtml += '</tr>';
-  });
-  tbody.innerHTML = tbHtml;
+  // ── Nhiệm vụ trọng tâm ──
+  var nhiemVu  = kpi['Nhiệm vụ trọng tâm tháng tới'] || '';
+  var nvEl     = document.getElementById('tqt-nhiemvu');
+  var nvPeriod = document.getElementById('tqt-nhiemvu-period');
+  if (nvEl)     nvEl.textContent = nhiemVu || '(Chưa có dữ liệu)';
+  if (nvPeriod) {
+    var thP = kpi['Tháng'] || ''; var nmP = kpi['Năm'] || '';
+    nvPeriod.textContent = (thP && nmP) ? ('T' + thP + '/' + nmP) : '';
+  }
 }
 
 function renderThNq205() {
