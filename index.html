@@ -2671,6 +2671,12 @@ body::after{
             <option value="gemini">✦ Gemini</option>
             <option value="claude">◆ Claude</option>
             <option value="deepseek">⚡ DeepSeek V4</option>
+            <optgroup label="🔀 Bynara">
+              <option value="bynara_mistral_large">Mistral Large</option>
+              <option value="bynara_mimo_pro">Mimo v2.5 Pro Free</option>
+              <option value="bynara_mimo_free">Mimo v2.5 Free</option>
+              <option value="bynara_mistral_medium">Mistral Medium 3.5</option>
+            </optgroup>
           </select>
         </div>
       </div>
@@ -2732,6 +2738,12 @@ body::after{
               <option value="gemini">✦ Gemini</option>
               <option value="claude">◆ Claude</option>
               <option value="deepseek">⚡ DeepSeek V4</option>
+              <optgroup label="🔀 Bynara Router">
+                <option value="bynara_mistral_large">Mistral Large (252K)</option>
+                <option value="bynara_mimo_pro">Mimo v2.5 Pro Free (1M)</option>
+                <option value="bynara_mimo_free">Mimo v2.5 Free (1M)</option>
+                <option value="bynara_mistral_medium">Mistral Medium 3.5 (256K)</option>
+              </optgroup>
             </select>
             <button onclick="runPhatBieu()" id="btnPhatBieu" style="
               height:34px;padding:0 22px;border-radius:var(--rsm);border:none;cursor:pointer;
@@ -8191,6 +8203,13 @@ function sendAiMsg() {
 
   const payload = { messages: recentHistory, contextParams: contextParams };
 
+  // Route theo provider
+  if (_aiProvider === 'bynara') {
+    _callBynaraAPI(recentHistory, contextParams)
+      .then(_onReply).catch(_onErr);
+    return;
+  }
+
   if (MODE === 'VERCEL') {
     gasAskAI(payload).then(_onReply).catch(_onErr);
     return;
@@ -8331,7 +8350,11 @@ function runPhatBieu() {
     ['btnTmCopy','btnTmExport'].forEach(function(id){
       var b = document.getElementById(id); if(b) b.style.display='flex';
     });
-    var mLabel = model==='claude'?'◆ Claude':model==='deepseek'?'⚡ DeepSeek V4':'✦ Gemini';
+    var byM = model && model.startsWith('bynara') ? model.replace('bynara_','').replace('_',' ') : '';
+    var mLabel = model==='claude'?'◆ Claude'
+                : model==='deepseek'?'⚡ DeepSeek V4'
+                : byM ? '🔀 Bynara / ' + byM
+                : '✦ Gemini';
     document.getElementById('tmMeta').textContent = mLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
     var el = document.getElementById('tmContent');
     el.innerHTML = typeof _aiFormatReply==='function' ? _aiFormatReply(reply) : reply;
@@ -8558,8 +8581,10 @@ function runThamMuuAI() {
     });
     var _cbtn = document.getElementById('btnTmCopy');
     if (_cbtn) _cbtn.style.display = 'flex';
+    var _tmByM = model && model.startsWith('bynara') ? model.replace('bynara_','').replace(/_/g,' ').toUpperCase() : '';
     var _tmLabel = model === 'claude' ? '◆ Claude'
                  : model === 'deepseek' ? '⚡ DeepSeek V4'
+                 : _tmByM ? '🔀 Bynara / ' + _tmByM
                  : '✦ Gemini';
     document.getElementById('tmMeta').textContent = _tmLabel + ' | ' + new Date().toLocaleTimeString('vi-VN');
 
@@ -8595,6 +8620,19 @@ function runThamMuuAI() {
     var dsPayload = { messages: messages, contextParams: contextParams };
     _callDeepSeekAPI(messages, contextParams)
       .then(onResult)
+      .catch(onError);
+
+  } else if (model && model.startsWith('bynara')) {
+    // Bynara Router — qua GAS askBynara (OpenAI-compatible)
+    var byModelId = model.replace('bynara_','').replace(/_/g,'-');
+    gasAPI('askBynara', { payload: JSON.stringify({
+      messages      : messages.slice(-6),
+      contextParams : contextParams,
+      bynaraModel   : byModelId,
+      analyzeMode   : true,
+      analyzePrompt : analyzePrompt || ''
+    })})
+      .then(function(d){ onResult(d.reply || d.error || '(Không có phản hồi)'); })
       .catch(onError);
 
   } else {
@@ -8811,6 +8849,7 @@ function aiSetProvider(p) {
   const btnG  = document.getElementById('btnProvGemini');
   const btnC  = document.getElementById('btnProvClaude');
   const btnDS = document.getElementById('btnProvDeepseek');
+  const btnBY = document.getElementById('btnProvBynara');
   const icon  = document.getElementById('aiProviderIcon');
   const name  = document.getElementById('aiProviderName');
   const banner = document.getElementById('aiClaudeKeyBanner');
@@ -8819,11 +8858,54 @@ function aiSetProvider(p) {
   const isGemini   = (p === 'gemini');
   const isClaude   = (p === 'claude');
   const isDeepseek = (p === 'deepseek');
+  const isBynara   = (p === 'bynara');
 
   // Reset tất cả buttons về inactive
-  [btnG, btnC, btnDS].forEach(function(b) {
+  [btnG, btnC, btnDS, btnBY].forEach(function(b) {
     if (b) { b.style.background = 'var(--n800)'; b.style.color = 'var(--ts)'; b.style.fontWeight = '600'; }
   });
+  if (btnG && isGemini) {
+    btnG.style.background = 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))';
+    btnG.style.color = 'var(--cyan)'; btnG.style.fontWeight = '700';
+  }
+  if (btnC && isClaude) {
+    btnC.style.background = 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))';
+    btnC.style.color = '#c4b5fd'; btnC.style.fontWeight = '700';
+  }
+  if (btnDS && isDeepseek) {
+    btnDS.style.background = 'linear-gradient(135deg,rgba(99,179,237,.25),rgba(99,179,237,.1))';
+    btnDS.style.color = '#63b3ed'; btnDS.style.fontWeight = '700';
+  }
+  if (btnBY && isBynara) {
+    btnBY.style.background = 'linear-gradient(135deg,rgba(251,146,60,.25),rgba(251,146,60,.1))';
+    btnBY.style.color = '#fb923c'; btnBY.style.fontWeight = '700';
+  }
+  if (icon) icon.innerHTML = isGemini ? '<img src="https://raw.githubusercontent.com/haqn952001-bot/vksnd-gialai/main/assets/icon-gemini-small.png" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="AI">' : '◆';
+  if (name) {
+    name.textContent = isDeepseek ? 'DeepSeek — Trợ lý AI VKSND'
+                     : isClaude   ? 'Claude — Trợ lý AI VKSND'
+                     : isBynara   ? 'Bynara — Trợ lý AI VKSND'
+                     :              'Trợ lý AI VKSND';
+    name.style.color = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : isBynara ? '#fb923c' : 'var(--cyan)';
+  }
+  if (sendBtn) sendBtn.style.background =
+    isDeepseek ? 'linear-gradient(135deg,#2b6cb0,#63b3ed)'
+    : isClaude ? 'linear-gradient(135deg,#6d28d9,#8b5cf6)'
+    : isBynara ? 'linear-gradient(135deg,#c2410c,#fb923c)'
+    :            'linear-gradient(135deg,#0066cc,#00d4ff)';
+  if (driveBtn) {
+    driveBtn.style.opacity = isGemini ? '1' : '.4';
+    driveBtn.title = isGemini ? 'Tra cứu tài liệu Google Drive' : 'Google Drive chỉ hoạt động với Gemini';
+    if (!isGemini) driveBtn.classList.remove('ai-src-active');
+  }
+  if (banner) banner.style.display = 'none';
+  var provLabel = isDeepseek ? 'DeepSeek R1 (API trực tiếp)'
+                : isClaude   ? ('Claude ' + _claudeGetModel() + ' (API trực tiếp)')
+                : isBynara   ? 'Bynara Router (Mistral / Mimo)'
+                :              'Gemini (qua GAS)';
+  var provColor = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : isBynara ? '#fb923c' : 'var(--cyan)';
+  _aiAddMsg('<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:' + provColor + '">' + provLabel + '</strong></span>', 'bot');
+}
   if (btnG && isGemini) {
     btnG.style.background = 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))';
     btnG.style.color = 'var(--cyan)'; btnG.style.fontWeight = '700';
@@ -9024,6 +9106,41 @@ async function _callDeepSeekAnalyze(payload) {
     const script = document.createElement('script');
     script.src = url.toString();
     script.onerror = () => { cleanup(); reject(new Error('JSONP script error: askDeepSeek')); };
+    document.head.appendChild(script);
+  });
+}
+
+// ── Bynara Router API (OpenAI-compatible, qua GAS askBynara) ──────
+async function _callBynaraAPI(messages, contextParams) {
+  const url      = new URL(GAS_API_URL);
+  const cbName   = '_gcb_by_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  const payload  = { messages: messages, contextParams: contextParams };
+  url.searchParams.set('action',   'askBynara');
+  url.searchParams.set('callback', cbName);
+  // Giới hạn payload để tránh URL quá dài
+  const safePayload = {
+    messages      : messages.slice(-6).map(function(m) {
+      return { role: m.role, content: (m.content || '').slice(0, 1500) };
+    }),
+    contextParams : contextParams
+  };
+  url.searchParams.set('payload', JSON.stringify(safePayload));
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Bynara timeout (90s)')); }, 90000);
+    window[cbName] = (data) => {
+      cleanup();
+      if (data && data.error) reject(new Error(data.error));
+      else resolve(data && data.reply ? data.reply : '[Không có phản hồi từ Bynara]');
+    };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+    }
+    const script = document.createElement('script');
+    script.src   = url.toString();
+    script.onerror = () => { cleanup(); reject(new Error('JSONP script error: askBynara')); };
     document.head.appendChild(script);
   });
 }
@@ -9228,6 +9345,7 @@ console.log('[Claude Integration V1] loaded | provider:', _aiProvider, '| key: s
         <button id="btnProvGemini" onclick="aiSetProvider('gemini')" style="height:26px;padding:0 9px;font-size:10px;font-weight:700;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1));color:var(--cyan);transition:all .18s" title="Dùng Gemini (qua GAS)">✦ Gemini</button>
         <button id="btnProvClaude" onclick="aiSetProvider('claude')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng Claude (Anthropic API trực tiếp)">◆ Claude</button>
         <button id="btnProvDeepseek" onclick="aiSetProvider('deepseek')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Dùng DeepSeek R1 (API trực tiếp)">⚡ DeepSeek</button>
+        <button id="btnProvBynara" onclick="aiSetProvider('bynara')" style="height:26px;padding:0 9px;font-size:10px;font-weight:600;font-family:var(--fb);cursor:pointer;border:none;white-space:nowrap;background:var(--n800);color:var(--ts);border-left:1px solid rgba(0,212,255,.2);transition:all .18s" title="Bynara Router (Mistral, Mimo)">🔀 Bynara</button>
       </div>
 
       <button onclick="refreshAiData()" title="Làm mới dữ liệu" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0;border-radius:6px;cursor:pointer;font-size:11px;padding:3px 7px;font-family:var(--fb)">↻</button>
