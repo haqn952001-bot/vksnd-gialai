@@ -8896,7 +8896,15 @@ function aiSetProvider(p) {
   if (driveBtn) {
     driveBtn.style.opacity = isGemini ? '1' : '.4';
     driveBtn.title = isGemini ? 'Tra cứu tài liệu Google Drive' : 'Google Drive chỉ hoạt động với Gemini';
-    if (!isGemini) driveBtn.classList.remove('ai-src-active');
+    if (!isGemini) {
+      driveBtn.classList.remove('ai-src-active');
+      // Auto-tick nguồn mặc định nếu không còn nguồn nào active
+      var _activeSrcs = document.querySelectorAll('#aiSourceBtns .ai-src-btn.ai-src-active');
+      if (_activeSrcs.length === 0) {
+        var _defBtn = document.querySelector('#aiSourceBtns .ai-src-btn:not([data-src="drive"])');
+        if (_defBtn) _defBtn.classList.add('ai-src-active');
+      }
+    }
   }
   if (banner) banner.style.display = 'none';
   var provLabel = isDeepseek ? 'DeepSeek R1 (API trực tiếp)'
@@ -8904,41 +8912,6 @@ function aiSetProvider(p) {
                 : isBynara   ? 'Bynara Router (Mistral / Mimo)'
                 :              'Gemini (qua GAS)';
   var provColor = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : isBynara ? '#fb923c' : 'var(--cyan)';
-  _aiAddMsg('<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:' + provColor + '">' + provLabel + '</strong></span>', 'bot');
-}
-  if (btnG && isGemini) {
-    btnG.style.background = 'linear-gradient(135deg,rgba(0,212,255,.25),rgba(0,212,255,.1))';
-    btnG.style.color = 'var(--cyan)'; btnG.style.fontWeight = '700';
-  }
-  if (btnC && isClaude) {
-    btnC.style.background = 'linear-gradient(135deg,rgba(139,92,246,.25),rgba(139,92,246,.1))';
-    btnC.style.color = '#c4b5fd'; btnC.style.fontWeight = '700';
-  }
-  if (btnDS && isDeepseek) {
-    btnDS.style.background = 'linear-gradient(135deg,rgba(99,179,237,.25),rgba(99,179,237,.1))';
-    btnDS.style.color = '#63b3ed'; btnDS.style.fontWeight = '700';
-  }
-  if (icon) icon.innerHTML = isGemini ? '<img src="https://raw.githubusercontent.com/haqn952001-bot/vksnd-gialai/main/assets/icon-gemini-small.png" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="AI">' : '◆';
-  if (name) {
-    name.textContent = isDeepseek ? 'DeepSeek — Trợ lý AI VKSND'
-                     : isClaude   ? 'Claude — Trợ lý AI VKSND'
-                     :              'Trợ lý AI VKSND';
-    name.style.color = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : 'var(--cyan)';
-  }
-  if (sendBtn) sendBtn.style.background =
-    isDeepseek ? 'linear-gradient(135deg,#2b6cb0,#63b3ed)'
-    : isClaude ? 'linear-gradient(135deg,#6d28d9,#8b5cf6)'
-    :            'linear-gradient(135deg,#0066cc,#00d4ff)';
-  if (driveBtn) {
-    driveBtn.style.opacity = isGemini ? '1' : '.4';
-    driveBtn.title = isGemini ? 'Tra cứu tài liệu Google Drive' : 'Google Drive chỉ hoạt động với Gemini';
-    if (!isGemini) driveBtn.classList.remove('ai-src-active');
-  }
-  if (banner) banner.style.display = 'none';
-  var provLabel = isDeepseek ? 'DeepSeek R1 (API trực tiếp)'
-                : isClaude   ? ('Claude ' + _claudeGetModel() + ' (API trực tiếp)')
-                :              'Gemini (qua GAS)';
-  var provColor = isDeepseek ? '#63b3ed' : isClaude ? '#c4b5fd' : 'var(--cyan)';
   _aiAddMsg('<span style="font-size:10px;color:var(--ts);opacity:.8">🔄 Đã chuyển sang <strong style="color:' + provColor + '">' + provLabel + '</strong></span>', 'bot');
 }
 window.aiSetProvider = aiSetProvider;
