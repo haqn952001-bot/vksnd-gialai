@@ -8203,13 +8203,30 @@ function sendAiMsg() {
 
   const payload = { messages: recentHistory, contextParams: contextParams };
 
-  // Route theo provider
+  // Route theo provider — check lại _aiProvider ngay trước khi gửi
+  console.log('[AI] Provider:', _aiProvider, '| MODE:', MODE);
+
   if (_aiProvider === 'bynara') {
     _callBynaraAPI(recentHistory, contextParams)
       .then(_onReply).catch(_onErr);
     return;
   }
 
+  if (_aiProvider === 'deepseek') {
+    _callDeepSeekAPI(recentHistory, contextParams)
+      .then(async (reply) => _onReply(reply))
+      .catch(err => _onReply('Lỗi DeepSeek: ' + (err.message||err)));
+    return;
+  }
+
+  if (_aiProvider === 'claude') {
+    _callClaudeAPI(recentHistory, contextParams)
+      .then(async (reply) => _onReply(reply))
+      .catch(err => _onReply('Lỗi Claude: ' + (err.message||err)));
+    return;
+  }
+
+  // Gemini (mặc định)
   if (MODE === 'VERCEL') {
     gasAskAI(payload).then(_onReply).catch(_onErr);
     return;
