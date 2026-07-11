@@ -2798,6 +2798,11 @@ function nav(el) {
   // Đồng bộ nguồn dữ liệu AI theo tab vừa chuyển (nếu panel đang mở thì update ngay)
   if (typeof _aiAutoSyncSources === 'function') _aiAutoSyncSources();
 }
+window.nav = nav;
+function _openHelp() {
+  if (typeof toggleAiChat === "function") toggleAiChat();
+}
+window._openHelp = _openHelp;
 
 // ══════════════════════════════════════════════════════════════
 // DATA — gọi qua google.script.run khi chạy trong Apps Script
