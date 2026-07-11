@@ -2588,6 +2588,13 @@ const $ = id => document.getElementById(id);
 const v = id => $( id)?.value || '';
 const F = n => (Number(n)||0).toLocaleString('vi-VN');
 function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 // ══════════════════════════════════════════════════════════════
 // CẤU HÌNH GAS API URL — thay bằng URL deployment thực tế
 // ══════════════════════════════════════════════════════════════
@@ -7378,9 +7385,6 @@ window.addEventListener('load', () => {
     if (typeof _tmSwitchMode === 'function') _tmSwitchMode('speech');
   }, 200);
 });
-
-// [auto-fix] closing brace restored
-}
 </script>
 
 <script>
