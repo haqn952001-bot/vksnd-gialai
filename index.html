@@ -1481,98 +1481,8 @@ body::after{
         </svg>
         Làm mới
       </button>
-    </div></div>
-        <div class="tr-inner" id="trInner">
-          <div class="tr-track"></div>
-          <div class="tr-fill"  id="trFill"></div>
-          <div class="tr-thumb" id="trThumbL" tabindex="0" role="slider"
-               aria-label="Tháng từ" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1">
-            <div class="tr-tip" id="trTipL">T.1</div>
-          </div>
-          <div class="tr-thumb" id="trThumbR" tabindex="0" role="slider"
-               aria-label="Tháng đến" aria-valuemin="1" aria-valuemax="12" aria-valuenow="12">
-            <div class="tr-tip" id="trTipR">T.12</div>
-          </div>
-          <div class="tr-ticks">
-            <span>1</span><span>3</span><span>6</span><span>9</span><span>12</span>
-          </div>
-        </div>
-        <!-- Popup preset nhanh — dùng fixed để không bị clip -->
-        <div class="tr-presets" id="trPresets">
-          <button class="tr-pb" onclick="_trPreset(1,1)">Tháng 1</button>
-          <button class="tr-pb" onclick="_trPreset(1,3)">Quý 1 (T1–T3)</button>
-          <button class="tr-pb" onclick="_trPreset(4,6)">Quý 2 (T4–T6)</button>
-          <button class="tr-pb" onclick="_trPreset(1,6)">6 tháng (T1–T6)</button>
-          <button class="tr-pb" onclick="_trPreset(7,9)">Quý 3 (T7–T9)</button>
-          <button class="tr-pb" onclick="_trPreset(9,12)">Quý 4 (T9–T12)</button>
-          <button class="tr-pb active" onclick="_trPreset(1,12)">Cả năm (T1–T12)</button>
-        </div>
-      </div>
-      <!-- ═ END SLIDER ══════════════════════════════════════════════ -->
-      <!-- Đơn vị -->
-      <select id="fKV" onchange="markFilterDirty(); onTopbarKVChange()" class="fl-sel-kv" style="height:28px;font-size:11px;min-width:120px;max-width:155px">
-        <option value="">Tất cả đơn vị</option>
-        <optgroup label="── Phòng nghiệp vụ ──" id="fKV-phong-group">
-          <option value="__phong1__">Phòng 1</option>
-          <option value="__phong2__">Phòng 2</option>
-          <option value="__phong7__">Phòng 7</option>
-          <option value="__phong8__">Phòng 8</option>
-          <option value="__phong9__">Phòng 9</option>
-          <option value="__phong10__">Phòng 10</option>
-          <option value="__phong11__">Phòng 11</option>
-          <option value="__ttra__">Thanh tra - Khiếu tố</option>
-          <option value="__phong15__">Phòng 15</option>
-        </optgroup>
-        <optgroup label="── Khu vực ──" id="fKV-kv-group">
-        </optgroup>
-      </select>
-      <!-- ── NHÓM 2: ACTIONS ───────────────────── -->
-      <div class="tl-divider"></div>
-      <!-- Xác nhận filter -->
-      <button class="tb-btn tb-btn-primary" id="btnConfirm" onclick="confirmFilter()" title="Áp dụng bộ lọc đã chọn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
-        Xác nhận
-      </button>
-      <!-- Tải lại -->
-      <button class="tb-btn tb-btn-reload" onclick="reload(true)" title="Tải lại dữ liệu từ Sheets">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-        Tải lại
-      </button>
-
-      <!-- ── NHÓM 3: VIEW OPTIONS ───────────────── -->
-      <div class="tl-divider"></div>
-      <!-- So sánh -->
-      <select id="fCompare" class="compare-sel" onchange="renderPage('overview')" title="So sánh KPI với kỳ trước">
-        <option value="month">▲▼ T.trước</option>
-        <option value="year">▲▼ N.trước</option>
-        <option value="qtr">▲▼ Q.trước</option>
-        <option value="none">Ẩn ▲▼</option>
-      </select>
-      <!-- Đổi kỳ -->
-      <button class="tb-btn" onclick="showWelcomeAgain()" title="Chọn lại kỳ báo cáo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-        Đổi kỳ
-      </button>
-
-      <!-- ── NHÓM 4: TOOLS (icon-only) ─────────── -->
-      <div class="tl-divider"></div>
-      <!-- Trình chiếu -->
-      <button id="btnPresent" class="tb-btn" onclick="_togglePresentation()" title="Trình chiếu (Esc để thoát)" style="padding:0 8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-      </button>
-
     </div>
-    <button id="btnInstallApp" onclick="_installPWA()" title="Cài đặt ứng dụng Dashboard" style="
-  display:none;height:28px;width:28px;padding:0;border-radius:6px;
-  border:1px solid rgba(250,204,21,.3);background:rgba(250,204,21,.08);
-  color:var(--gold);cursor:pointer;align-items:center;justify-content:center;
-  animation:confirmPulse 2s ease-in-out infinite;flex-shrink:0">
-  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-  </svg>
-</button>
-<div class="tl-status">
+    <div class="tl-status">
       <div class="dot"></div>
       <span id="tsUp">--:--</span>
     </div>
@@ -9726,56 +9636,6 @@ document.addEventListener('DOMContentLoaded', function(){
       if (btn) btn.style.display = 'none';
     });
   };
-})();
-</script>
-
-
-<script>
-// [Emergency show] — force hiển thị Tham mưu AI ngay khi DOM sẵn sàng
-(function() {
-  function forceShowTM() {
-    // Ẩn tất cả pages
-    document.querySelectorAll('.page').forEach(function(p){
-      p.classList.remove('active');
-      p.style.display = 'none';
-    });
-    // Hiện page-thammuuai
-    var tmPage = document.getElementById('page-thammuuai');
-    if (tmPage) {
-      tmPage.classList.add('active');
-      tmPage.style.display = 'flex';
-      tmPage.style.opacity = '1';
-      tmPage.style.visibility = 'visible';
-    }
-    // Ẩn overlay welcome nếu còn
-    var ws = document.getElementById('welcomeScreen');
-    if (ws) ws.style.display = 'none';
-    // Ẩn loader
-    var ld = document.getElementById('ld');
-    if (ld) { ld.style.display = 'none'; ld.classList.add('hide'); }
-    // Đảm bảo main hiển thị
-    var main = document.getElementById('main');
-    if (main) { main.style.display = 'flex'; main.style.opacity = '1'; }
-    // Đảm bảo app hiển thị
-    var app = document.querySelector('.app');
-    if (app) app.style.display = 'grid';
-    // Set nav-item active
-    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
-    var tmNav = document.querySelector('[data-page="thammuuai"]');
-    if (tmNav) tmNav.classList.add('active');
-    // Switch sang mode Phát biểu nhanh nếu có
-    if (typeof _tmSwitchMode === 'function') {
-      try { _tmSwitchMode('speech'); } catch(e) { console.warn('_tmSwitchMode err:', e); }
-    }
-    console.log('[EmergencyShow] Tham mưu AI forced visible');
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ setTimeout(forceShowTM, 500); });
-  } else {
-    setTimeout(forceShowTM, 500);
-  }
-  // Chạy lại sau 1.5s để đảm bảo override mọi thứ
-  setTimeout(forceShowTM, 1500);
 })();
 </script>
 </body>
