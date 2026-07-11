@@ -776,48 +776,6 @@ body::after{
     linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);
   background-size:48px 48px;
 }
-.login-box{
-  position:relative;z-index:1;
-  width:clamp(320px, 90vw, 440px);
-  background:rgba(11,20,40,.92);
-  border:1px solid rgba(0,212,255,.18);
-  border-radius:20px;
-  padding:clamp(24px, 5vw, 40px) clamp(20px, 5vw, 36px) clamp(20px, 4vw, 36px);
-  box-shadow:0 0 60px rgba(0,212,255,.08),0 24px 64px rgba(0,0,0,.5);
-  backdrop-filter:blur(20px);
-  animation:fadeUp .4s ease both;
-  margin:auto;
-}
-.login-logo{display:flex;align-items:center;gap:14px;margin-bottom:32px}
-.login-badge{
-  width:48px;height:48px;border-radius:12px;flex-shrink:0;
-  background:linear-gradient(135deg,#0066cc,#00d4ff);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;font-weight:800;color:#fff;
-  box-shadow:0 0 24px rgba(0,212,255,.3);
-}
-.login-org{font-size:13px;font-weight:700;color:var(--tp);line-height:1.3}
-.login-org-sub{font-size:11px;color:var(--ts);margin-top:2px}
-.login-heading{
-  font-size:clamp(17px,4vw,22px);font-weight:800;margin-bottom:4px;
-  background:linear-gradient(135deg,#fff 0%,var(--cyan) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.login-desc{font-size:clamp(11px,2.5vw,12px);color:var(--ts);margin-bottom:28px}
-.login-field{margin-bottom:16px}
-.login-label{
-  display:block;font-size:10px;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;
-  color:var(--ts);margin-bottom:7px;
-}
-.login-input{
-  width:100%;height:44px;border-radius:10px;
-  border:1px solid var(--bdm);
-  background:rgba(15,28,53,.8);
-  color:var(--tp);font-size:13px;
-  padding:0 14px;font-family:var(--fb);
-  outline:none;transition:border-color .2s,box-shadow .2s;
-}
 .login-input:focus{
   border-color:var(--cyan);
   box-shadow:0 0 0 3px rgba(0,212,255,.12);
@@ -1317,65 +1275,16 @@ body::after{
 <body>
 
 <!-- LOGIN PAGE -->
-<div id="loginPage">
-  <div class="login-box">
-        <!-- Logo VKSND — ảnh thực tế tách nền -->
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="position:relative;width:clamp(80px,18vw,120px);height:clamp(80px,18vw,120px);margin:0 auto 12px;">
-        <!-- Glow nền -->
-        <div style="position:absolute;inset:-10px;border-radius:50%;
-          background:radial-gradient(circle,rgba(250,204,21,.12) 0%,transparent 70%);
-          animation:blink 2.5s ease-in-out infinite;"></div>
-        <!-- Ảnh logo VKSND tách nền -->
-        <img src="https://raw.githubusercontent.com/haqn952001-bot/vksnd-gialai/main/assets/logo-vksnd.png"
-          style="width:clamp(80px,18vw,120px);height:clamp(80px,18vw,120px);object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 0 6px rgba(250,204,21,.4)) brightness(1.03);animation:floatAvatar 3s ease-in-out infinite"
-        />
-      </div>
-      <!-- Dòng 1: VIỆN KSND TỐI CAO — mờ -->
-      <div style="font-size:11px;font-weight:700;
-        color:rgba(250,204,21,.45);
-        letter-spacing:2px;text-transform:uppercase;
-        margin-bottom:5px">
-        VIỆN KSND TỐI CAO
-      </div>
-      <!-- Dòng 2: VIỆN KSND TỈNH GIA LAI — nổi bật -->
-      <div style="font-size:15px;font-weight:800;
-        color:#FACC15;
-        letter-spacing:1.2px;text-transform:uppercase;
-        text-shadow:0 0 20px rgba(250,204,21,.5),0 0 40px rgba(250,204,21,.2)">
-        VIỆN KSND TỈNH GIA LAI
-      </div>
-    </div>
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(250,204,21,.18),transparent);margin-bottom:22px"></div>
-    <div class="login-heading">Đăng nhập hệ thống</div>
-    <div class="login-desc">Vui lòng nhập tài khoản được cấp để truy cập Dashboard</div>
-    <div class="login-err" id="loginErr">Tên đăng nhập hoặc mật khẩu không đúng</div>
-    <div class="login-field">
-      <label class="login-label" for="loginUser">Tên đăng nhập</label>
-      <input class="login-input" id="loginUser" type="text"
-        placeholder="Nhập tên đăng nhập" autocomplete="username" spellcheck="false"/>
-    </div>
-    <div class="login-field">
-      <label class="login-label" for="loginPass">Mật khẩu</label>
-      <input class="login-input" id="loginPass" type="password"
-        placeholder="Nhập mật khẩu" autocomplete="current-password"/>
-    </div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
-    <div class="login-footer">
-      Hệ thống dành riêng cho VKSND tỉnh Gia Lai<br>
-      Liên hệ quản trị viên nếu quên mật khẩu
-    </div>
-  </div>
-</div>
+
 
 <!-- LOADING -->
-<div class="loading hide" id="ld">
+<div class="loading hide" id="ld" class="hide">
   <div class="ring"></div>
   <div class="loading-txt" id="ldTxt">Đang tải dữ liệu từ Sheets…</div>
 </div>
 
 <!-- WELCOME SCREEN — chọn kỳ báo cáo -->
-<div id="welcomeScreen">
+<div id="welcomeScreen" style="display:none!important">
   <div class="ws-card" style="position:relative">
     <!-- Nhân vật góc phải trong card -->
     <img src="https://raw.githubusercontent.com/haqn952001-bot/vksnd-gialai/main/assets/avatar-ai-welcome.png"
@@ -3019,44 +2928,13 @@ function reload(immediate) {
 window.reload = reload;
 
 function _doReload() {
-  _reloadTimer = null;
-  showLoader('Đang tải dữ liệu…');
-  document.querySelector('.tl-filters')?.classList.add('loading');
-
-  const p = { ...getFilterParams(), forceRefresh: false };
-
-  // Vercel mode: gọi GAS REST API qua JSONP
-  if (!GAS && typeof GAS_API_URL !== 'undefined' && GAS_API_URL.includes('script.google.com')) {
-    gasAPI('getData', p)
-      .then(d => {
-        document.querySelector('.tl-filters')?.classList.remove('loading');
-        if (d?.error) { onErr({ message: d.error }); return; }
-        onData(d);
-      })
-      .catch(err => {
-        document.querySelector('.tl-filters')?.classList.remove('loading');
-        onErr(err);
-      });
-    return;
-  }
-
-  // Demo mode
-  if (!GAS) {
-    setTimeout(() => {
-      document.querySelector('.tl-filters')?.classList.remove('loading');
-      loadDemo(); hideLoader();
-    }, 300);
-    return;
-  }
-
-  // GAS mode
-  google.script.run
-    .withSuccessHandler(onData)
-    .withFailureHandler(onErr)
-    .getData(p);
+  // getData không còn cần thiết — trang chỉ có Tham mưu AI
+  hideLoader();
+  var tmNav = document.querySelector('[data-page="thammuuai"]');
+  if (tmNav) nav(tmNav);
+  if (typeof _tmSwitchMode === 'function') _tmSwitchMode('speech');
 }
 
-// Hàm gọi khi người dùng bấm nút "Cập nhật" trên topbar — cho phép chọn lại kỳ
 function showWelcomeAgain() {
   try {
     try { sessionStorage.removeItem('vksnd_welcomed'); } catch(_) {}
@@ -5445,6 +5323,13 @@ window.wsConfirm = wsConfirm;
 
 
 function wsCheckAndInit() {
+  // Lược bỏ màn hình chọn kỳ — không còn cần thiết
+  var ws = $('welcomeScreen');
+  if (ws) ws.style.cssText = 'display:none!important';
+  window._vksndWelcomed = true;
+  return;
+  // (original code below, kept for reference)
+  var _ws_disabled = true; if (_ws_disabled) {
   _wsUpdateQuyRange();
   // Nếu đã chọn kỳ báo cáo trong session này → bỏ qua
   if (window._vksndWelcomed || sessionStorage.getItem('vksnd_welcomed') === '1') {
@@ -7570,11 +7455,13 @@ window.addEventListener('load', () => {
     // Mặc định hiện Phát biểu nhanh (không còn tab số liệu)
     if (typeof _tmSwitchMode === 'function') _tmSwitchMode('speech');
   }, 300);
-  // Khởi tạo phong filter state (phòng trường hợp select đã có giá trị từ trước)
-  const _initSel = (typeof v === 'function') ? v('fKV') : '';
-  if (_initSel && _initSel.startsWith('__') && typeof _applyPhongFilter === 'function') {
-    _applyPhongFilter(_initSel);
-  }
+  // Render ngay không cần dữ liệu Sheets
+  setTimeout(function() {
+    hideLoader();
+    var tmNav = document.querySelector('[data-page="thammuuai"]');
+    if (tmNav) nav(tmNav);
+    if (typeof _tmSwitchMode === 'function') _tmSwitchMode('speech');
+  }, 200);
 });
 </script>
 
@@ -9670,21 +9557,6 @@ async function _sha256(str) {
     .map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-function _checkLoginSession() {
-  // Login đã lược bỏ — luôn cho phép truy cập
-  return;
-  try {
-    const raw = sessionStorage.getItem(_SESSION_KEY);
-    if (!raw) { _showLogin(); return; }
-    const s = JSON.parse(raw);
-    if (!s || Date.now() - s.ts > _SESSION_TTL) {
-      sessionStorage.removeItem(_SESSION_KEY);
-      _showLogin(); return;
-    }
-    _hideLogin();
-  } catch(e) { _showLogin(); }
-}
-
 function _showLogin() {
   const p = document.getElementById('loginPage');
   if (p) { p.style.display = 'flex'; }
@@ -9704,95 +9576,7 @@ function _hideLogin() {
   // aiChat luôn hiện (z-index tự xử lý layering)
 }
 
-async function doLogin() {
-  const userEl = document.getElementById('loginUser');
-  const passEl = document.getElementById('loginPass');
-  const errEl  = document.getElementById('loginErr');
-  const btn    = document.getElementById('loginBtn');
-
-  const user = (userEl.value || '').trim().toLowerCase();
-  const pass = (passEl.value || '').trim();
-
-  errEl.classList.remove('show');
-  if (!user || !pass) {
-    errEl.textContent = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu';
-    errEl.classList.add('show');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Đang xác thực...';
-
-  try {
-    const hash = await _sha256(pass);
-    if (_USERS[user] && _USERS[user] === hash) {
-      // Đăng nhập thành công
-      sessionStorage.setItem(_SESSION_KEY, JSON.stringify({
-        user: user, ts: Date.now()
-      }));
-      _updateProfileCard();
-      btn.textContent = '✓ Thành công';
-      btn.style.background = 'linear-gradient(135deg,#00994d,#00e5a0)';
-      setTimeout(function(){
-        _hideLogin();
-        _updateProfileCard();
-        // Nếu data chưa load thì load ngay
-        if (typeof DATA === 'undefined' || !DATA) reload();
-      }, 500);
-    } else {
-      errEl.textContent = 'Tên đăng nhập hoặc mật khẩu không đúng';
-      errEl.classList.add('show');
-      passEl.value = '';
-      passEl.focus();
-      // Rung box
-      const box = document.querySelector('.login-box');
-      if (box) {
-        box.style.animation = 'none';
-        box.style.transform = 'translateX(-8px)';
-        setTimeout(function(){
-          box.style.transition = 'transform .4s cubic-bezier(.36,.07,.19,.97)';
-          box.style.transform = 'translateX(0)';
-        }, 20);
-      }
-      btn.disabled = false;
-      btn.textContent = 'Đăng nhập';
-    }
-  } catch(e) {
-    errEl.textContent = 'Lỗi xác thực: ' + e.message;
-    errEl.classList.add('show');
-    btn.disabled = false;
-    btn.textContent = 'Đăng nhập';
-  }
-}
-
-// Enter trong input → đăng nhập
-document.addEventListener('DOMContentLoaded', function(){
-  ['loginUser','loginPass'].forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', function(e){
-      if (e.key === 'Enter') doLogin();
-    });
-  });
-});
-
-// ═══ USER PROFILE CARD — cập nhật từ session & menu ═══
-const _USER_PROFILE = {
-  'vientruong'    : { name: 'Viện trưởng',      role: 'VKSND tỉnh Gia Lai',              initials: 'VT'  },
-  'chanhvanphong' : { name: 'Chánh VP',          role: 'Văn phòng tổng hợp',              initials: 'VP'  },
-  'truongphong1'  : { name: 'Trưởng phòng 1',    role: 'Phòng KSĐT án KT-CV,MT',          initials: 'P1'  },
-  'truongphong2'  : { name: 'Trưởng phòng 2',    role: 'Phòng KSĐT án TTXH, an ninh',     initials: 'P2'  },
-  'truongphong7'  : { name: 'Trưởng phòng 7',    role: 'Phòng 7 - Kiểm sát DS',           initials: 'P7'  },
-  'truongphong9'  : { name: 'Trưởng phòng 9',    role: 'Phòng KSXX án dân sự',            initials: 'P9'  },
-  'truongphong10' : { name: 'Trưởng phòng 10',   role: 'Phòng KSXX án HC, KDTM-LĐ',      initials: 'P10' },
-  'truongphong11' : { name: 'Trưởng phòng 11',   role: 'Phòng KS THADS, THAHC',           initials: 'P11' },
-  'chanhthanhtra' : { name: 'Chánh Thanh tra',   role: 'Thanh tra - Khiếu tố',            initials: 'TT'  },
-  'truongphong15' : { name: 'Trưởng phòng 15',   role: 'Phòng Tổ chức - Cán bộ',          initials: 'P15' },
-  'truongphong8'  : { name: 'Trưởng phòng 8',    role: 'Phòng KSTGTG, THAHS',             initials: 'P8'  },
-  'phovientruong' : { name: 'Phó Viện trưởng',   role: 'VKSND tỉnh Gia Lai',              initials: 'PV'  },
-  'admin'         : { name: 'Quản trị viên',     role: 'Hệ thống Dashboard',              initials: 'AD'  }
-};
-
-function _updateProfileCard() {
+async function _updateProfileCard() {
   try {
     const raw = sessionStorage.getItem(_SESSION_KEY);
     if (!raw) return;
