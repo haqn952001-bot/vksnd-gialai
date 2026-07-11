@@ -2498,7 +2498,7 @@ body::after{
     </div><!-- /tongquantinh -->
 
     <!-- PAGE: THAM MƯU AI -->
-    <div class="page" id="page-thammuuai">
+    <div class="page" id="page-thammuuai" class="page active">
       <div class="ph fi">
         <div>
           <div class="ph-sub" id="tmSubTitle">PHÂN TÍCH DỮ LIỆU — THAM MƯU, ĐỀ XUẤT</div>
@@ -2509,7 +2509,7 @@ body::after{
       <!-- Chế độ: Phân tích / Phát biểu nhanh -->
       <div class="fi fi1" style="display:flex;gap:8px;margin-bottom:-8px">
         <button id="tmModeAnalyze" onclick="_tmSwitchMode('analyze')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(139,92,246,.3);border-bottom:none;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08));color:#c4b5fd;font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:all .2s">
-          📊 Phân tích số liệu
+          💬 Hỏi đáp & Tham mưu
         </button>
         <button id="tmModeSpeech" onclick="_tmSwitchMode('speech')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(0,212,255,.2);border-bottom:none;background:var(--n800);color:var(--ts);font-size:12px;font-weight:600;font-family:var(--fb);cursor:pointer;transition:all .2s">
           🎤 Phát biểu nhanh
@@ -2517,67 +2517,8 @@ body::after{
       </div>
 
       <!-- Bộ lọc kỳ phân tích -->
-      <div id="tmAnalyzeSection" class="cc fi fi1" style="padding:16px 20px">
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ts)">Kỳ phân tích:</div>
-          <select id="fTmKy" onchange="tmOnKyChange()" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 12px;cursor:pointer;min-width:160px">
-            <optgroup label="── Theo tháng ──">
-              <option value="thang_auto">Tháng hiện tại</option>
-              <option value="thang_1">Tháng 1</option>
-              <option value="thang_2">Tháng 2</option>
-              <option value="thang_3">Tháng 3</option>
-              <option value="thang_4">Tháng 4</option>
-              <option value="thang_5">Tháng 5</option>
-              <option value="thang_6">Tháng 6</option>
-              <option value="thang_7">Tháng 7</option>
-              <option value="thang_8">Tháng 8</option>
-              <option value="thang_9">Tháng 9</option>
-              <option value="thang_10">Tháng 10</option>
-              <option value="thang_11">Tháng 11</option>
-              <option value="thang_12">Tháng 12</option>
-            </optgroup>
-            <optgroup label="── Theo quý ──">
-              <option value="quy_1">Quý I</option>
-              <option value="quy_2">Quý II</option>
-              <option value="quy_3">Quý III</option>
-              <option value="quy_4">Quý IV</option>
-            </optgroup>
-            <optgroup label="── Theo kỳ báo cáo ──">
-              <option value="6thang">Kỳ 6 tháng</option>
-              <option value="12thang" selected>Kỳ 12 tháng</option>
-            </optgroup>
-          </select>
-          <select id="fTmNam" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
-            <option value="2026">Năm 2026</option>
-            <option value="2025">Năm 2025</option>
-          </select>
-          <select id="fTmKV" style="height:32px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer;min-width:120px">
-            <option value="">Toàn tỉnh</option>
-          </select>
-          <button onclick="runThamMuuAI()" id="btnThamMuu" style="
-            height:32px;padding:0 18px;border-radius:var(--rsm);border:none;cursor:pointer;
-            background:linear-gradient(135deg,#6d28d9,#8b5cf6);
-            color:#fff;font-size:12px;font-weight:700;font-family:var(--fb);
-            display:flex;align-items:center;gap:6px;transition:opacity .2s;
-          ">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M12 2a4 4 0 0 1 4 4c0 1.7-1 3.1-2.4 3.7L13 10v2h-2v-2l-.6-.3A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
-              <path d="M10 14h4"/><path d="M11 17h2"/>
-            </svg>
-            Phân tích ngay
-          </button>
-          <select id="fTmModel" style="height:32px;border-radius:var(--rsm);border:1px solid rgba(139,92,246,.3);background:var(--n800);color:#c4b5fd;font-size:11px;padding:0 10px;cursor:pointer" title="Chọn AI model">
-            <option value="gemini">✦ Gemini</option>
-            <option value="deepseek">⚡ DeepSeek V4</option>
-            <optgroup label="🔀 Bynara">
-              <option value="bynara_mistral_large">Mistral Large</option>
-              <option value="bynara_mimo_pro">Mimo v2.5 Pro Free</option>
-              <option value="bynara_mimo_free">Mimo v2.5 Free</option>
-              <option value="bynara_mistral_medium">Mistral Medium 3.5</option>
-            </optgroup>
-          </select>
-        </div>
-      </div>
+            <!-- Kỳ phân tích đã lược bỏ -->
+
 
       <!-- Form Phát biểu nhanh -->
       <div id="pbSection" style="display:none">
@@ -7622,13 +7563,13 @@ function _setKV(id, text) {
 }
 
 window.addEventListener('load', () => {
-  _checkLoginSession();
-  wsCheckAndInit();
   // Auto-navigate tới Tham mưu AI
   setTimeout(function(){
     var tmNav = document.querySelector('[data-page="thammuuai"]');
     if (tmNav && !document.querySelector('.nav-item.active')) nav(tmNav);
-  }, 100);
+    // Mặc định hiện Phát biểu nhanh (không còn tab số liệu)
+    if (typeof _tmSwitchMode === 'function') _tmSwitchMode('speech');
+  }, 300);
   // Khởi tạo phong filter state (phòng trường hợp select đã có giá trị từ trước)
   const _initSel = (typeof v === 'function') ? v('fKV') : '';
   if (_initSel && _initSel.startsWith('__') && typeof _applyPhongFilter === 'function') {
@@ -7683,6 +7624,8 @@ window.addEventListener('load', () => {
 <script>
 let _aiOpen    = false;
 let _aiHistory = []; // lịch sử đầy đủ — GAS sẽ tự filter 12 turns gần nhất
+// Session mặc định (không cần đăng nhập)
+var _currentUser = { user: 'vientruong', name: 'Viện trưởng' };
 let _aiSending = false;
 
 // ── Patterns phát hiện câu hỏi nối tiếp (đồng bộ với GAS) ────
@@ -8149,7 +8092,7 @@ var _tmRunning = false;
 // ══════════════════════════════════════════════════════════════
 
 function _tmSwitchMode(mode) {
-  var analyzeSection = document.getElementById('tmAnalyzeSection');  // bộ lọc kỳ
+  var analyzeSection = null;  // đã lược bỏ kỳ phân tích
   var pbSection      = document.getElementById('pbSection');
   var btnA = document.getElementById('tmModeAnalyze');
   var btnS = document.getElementById('tmModeSpeech');
@@ -8162,7 +8105,6 @@ function _tmSwitchMode(mode) {
 
   if (mode === 'speech') {
     // Ẩn form phân tích, hiện form phát biểu
-    if (analyzeSection) analyzeSection.style.display = 'none';
     if (pbSection) pbSection.style.display = 'block';
     // Toggle buttons
     btnS.style.background = 'linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,212,255,.08))';
@@ -8185,7 +8127,6 @@ function _tmSwitchMode(mode) {
     }
   } else {
     // Hiện form phân tích, ẩn form phát biểu
-    if (analyzeSection) analyzeSection.style.display = '';
     if (pbSection) pbSection.style.display = 'none';
     btnA.style.background = 'linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08))';
     btnA.style.color = '#c4b5fd';
@@ -8201,9 +8142,8 @@ function _tmSwitchMode(mode) {
       ph2.innerHTML = '<div style="font-size:40px;margin-bottom:16px;opacity:.5">🧠</div>' +
         '<div style="font-size:15px;font-weight:700;color:var(--tp);margin-bottom:8px">Chọn kỳ báo cáo và nhấn "Phân tích ngay"</div>' +
         '<div style="font-size:12px;color:var(--ts);max-width:500px;margin:0 auto;line-height:1.6">' +
-        'AI sẽ phân tích toàn bộ số liệu trong kỳ đã chọn, bao gồm hoạt động từng phòng nghiệp vụ, ' +
-        'đưa ra nhận xét về những chỉ tiêu cần chú ý, dự báo xu hướng và đề xuất phương án ' +
-        'đôn đốc, quán triệt các đơn vị thực hiện.</div>';
+        'AI sẽ phân tích và tham mưu dựa trên kho tri thức nghiệp vụ kiểm sát. ' +
+        'Nhập câu hỏi hoặc yêu cầu tham mưu cụ thể để bắt đầu.</div>';
     }
   }
 }
@@ -9731,6 +9671,8 @@ async function _sha256(str) {
 }
 
 function _checkLoginSession() {
+  // Login đã lược bỏ — luôn cho phép truy cập
+  return;
   try {
     const raw = sessionStorage.getItem(_SESSION_KEY);
     if (!raw) { _showLogin(); return; }
