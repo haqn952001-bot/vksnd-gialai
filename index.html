@@ -2674,6 +2674,10 @@ body::after{
 </nav>
 
 <script>
+const $ = id => document.getElementById(id);
+const v = id => $( id)?.value || '';
+const F = n => (Number(n)||0).toLocaleString('vi-VN');
+function esc(s) {
 // ══════════════════════════════════════════════════════════════
 // CẤU HÌNH GAS API URL — thay bằng URL deployment thực tế
 // ══════════════════════════════════════════════════════════════
@@ -5782,10 +5786,6 @@ function animateCount(elId, target, suffix) {
   }, 16);
 }
 
-const $ = id => document.getElementById(id);
-const v = id => $( id)?.value || '';
-const F = n => (Number(n)||0).toLocaleString('vi-VN');
-function esc(s) {
   return String(s||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
