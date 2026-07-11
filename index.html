@@ -9728,5 +9728,55 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 })();
 </script>
+
+
+<script>
+// [Emergency show] — force hiển thị Tham mưu AI ngay khi DOM sẵn sàng
+(function() {
+  function forceShowTM() {
+    // Ẩn tất cả pages
+    document.querySelectorAll('.page').forEach(function(p){
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+    // Hiện page-thammuuai
+    var tmPage = document.getElementById('page-thammuuai');
+    if (tmPage) {
+      tmPage.classList.add('active');
+      tmPage.style.display = 'flex';
+      tmPage.style.opacity = '1';
+      tmPage.style.visibility = 'visible';
+    }
+    // Ẩn overlay welcome nếu còn
+    var ws = document.getElementById('welcomeScreen');
+    if (ws) ws.style.display = 'none';
+    // Ẩn loader
+    var ld = document.getElementById('ld');
+    if (ld) { ld.style.display = 'none'; ld.classList.add('hide'); }
+    // Đảm bảo main hiển thị
+    var main = document.getElementById('main');
+    if (main) { main.style.display = 'flex'; main.style.opacity = '1'; }
+    // Đảm bảo app hiển thị
+    var app = document.querySelector('.app');
+    if (app) app.style.display = 'grid';
+    // Set nav-item active
+    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+    var tmNav = document.querySelector('[data-page="thammuuai"]');
+    if (tmNav) tmNav.classList.add('active');
+    // Switch sang mode Phát biểu nhanh nếu có
+    if (typeof _tmSwitchMode === 'function') {
+      try { _tmSwitchMode('speech'); } catch(e) { console.warn('_tmSwitchMode err:', e); }
+    }
+    console.log('[EmergencyShow] Tham mưu AI forced visible');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(forceShowTM, 500); });
+  } else {
+    setTimeout(forceShowTM, 500);
+  }
+  // Chạy lại sau 1.5s để đảm bảo override mọi thứ
+  setTimeout(forceShowTM, 1500);
+})();
+</script>
 </body>
 </html>
