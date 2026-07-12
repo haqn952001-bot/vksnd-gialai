@@ -126,7 +126,7 @@
   height:38px;padding:0 24px;border-radius:var(--rmd);border:none;cursor:pointer;
   background:linear-gradient(135deg, var(--ai-cyan-deep), var(--ai-cyan) 60%, var(--ai-cyan-soft));
   color:#031621;font-size:12.5px;font-weight:800;font-family:var(--fb);letter-spacing:.2px;
-  display:flex;align-items:center;gap:8px;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;
   box-shadow:0 2px 12px rgba(34,211,238,.28), inset 0 1px 0 rgba(255,255,255,.25);
   transition:all .22s cubic-bezier(.4,0,.2,1);
 }
@@ -2528,8 +2528,8 @@ body::after{
           </div>
 
           <!-- Row 4: Model + Nút tạo -->
-          <div style="display:flex;gap:10px;align-items:center">
-            <select id="pbModel" class="cmd-input" style="height:38px;padding:0 12px;font-size:11.5px;cursor:pointer;color:var(--ai-cyan-soft);border-color:var(--ai-bd)" title="Chọn AI model">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <select id="pbModel" class="cmd-input" style="height:38px;padding:0 12px;font-size:11.5px;cursor:pointer;color:var(--ai-cyan-soft);border-color:var(--ai-bd);flex:1;min-width:150px" title="Chọn AI model">
               <option value="gemini">✦ Gemini</option>
               <option value="deepseek">⚡ DeepSeek V4</option>
               <optgroup label="🔀 Bynara Router">
@@ -2539,7 +2539,7 @@ body::after{
                 <option value="bynara_mistral_medium">Mistral Medium 3.5 (256K)</option>
               </optgroup>
             </select>
-            <button onclick="runPhatBieu()" id="btnPhatBieu" class="cmd-btn-primary">
+            <button onclick="runPhatBieu()" id="btnPhatBieu" class="cmd-btn-primary" style="flex:1;min-width:180px;justify-content:center">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M10 16l4-4-4-4"/></svg>
               Tạo ý phát biểu
             </button>
@@ -9455,27 +9455,22 @@ body.presentation-mode #btnPresent {
 </style>
 
 <script>
-// ══ DRAG-TO-MOVE cho #aiChat ═══════════════════════════════════
+// ══ DRAG-TO-MOVE cho #aiChat — Assistive Touch style ═══════════
 (function() {
   const STORE_KEY = 'aiChat_pos_v2';
 
-  // ── Assistive Touch drag — desktop + mobile ──────────────────
-  // - Kéo tự do toàn viewport
-  // - Thả ra → snap về cạnh trái/phải gần nhất (iOS style)
-  // - Lưu vị trí vào localStorage
-  // ─────────────────────────────────────────────────────────────
+  // ── Kéo tự do toàn viewport, thả ra → snap về cạnh gần nhất (iOS style) ──
   function initDrag() {
     const wrap   = document.getElementById('aiChat');
     const bubble = document.getElementById('aiBubble');
     if (!wrap || !bubble) return;
 
     const MARGIN  = 8;   // khoảng cách với cạnh màn hình khi snap
-    const THRESH  = 5;   // px tối thiểu để tính là drag (không phải tap)
+    const THRESH  = 6;   // px tối thiểu để tính là drag (không phải tap)
     let isDragging = false;
     let startCX, startCY;    // clientX/Y lúc pointerdown
     let startLeft, startTop; // vị trí wrap lúc bắt đầu drag
 
-    // ── Khôi phục vị trí đã lưu ──────────────────────────────
     function restorePos() {
       try {
         const s = JSON.parse(localStorage.getItem(STORE_KEY));
@@ -9486,13 +9481,11 @@ body.presentation-mode #btnPresent {
           return;
         }
       } catch(e) {}
-      // Vị trí mặc định: góc dưới phải
       const r = wrap.getBoundingClientRect();
       _applyPos(window.innerWidth - r.width - MARGIN,
                 window.innerHeight - r.height - 80, false);
     }
 
-    // ── Áp dụng vị trí top/left ──────────────────────────────
     function _applyPos(left, top, animate) {
       wrap.style.removeProperty('right');
       wrap.style.removeProperty('bottom');
@@ -9505,38 +9498,33 @@ body.presentation-mode #btnPresent {
       wrap.style.top  = top  + 'px';
     }
 
-    // ── Snap về cạnh trái hoặc phải ──────────────────────────
     function snapToEdge() {
       const r    = wrap.getBoundingClientRect();
       const vW   = window.innerWidth;
       const vH   = window.innerHeight;
       const midX = r.left + r.width / 2;
 
-      // Top/bottom clamp
       let newTop = r.top;
       newTop = Math.max(MARGIN, Math.min(newTop, vH - r.height - MARGIN));
 
-      // Snap: trái hay phải?
       let newLeft;
       if (midX < vW / 2) {
-        newLeft = MARGIN;                          // snap cạnh trái
+        newLeft = MARGIN;
       } else {
-        newLeft = vW - r.width - MARGIN;           // snap cạnh phải
+        newLeft = vW - r.width - MARGIN;
       }
 
       _applyPos(newLeft, newTop, true);
 
       try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({
-          left: newLeft, top: newTop
-        }));
+        localStorage.setItem(STORE_KEY, JSON.stringify({ left: newLeft, top: newTop }));
       } catch(e) {}
     }
 
-    // ── Pointer events (desktop + mobile unify) ───────────────
+    // ── Pointer events (Pointer Events API hoạt động cho cả chuột lẫn cảm ứng) ──
     function onDown(e) {
       if (e.target.closest('#aiPanel')) return;  // click vào panel: bỏ qua
-      if (e.button !== undefined && e.button !== 0) return; // chỉ chuột trái
+      if (e.pointerType === 'mouse' && e.button !== 0) return; // chỉ chuột trái
 
       isDragging = false;
       startCX = e.clientX;
@@ -9553,6 +9541,9 @@ body.presentation-mode #btnPresent {
 
       bubble.style.transform = 'scale(0.92)';
       bubble.style.transition = 'transform .1s';
+
+      // Bắt pointer để nhận move/up ngay cả khi ngón tay rời khỏi bubble
+      try { bubble.setPointerCapture(e.pointerId); } catch(err) {}
 
       window.addEventListener('pointermove', onMove, { passive: false });
       window.addEventListener('pointerup',   onUp);
@@ -9572,7 +9563,6 @@ body.presentation-mode #btnPresent {
       let newLeft = startLeft + dx;
       let newTop  = startTop  + dy;
 
-      // Clamp trong viewport
       newLeft = Math.max(0, Math.min(newLeft, vW - r.width));
       newTop  = Math.max(0, Math.min(newTop,  vH - r.height));
 
@@ -9589,9 +9579,11 @@ body.presentation-mode #btnPresent {
       bubble.style.transform = '';
       bubble.style.transition = '';
 
+      try { bubble.releasePointerCapture(e.pointerId); } catch(err) {}
+
       if (isDragging) {
         snapToEdge();
-        // Chặn click ngay sau drag
+        // Chặn click ngay sau drag (tránh mở panel ngoài ý muốn)
         bubble.addEventListener('click', function noClick(ev) {
           ev.stopImmediatePropagation();
         }, { capture: true, once: true });
@@ -9599,10 +9591,9 @@ body.presentation-mode #btnPresent {
       isDragging = false;
     }
 
-    bubble.addEventListener('pointerdown', onDown);
-    bubble.style.touchAction = 'none';  // tắt scroll mặc định khi drag trên mobile
+    bubble.addEventListener('pointerdown', onDown, { passive: false });
+    bubble.style.touchAction = 'none';  // tắt scroll/zoom mặc định khi kéo trên mobile
 
-    // ── Resize: re-snap về vị trí hợp lệ ────────────────────
     window.addEventListener('resize', function() {
       const r  = wrap.getBoundingClientRect();
       const vW = window.innerWidth;
@@ -9612,11 +9603,9 @@ body.presentation-mode #btnPresent {
       }
     });
 
-    // Khôi phục vị trí sau 120ms (chờ layout ổn định)
     setTimeout(restorePos, 120);
   }
 
-  // Chạy sau DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initDrag);
   } else {
