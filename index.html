@@ -2443,8 +2443,8 @@ body::after{
           <div id="docDropZone" class="cmd-upload" onclick="document.getElementById('docFileInput').click()">
             <div class="cmd-upload-icon">📤</div>
             <div id="docDropText" style="font-size:13.5px;color:var(--tp);font-weight:700">Kéo-thả file vào đây, hoặc bấm để chọn file</div>
-            <div style="font-size:11px;color:var(--tm);margin-top:6px;font-family:var(--fm)">Hỗ trợ .PDF · .DOCX · .DOC — tối đa 20MB</div>
-            <input type="file" id="docFileInput" accept=".pdf,.docx,.doc" style="display:none" onchange="_docFileSelected(this.files)"/>
+            <div style="font-size:11px;color:var(--tm);margin-top:6px;font-family:var(--fm)">Hỗ trợ .PDF · .DOCX · .DOC · .JPG · .PNG — tối đa 20MB</div>
+            <input type="file" id="docFileInput" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" style="display:none" onchange="_docFileSelected(this.files)"/>
           </div>
 
           <!-- File đã chọn -->
@@ -8011,8 +8011,10 @@ function _docFileSelected(files) {
   if (!files || !files.length) return;
   var f = files[0];
   var ext = (f.name.split('.').pop() || '').toLowerCase();
-  if (!['pdf','docx','doc'].includes(ext)) {
-    alert('Chỉ hỗ trợ file .PDF, .DOCX, .DOC');
+  var IMG_EXTS = ['jpg','jpeg','png'];
+  var DOC_EXTS = ['pdf','docx','doc'];
+  if (!DOC_EXTS.includes(ext) && !IMG_EXTS.includes(ext)) {
+    alert('Chỉ hỗ trợ file .PDF, .DOCX, .DOC, .JPG, .PNG');
     return;
   }
   if (f.size > 20 * 1024 * 1024) {
@@ -8022,10 +8024,11 @@ function _docFileSelected(files) {
   _docSelectedFile = f;
 
   // Cập nhật UI
-  var icon = ext === 'pdf' ? '📕' : '📘';
+  var icon = ext === 'pdf' ? '📕' : IMG_EXTS.includes(ext) ? '🖼️' : '📘';
   document.getElementById('docFileIcon').textContent = icon;
   document.getElementById('docFileName').textContent = f.name;
-  document.getElementById('docFileSize').textContent = _docFmtSize(f.size) + ' · ' + ext.toUpperCase();
+  var engineTag = IMG_EXTS.includes(ext) ? ' · Bynara Vision OCR' : ' · Google Drive OCR';
+  document.getElementById('docFileSize').textContent = _docFmtSize(f.size) + ' · ' + ext.toUpperCase() + engineTag;
   document.getElementById('docFileInfo').style.display = 'block';
   document.getElementById('docDropText').textContent = 'Đã chọn file — bấm để đổi file khác';
 
