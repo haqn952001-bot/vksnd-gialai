@@ -306,6 +306,19 @@ body::after{
   box-shadow:1px 0 0 rgba(250,204,21,.06), 4px 0 16px rgba(0,0,0,.3);
   position:relative;
 }
+/* Hiệu ứng nền ambient — lấp khoảng trống dưới nav-item, không thêm nội dung */
+.sidebar::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;top:140px;
+  z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(34,211,238,.05) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 30% at 30% 60%, rgba(250,204,21,.03) 0%, transparent 70%);
+  animation:sidebarBreathe 8s ease-in-out infinite;
+}
+@keyframes sidebarBreathe{
+  0%,100%{opacity:.6}
+  50%{opacity:1}
+}
 .nav-label{
   font-size:9px;font-weight:700;letter-spacing:1.5px;
   color:var(--tm);text-transform:uppercase;
