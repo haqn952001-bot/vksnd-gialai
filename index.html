@@ -9702,6 +9702,24 @@ const _USERS = {
 const _SESSION_KEY = 'vksnd_auth_v1';
 const _SESSION_TTL = 8 * 60 * 60 * 1000; // 8 giờ
 
+// Thông tin hiển thị (tên/chức danh) cho từng tài khoản — dùng để AI xưng hô đúng
+const _USER_PROFILE = {
+  'vientruong'     : { name: 'Viện trưởng',            role: 'Viện trưởng',             initials: 'VT' },
+  'phovientruong'  : { name: 'Phó Viện trưởng',        role: 'Phó Viện trưởng',          initials: 'PVT' },
+  'chanhvanphong'  : { name: 'Chánh Văn phòng',        role: 'Chánh Văn phòng',          initials: 'CVP' },
+  'chanhthanhtra'  : { name: 'Chánh Thanh tra',        role: 'Chánh Thanh tra',          initials: 'CTT' },
+  'truongphong1'   : { name: 'Trưởng phòng 1',         role: 'Trưởng phòng',             initials: 'P1'  },
+  'truongphong2'   : { name: 'Trưởng phòng 2',         role: 'Trưởng phòng',             initials: 'P2'  },
+  'truongphong7'   : { name: 'Trưởng phòng 7',         role: 'Trưởng phòng',             initials: 'P7'  },
+  'truongphong8'   : { name: 'Trưởng phòng 8',         role: 'Trưởng phòng',             initials: 'P8'  },
+  'truongphong9'   : { name: 'Trưởng phòng 9',         role: 'Trưởng phòng',             initials: 'P9'  },
+  'truongphong10'  : { name: 'Trưởng phòng 10',        role: 'Trưởng phòng',             initials: 'P10' },
+  'truongphong11'  : { name: 'Trưởng phòng 11',        role: 'Trưởng phòng',             initials: 'P11' },
+  'truongphong15'  : { name: 'Trưởng phòng 15',        role: 'Trưởng phòng',             initials: 'P15' },
+  'admin'          : { name: 'Quản trị viên',          role: 'Admin',                    initials: 'AD'  }
+};
+window._USER_PROFILE = _USER_PROFILE;
+
 async function _sha256(str) {
   const buf  = await crypto.subtle.digest('SHA-256',
     new TextEncoder().encode(str));
