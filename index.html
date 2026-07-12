@@ -46,7 +46,96 @@
   /* Glow shadows cho icon & KPI */
   --glow-gold:0 0 24px rgba(250,204,21,.35),0 0 8px rgba(250,204,21,.5);
   --glow-gold-soft:0 0 16px rgba(250,204,21,.2);
+
+  /* ═══ GOVERNMENT AI COMMAND CENTER — AI-only accent (tách biệt Gold) ═══ */
+  --ai-cyan:#22D3EE;--ai-cyan-soft:#67E8F9;--ai-cyan-deep:#0891B2;
+  --ai-glow:0 0 22px rgba(34,211,238,.32),0 0 8px rgba(34,211,238,.45);
+  --ai-glow-soft:0 0 14px rgba(34,211,238,.18);
+  --ai-bd:rgba(34,211,238,.28);--ai-bg:rgba(34,211,238,.07);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   GOVERNMENT AI COMMAND CENTER — thành phần AI (tab, upload, input, button)
+   Cyan dành riêng cho các điểm chạm AI — tách biệt Navy/Gold
+   ═══════════════════════════════════════════════════════════════ */
+.cmd-tabs{display:flex;gap:8px;margin-bottom:-1px;position:relative;z-index:1}
+.cmd-tab{
+  height:38px;padding:0 20px;border-radius:12px 12px 0 0;cursor:pointer;
+  display:flex;align-items:center;gap:7px;
+  font-size:12.5px;font-weight:700;font-family:var(--fb);
+  border:1px solid var(--bd);border-bottom:none;
+  background:linear-gradient(180deg, rgba(7,27,51,.5), rgba(7,27,51,.2));
+  color:var(--ts);transition:all .22s cubic-bezier(.4,0,.2,1);
+  position:relative;user-select:none;
+}
+.cmd-tab:hover{color:var(--tp);background:rgba(255,255,255,.04);border-color:var(--bdm)}
+.cmd-tab.active{
+  color:var(--ai-cyan-soft);
+  background:linear-gradient(180deg, rgba(34,211,238,.16), rgba(34,211,238,.04));
+  border-color:var(--ai-bd);
+  box-shadow:0 -2px 16px rgba(34,211,238,.1), inset 0 1px 0 rgba(34,211,238,.2);
+}
+.cmd-tab.active::after{
+  content:'';position:absolute;left:10%;right:10%;bottom:-1px;height:2px;
+  background:linear-gradient(90deg, transparent, var(--ai-cyan), transparent);
+  box-shadow:0 0 10px var(--ai-cyan);
+}
+
+.cmd-upload{
+  position:relative;border:1.5px dashed var(--ai-bd);border-radius:var(--rlg);
+  padding:34px 20px;text-align:center;cursor:pointer;margin-bottom:14px;
+  background:radial-gradient(ellipse at 50% 0%, rgba(34,211,238,.06) 0%, transparent 70%), var(--glass);
+  transition:all .28s cubic-bezier(.4,0,.2,1);overflow:hidden;
+}
+.cmd-upload::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;opacity:0;
+  background:radial-gradient(ellipse at 50% 30%, rgba(34,211,238,.14) 0%, transparent 65%);
+  transition:opacity .3s;pointer-events:none;
+}
+.cmd-upload:hover{
+  border-color:var(--ai-cyan);
+  box-shadow:var(--ai-glow-soft), inset 0 0 30px rgba(34,211,238,.05);
+  transform:translateY(-1px);
+}
+.cmd-upload:hover::before{opacity:1}
+.cmd-upload.drag-over{
+  border-color:var(--ai-cyan);border-style:solid;
+  box-shadow:var(--ai-glow);background:rgba(34,211,238,.08);
+}
+.cmd-upload-icon{
+  font-size:38px;margin-bottom:10px;line-height:1;
+  filter:drop-shadow(0 0 12px rgba(34,211,238,.35));
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+.cmd-upload:hover .cmd-upload-icon{transform:translateY(-3px) scale(1.06)}
+
+.cmd-input{
+  width:100%;border-radius:var(--rmd);
+  border:1px solid var(--bdm);background:var(--n800);color:var(--tp);
+  font-family:var(--fb);transition:all .2s;
+}
+.cmd-input:focus{
+  outline:none;border-color:var(--ai-cyan);
+  box-shadow:0 0 0 3px rgba(34,211,238,.12), var(--ai-glow-soft);
+  background:var(--n750);
+}
+.cmd-input::placeholder{color:var(--tm)}
+
+.cmd-btn-primary{
+  height:38px;padding:0 24px;border-radius:var(--rmd);border:none;cursor:pointer;
+  background:linear-gradient(135deg, var(--ai-cyan-deep), var(--ai-cyan) 60%, var(--ai-cyan-soft));
+  color:#031621;font-size:12.5px;font-weight:800;font-family:var(--fb);letter-spacing:.2px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 2px 12px rgba(34,211,238,.28), inset 0 1px 0 rgba(255,255,255,.25);
+  transition:all .22s cubic-bezier(.4,0,.2,1);
+}
+.cmd-btn-primary:hover:not(:disabled){
+  transform:translateY(-1.5px);
+  box-shadow:0 6px 20px rgba(34,211,238,.4), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.cmd-btn-primary:active:not(:disabled){transform:translateY(0)}
+.cmd-btn-primary:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:14px;height:100%}
@@ -2326,60 +2415,51 @@ body::after{
       </div>
 
       <!-- Chế độ: Phân tích tài liệu / Phát biểu nhanh -->
-      <div class="fi fi1" style="display:flex;gap:8px;margin-bottom:-8px">
-        <button id="tmModeDoc" onclick="_tmSwitchMode('docanalysis')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(139,92,246,.3);border-bottom:none;background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08));color:#c4b5fd;font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:all .2s">
+      <div class="fi fi1 cmd-tabs">
+        <button id="tmModeDoc" class="cmd-tab active" onclick="_tmSwitchMode('docanalysis')">
           📄 Phân tích tài liệu
         </button>
-        <button id="tmModeSpeech" onclick="_tmSwitchMode('speech')" style="height:34px;padding:0 18px;border-radius:8px 8px 0 0;border:1px solid rgba(0,212,255,.2);border-bottom:none;background:var(--n800);color:var(--ts);font-size:12px;font-weight:600;font-family:var(--fb);cursor:pointer;transition:all .2s">
+        <button id="tmModeSpeech" class="cmd-tab" onclick="_tmSwitchMode('speech')">
           🎤 Phát biểu nhanh
         </button>
       </div>
 
       <!-- Form Phân tích tài liệu -->
       <div id="docSection" style="display:none">
-        <div class="cc fi fi1" style="padding:20px">
-          <div class="cc-hd" style="margin-bottom:14px">
-            <div class="cc-title" style="color:var(--cyan)">📄 PHÂN TÍCH TÀI LIỆU</div>
+        <div class="cc fi fi1" style="padding:22px;border-top-left-radius:0">
+          <div class="cc-hd" style="margin-bottom:16px">
+            <div class="cc-title" style="color:var(--ai-cyan-soft)">📄 PHÂN TÍCH TÀI LIỆU</div>
             <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">OCR + Trích xuất ý chính bằng AI</div>
           </div>
 
-          <!-- Vùng upload file -->
-          <div id="docDropZone" style="
-            border:2px dashed rgba(0,212,255,.3);border-radius:var(--rmd);
-            padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;
-            background:rgba(0,212,255,.02);margin-bottom:14px;
-          " onclick="document.getElementById('docFileInput').click()">
-            <div style="font-size:32px;margin-bottom:8px;opacity:.6">📤</div>
-            <div id="docDropText" style="font-size:13px;color:var(--tp);font-weight:600">Kéo-thả file vào đây, hoặc bấm để chọn file</div>
-            <div style="font-size:11px;color:var(--tm);margin-top:6px">Hỗ trợ .PDF, .DOCX, .DOC — tối đa 20MB</div>
+          <!-- Vùng upload file — "AI Intake Console" -->
+          <div id="docDropZone" class="cmd-upload" onclick="document.getElementById('docFileInput').click()">
+            <div class="cmd-upload-icon">📤</div>
+            <div id="docDropText" style="font-size:13.5px;color:var(--tp);font-weight:700">Kéo-thả file vào đây, hoặc bấm để chọn file</div>
+            <div style="font-size:11px;color:var(--tm);margin-top:6px;font-family:var(--fm)">Hỗ trợ .PDF · .DOCX · .DOC — tối đa 20MB</div>
             <input type="file" id="docFileInput" accept=".pdf,.docx,.doc" style="display:none" onchange="_docFileSelected(this.files)"/>
           </div>
 
           <!-- File đã chọn -->
           <div id="docFileInfo" style="display:none;margin-bottom:14px">
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--rsm);background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2)">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--rmd);background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.25)">
               <div style="font-size:20px" id="docFileIcon">📄</div>
               <div style="flex:1;min-width:0">
                 <div id="docFileName" style="font-size:13px;font-weight:600;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
                 <div id="docFileSize" style="font-size:10px;color:var(--tm);font-family:var(--fm)">—</div>
               </div>
-              <div onclick="_docClearFile()" style="cursor:pointer;color:var(--coral);font-size:12px;font-weight:700;padding:4px 8px" title="Xóa file">✕</div>
+              <div onclick="_docClearFile()" style="cursor:pointer;color:var(--coral);font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;transition:background .15s" title="Xóa file" onmouseover="this.style.background='rgba(239,68,68,.12)'" onmouseout="this.style.background='transparent'">✕</div>
             </div>
           </div>
 
           <!-- Yêu cầu trích xuất cụ thể -->
-          <div style="margin-bottom:14px">
-            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Yêu cầu trích xuất <span style="font-weight:400;color:var(--tm)">(tùy chọn — để trống sẽ trích xuất ý chính, ý trọng tâm và số liệu tổng quát)</span></label>
-            <textarea id="docRequest" rows="3" placeholder="Ví dụ: Trích xuất các số liệu về khởi tố mới; Tóm tắt kết luận thanh tra; Liệt kê các kiến nghị..." style="width:100%;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:10px 14px;font-family:var(--fb);resize:vertical;line-height:1.6"></textarea>
+          <div style="margin-bottom:16px">
+            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px">✦ Yêu cầu trích xuất <span style="font-weight:400;color:var(--tm);text-transform:none;letter-spacing:0">(tùy chọn — để trống sẽ trích xuất ý chính, ý trọng tâm và số liệu tổng quát)</span></label>
+            <textarea id="docRequest" rows="3" class="cmd-input" placeholder="Ví dụ: Trích xuất các số liệu về khởi tố mới; Tóm tắt kết luận thanh tra; Liệt kê các kiến nghị..." style="padding:11px 14px;font-size:12.5px;resize:vertical;line-height:1.65"></textarea>
           </div>
 
-          <button onclick="runDocAnalysis()" id="btnDocAnalysis" disabled style="
-            height:34px;padding:0 22px;border-radius:var(--rsm);border:none;cursor:pointer;
-            background:linear-gradient(135deg,#0891b2,#06b6d4);opacity:.4;
-            color:#fff;font-size:12px;font-weight:700;font-family:var(--fb);
-            display:flex;align-items:center;gap:7px;transition:opacity .2s;
-          ">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <button onclick="runDocAnalysis()" id="btnDocAnalysis" disabled class="cmd-btn-primary">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             Phân tích tài liệu
           </button>
         </div>
@@ -2393,15 +2473,15 @@ body::after{
       <div id="pbSection" style="display:none">
         <div class="cc fi fi1" style="padding:20px">
           <div class="cc-hd" style="margin-bottom:14px">
-            <div class="cc-title" style="color:var(--cyan)">🎤 KHỞI TẠO PHÁT BIỂU NHANH</div>
+            <div class="cc-title" style="color:var(--ai-cyan-soft)">🎤 KHỞI TẠO PHÁT BIỂU NHANH</div>
             <div style="font-size:10px;color:var(--ts);font-family:var(--fm)">RAG: Knowledge Drive + Q/A</div>
           </div>
 
           <!-- Row 1: Loại hội nghị + Bối cảnh -->
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
             <div style="flex:1;min-width:200px">
-              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Loại hội nghị / sự kiện</label>
-              <select id="pbLoai" style="width:100%;height:34px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
+              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px">Loại hội nghị / sự kiện</label>
+              <select id="pbLoai" class="cmd-input" style="height:36px;padding:0 12px;font-size:12.5px;cursor:pointer">
                 <option value="tong_ket">Hội nghị tổng kết (năm, 6 tháng, quý)</option>
                 <option value="so_ket">Hội nghị sơ kết</option>
                 <option value="chuyen_de">Hội nghị chuyên đề</option>
@@ -2417,8 +2497,8 @@ body::after{
               </select>
             </div>
             <div style="flex:1;min-width:200px">
-              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Văn phong</label>
-              <select id="pbVanPhong" style="width:100%;height:34px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:0 10px;cursor:pointer">
+              <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px">Văn phong</label>
+              <select id="pbVanPhong" class="cmd-input" style="height:36px;padding:0 12px;font-size:12.5px;cursor:pointer">
                 <option value="chi_dao">Chỉ đạo — quyết liệt, dứt khoát, yêu cầu thực hiện</option>
                 <option value="dong_vien">Động viên — ghi nhận, khích lệ, định hướng</option>
                 <option value="doi_ngoai">Đối ngoại — trang trọng, cân nhắc, ngoại giao</option>
@@ -2429,20 +2509,20 @@ body::after{
           </div>
 
           <!-- Row 2: Chủ đề -->
-          <div style="margin-bottom:12px">
-            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Chủ đề / Nội dung chính</label>
-            <input id="pbChuDe" type="text" placeholder="Ví dụ: Tổng kết 6 tháng đầu năm 2026, nâng cao chất lượng THQCT trong lĩnh vực hình sự..." style="width:100%;height:36px;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:13px;padding:0 14px;font-family:var(--fb)"/>
+          <div style="margin-bottom:14px">
+            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px">Chủ đề / Nội dung chính</label>
+            <input id="pbChuDe" type="text" class="cmd-input" placeholder="Ví dụ: Tổng kết 6 tháng đầu năm 2026, nâng cao chất lượng THQCT trong lĩnh vực hình sự..." style="height:38px;padding:0 14px;font-size:13px"/>
           </div>
 
           <!-- Row 3: Bối cảnh bổ sung -->
-          <div style="margin-bottom:14px">
-            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Bối cảnh / Tài liệu bổ sung <span style="font-weight:400;color:var(--tm)">(tùy chọn — dán trực tiếp nghị quyết, số liệu, chương trình hội nghị...)</span></label>
-            <textarea id="pbBoiCanh" rows="4" placeholder="Dán nội dung tại đây hoặc để trống nếu không có tài liệu bổ sung. AI sẽ tìm kiếm từ Knowledge Drive..." style="width:100%;border-radius:var(--rsm);border:1px solid var(--bdm);background:var(--n800);color:var(--tp);font-size:12px;padding:10px 14px;font-family:var(--fb);resize:vertical;line-height:1.6"></textarea>
+          <div style="margin-bottom:16px">
+            <label style="font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px">Bối cảnh / Tài liệu bổ sung <span style="font-weight:400;color:var(--tm);text-transform:none;letter-spacing:0">(tùy chọn — dán trực tiếp nghị quyết, số liệu, chương trình hội nghị...)</span></label>
+            <textarea id="pbBoiCanh" rows="4" class="cmd-input" placeholder="Dán nội dung tại đây hoặc để trống nếu không có tài liệu bổ sung. AI sẽ tìm kiếm từ Knowledge Drive..." style="padding:11px 14px;font-size:12.5px;resize:vertical;line-height:1.65"></textarea>
           </div>
 
           <!-- Row 4: Model + Nút tạo -->
           <div style="display:flex;gap:10px;align-items:center">
-            <select id="pbModel" style="height:34px;border-radius:var(--rsm);border:1px solid rgba(0,212,255,.25);background:var(--n800);color:var(--cyan);font-size:11px;padding:0 10px;cursor:pointer" title="Chọn AI model">
+            <select id="pbModel" class="cmd-input" style="height:38px;padding:0 12px;font-size:11.5px;cursor:pointer;color:var(--ai-cyan-soft);border-color:var(--ai-bd)" title="Chọn AI model">
               <option value="gemini">✦ Gemini</option>
               <option value="deepseek">⚡ DeepSeek V4</option>
               <optgroup label="🔀 Bynara Router">
@@ -2452,13 +2532,8 @@ body::after{
                 <option value="bynara_mistral_medium">Mistral Medium 3.5 (256K)</option>
               </optgroup>
             </select>
-            <button onclick="runPhatBieu()" id="btnPhatBieu" style="
-              height:34px;padding:0 22px;border-radius:var(--rsm);border:none;cursor:pointer;
-              background:linear-gradient(135deg,#0891b2,#06b6d4);
-              color:#fff;font-size:12px;font-weight:700;font-family:var(--fb);
-              display:flex;align-items:center;gap:7px;transition:opacity .2s;
-            ">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M10 16l4-4-4-4"/></svg>
+            <button onclick="runPhatBieu()" id="btnPhatBieu" class="cmd-btn-primary">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M10 16l4-4-4-4"/></svg>
               Tạo ý phát biểu
             </button>
           </div>
@@ -2542,96 +2617,7 @@ body::after{
 <!-- Mobile overlay -->
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
-<!-- Bottom Navigation (mobile only) -->
-<nav class="mobile-nav">
-  <button class="mobile-nav-btn" data-page="tongquantinh" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>TQ Tỉnh
-  </button>
-  <button class="mobile-nav-btn" data-page="overview" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>TQ KV
-  </button>
-  <button class="mobile-nav-btn" data-page="chitieu12" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-    </svg>CT 12T
-  </button>
-  <button class="mobile-nav-btn" data-page="chitieu6" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-    </svg>CT 6T
-  </button>
-  <button class="mobile-nav-btn" data-page="khuvuc" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="10" r="3"/>
-      <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
-    </svg>Khu vực
-  </button>
-  <button class="mobile-nav-btn" data-page="anhuy" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>Án hủy
-  </button>
-  <button class="mobile-nav-btn" data-page="shhsva" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-    </svg>CĐS
-  </button>
-  <button class="mobile-nav-btn" data-page="thnq205" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-    </svg>NQ 205
-  </button>
-  <button class="mobile-nav-btn" data-page="phong1" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 1
-  </button>
-  <button class="mobile-nav-btn" data-page="phong2" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 2
-  </button>
-  <button class="mobile-nav-btn" data-page="phong7" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 7
-  </button>
-  <button class="mobile-nav-btn" data-page="phong8" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 8
-  </button>
-  <button class="mobile-nav-btn" data-page="phong9" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 9
-  </button>
-  <button class="mobile-nav-btn" data-page="phong10" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 10
-  </button>
-  <button class="mobile-nav-btn" data-page="phong11" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-    </svg>Phòng 11
-  </button>
-  <button class="mobile-nav-btn" data-page="ttra" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>Thanh tra
-  </button>
-  <button class="mobile-nav-btn" data-page="thammuuai" onclick="mobileNav(this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M12 2a4 4 0 0 1 4 4c0 1.7-1 3.1-2.4 3.7L13 10v2h-2v-2l-.6-.3A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
-      <path d="M10 14h4"/><path d="M11 17h2"/>
-    </svg>Tham mưu
-  </button>
-</nav>
+
 
 <script>
 const $ = id => document.getElementById(id);
@@ -7966,13 +7952,9 @@ function _tmSwitchMode(mode) {
     // Ẩn form phân tích tài liệu, hiện form phát biểu
     if (pbSection)  pbSection.style.display = 'block';
     if (docSection) docSection.style.display = 'none';
-    // Toggle buttons
-    btnS.style.background = 'linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,212,255,.08))';
-    btnS.style.color = '#67e8f9';
-    btnS.style.borderColor = 'rgba(0,212,255,.3)';
-    btnD.style.background = 'var(--n800)';
-    btnD.style.color = 'var(--ts)';
-    btnD.style.borderColor = 'rgba(0,212,255,.15)';
+    // Toggle tabs (class-based — Government AI Command Center design)
+    btnS.classList.add('active');
+    btnD.classList.remove('active');
     if (subT) subT.textContent = 'PHÁT BIỂU NHANH — HỖ TRỢ LÃNH ĐẠO';
     // Hiện placeholder phù hợp
     var ph = document.getElementById('tmPlaceholder');
@@ -7989,12 +7971,8 @@ function _tmSwitchMode(mode) {
     // Hiện form phân tích tài liệu, ẩn form phát biểu
     if (pbSection)  pbSection.style.display = 'none';
     if (docSection) docSection.style.display = 'block';
-    btnD.style.background = 'linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08))';
-    btnD.style.color = '#c4b5fd';
-    btnD.style.borderColor = 'rgba(139,92,246,.3)';
-    btnS.style.background = 'var(--n800)';
-    btnS.style.color = 'var(--ts)';
-    btnS.style.borderColor = 'rgba(0,212,255,.15)';
+    btnD.classList.add('active');
+    btnS.classList.remove('active');
     if (subT) subT.textContent = 'PHÂN TÍCH TÀI LIỆU — OCR & TRÍCH XUẤT Ý CHÍNH';
     // Hiện placeholder phân tích tài liệu
     var ph2 = document.getElementById('tmPlaceholder');
@@ -8070,15 +8048,13 @@ window._docClearFile = _docClearFile;
     ['dragenter','dragover'].forEach(function(evt) {
       dz.addEventListener(evt, function(e) {
         e.preventDefault(); e.stopPropagation();
-        dz.style.borderColor = 'rgba(0,212,255,.6)';
-        dz.style.background = 'rgba(0,212,255,.06)';
+        dz.classList.add('drag-over');
       });
     });
     ['dragleave','drop'].forEach(function(evt) {
       dz.addEventListener(evt, function(e) {
         e.preventDefault(); e.stopPropagation();
-        dz.style.borderColor = 'rgba(0,212,255,.3)';
-        dz.style.background = 'rgba(0,212,255,.02)';
+        dz.classList.remove('drag-over');
       });
     });
     dz.addEventListener('drop', function(e) {
@@ -8095,15 +8071,13 @@ window._docClearFile = _docClearFile;
     ['dragenter','dragover'].forEach(function(evt) {
       dz.addEventListener(evt, function(e) {
         e.preventDefault(); e.stopPropagation();
-        dz.style.borderColor = 'rgba(0,212,255,.6)';
-        dz.style.background = 'rgba(0,212,255,.06)';
+        dz.classList.add('drag-over');
       });
     });
     ['dragleave','drop'].forEach(function(evt) {
       dz.addEventListener(evt, function(e) {
         e.preventDefault(); e.stopPropagation();
-        dz.style.borderColor = 'rgba(0,212,255,.3)';
-        dz.style.background = 'rgba(0,212,255,.02)';
+        dz.classList.remove('drag-over');
       });
     });
     dz.addEventListener('drop', function(e) {
